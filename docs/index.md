@@ -1,6 +1,28 @@
-# Conform.IA BNDES — Documentacao Tecnica e de Engenharia
+<div class="hero-section" markdown>
 
-Plataforma SaaS de Processamento Inteligente de Documentos (IDP) e Auditoria Imutavel concebida para atender aos requisitos da **Consulta Publica BNDES no 01/2025** (Checklist de Conformidade).
+<div class="hero-pill">
+  <span class="status-indicator"></span> Consulta Publica BNDES no 01/2025
+</div>
+
+<h1 class="hero-title">Conform.IA BNDES</h1>
+
+<p class="hero-subtitle">
+  Plataforma SaaS de <strong>Intelligent Document Processing (IDP)</strong> e <strong>Auditoria Imutavel</strong> concebida para automatizar a conferencia cadastral, fiscal, trabalhista e regulatoria de proponentes e operacoes de credito e investimento no BNDES.
+</p>
+
+<div class="hero-actions">
+  <a href="development/quickstart/" class="btn btn-primary">
+    Guia de Inicio Rapido
+  </a>
+  <a href="planning/" class="btn btn-secondary">
+    Explorar Planejamento
+  </a>
+  <a href="https://github.com/conformia-bndes/conformia-platform" target="_blank" class="btn btn-secondary">
+    Repositorio GitHub
+  </a>
+</div>
+
+</div>
 
 ---
 
@@ -10,64 +32,138 @@ Plataforma SaaS de Processamento Inteligente de Documentos (IDP) e Auditoria Imu
 
 <div class="metric-card success" markdown>
 <div class="metric-value">0.00%</div>
-<div class="metric-label">Falsos Positivos (Tolerancia Zero)</div>
+<div class="metric-label">Falsos Positivos em Certidoes (Tolerancia Zero)</div>
 </div>
 
 <div class="metric-card info" markdown>
 <div class="metric-value">100.0%</div>
-<div class="metric-label">Acuracia nos Benchmarks de Evals</div>
+<div class="metric-label">Acuracia no Benchmark de Harness Evals</div>
 </div>
 
 <div class="metric-card" markdown>
 <div class="metric-value">8 Sprints</div>
-<div class="metric-label">Cronograma ate 07/12/2026</div>
+<div class="metric-label">Cronograma Estruturado ate 07/12/2026</div>
 </div>
 
 <div class="metric-card warning" markdown>
 <div class="metric-value">15 RFs</div>
-<div class="metric-label">Requisitos Funcionais Mapeados</div>
+<div class="metric-label">Requisitos Funcionais com Trilha Auditavel</div>
 </div>
 
 </div>
 
 ---
 
-## Mapa Geral da Documentacao
+## O Ciclo de Processamento Documental
 
-Navegue pelos modulos tecnicos da plataforma:
+<div class="pipeline-strip" markdown>
+
+<div class="pipeline-step">
+  <span class="step-num">Passo 01</span>
+  <span class="step-name">Ingestao S3</span>
+</div>
+
+<div class="pipeline-step">
+  <span class="step-num">Passo 02</span>
+  <span class="step-name">IDP & OCR</span>
+</div>
+
+<div class="pipeline-step">
+  <span class="step-num">Passo 03</span>
+  <span class="step-name">Schemas JSON</span>
+</div>
+
+<div class="pipeline-step">
+  <span class="step-num">Passo 04</span>
+  <span class="step-name">Regras BNDES</span>
+</div>
+
+<div class="pipeline-step">
+  <span class="step-num">Passo 05</span>
+  <span class="step-name">Maker-Checker</span>
+</div>
+
+<div class="pipeline-step">
+  <span class="step-num">Passo 06</span>
+  <span class="step-name">Laudo & Auditoria</span>
+</div>
+
+</div>
+
+---
+
+## Pilares Tecnologicos da Solucao
+
+<div class="bento-grid" markdown>
+
+<div class="bento-card span-2" markdown>
+<div>
+  <span class="bento-tag">Engenharia de Documentos</span>
+  <h3>Pipeline IDP Hibrido e OCR Tesseract 5</h3>
+  <p>Extracao vetorial nativa de alta velocidade com fallback automatico para OCR Tesseract 5 em paginas digitalizadas. Pre-processamento adaptativo de imagem e deteccao de tabelas complexas com calibracao para o idioma portugues.</p>
+</div>
+<a href="engineering/idp-pipeline/" class="bento-meta">Conhecer o Pipeline de Extracao &rarr;</a>
+</div>
+
+<div class="bento-card" markdown>
+<div>
+  <span class="bento-tag">Harness de Inteligencia Artificial</span>
+  <h3>Padrao Maker-Checker Algoritmico</h3>
+  <p>Auditoria semantica cruzada: o agente propositor aponta a evidencia textual e o auditor algoritmico valida a correspondencia literal exata no documento original antes da emissao do laudo.</p>
+</div>
+<a href="planning/harness-engineering/" class="bento-meta">Entender o Maker-Checker &rarr;</a>
+</div>
+
+<div class="bento-card" markdown>
+<div>
+  <span class="bento-tag">Determinismo Normativo</span>
+  <h3>Motor Declarativo de Regras</h3>
+  <p>Checklists e restricoes de negocio desacoplados em esquemas JSON Schema versionados. Validacao temporal estrita de certidoes (CND, FGTS, CNDT, Falencia) com tolerancia zero a ambiguidades.</p>
+</div>
+<a href="engineering/rules-engine/" class="bento-meta">Explorar Motor de Regras &rarr;</a>
+</div>
+
+<div class="bento-card span-2" markdown>
+<div>
+  <span class="bento-tag">Governanca e Compliance Publico</span>
+  <h3>Trilha de Auditoria Imutavel e Conformidade LGPD</h3>
+  <p>Registro transacional imutavel (append-only) de cada deliberacao tecnica com hash criptografico SHA-256 do arquivo original, timestamp UTC e parecer circunstanciado para orgaos de fiscalizacao (TCU e CGU).</p>
+</div>
+<a href="planning/governance-security/" class="bento-meta">Ver Diretrizes de Governanca &rarr;</a>
+</div>
+
+</div>
+
+---
+
+## Navegacao Estruturada do Portal
 
 <div class="grid cards" markdown>
 
 - ### [Planejamento Estrategico](planning/index.md)
-    Contexto do edital BNDES, requisitos funcionais RF01 a RF15, roadmap de sprints e Definition of Done.
+    Entendimento do edital, requisitos funcionais RF01-RF15, roadmap de 8 sprints e Definition of Done.
     - [Visao Geral do Planejamento](planning/index.md)
-    - [Requisitos de Negocio e RF01-RF15](planning/requirements.md)
+    - [Requisitos Funcionais e RNF](planning/requirements.md)
     - [Arquitetura e Segregacao Regras/IA](planning/architecture-design.md)
-    - [Cronograma de Sprints e Backlog](planning/sprints-roadmap.md)
-    - [Seguranca, LGPD e Auditoria](planning/governance-security.md)
-    - [Harness Engineering e Maker-Checker](planning/harness-engineering.md)
+    - [Cronograma de Sprints](planning/sprints-roadmap.md)
+    - [Seguranca e LGPD](planning/governance-security.md)
+    - [Harness Engineering](planning/harness-engineering.md)
 
 - ### [Arquitetura e Decisoes (ADRs)](architecture/overview.md)
-    Topologia de micro-servicos, diagramas de fluxo, especificacao de componentes e registros formais de decisao.
+    Topologia de servicos conteinerizados, diagramas de fluxo de dados e registros formais de decisao.
     - [Visao Geral da Arquitetura](architecture/overview.md)
-    - [Indice de ADRs](architecture/adr-index.md)
+    - [Indice Central de ADRs](architecture/adr-index.md)
     - [ADR-001: Monorepo Modular](architecture/adr-001-monorepo-modular.md)
     - [ADR-002: Adoção do Astral uv](architecture/adr-002-astral-uv-toolchain.md)
     - [ADR-003: React SPA vs Next.js](architecture/adr-003-spa-vs-nextjs.md)
 
-- ### [Desafio e Conformidade BNDES](bndes/compliance-matrix.md)
-    Mapeamento minucioso dos itens do edital BNDES e especificacao tecnica das tipologias de certidoes.
+- ### [Desafio e Normativos BNDES](bndes/compliance-matrix.md)
+    Mapeamento dos requisitos da Consulta Publica no 01/2025 e especificacao tecnica das certidoes.
     - [Matriz de Aderencia ao Edital](bndes/compliance-matrix.md)
-    - [Tipologias de Documentos (CND, FGTS, CNDT, Falencia)](bndes/document-types.md)
+    - [Tipologias de Documentos do BNDES](bndes/document-types.md)
 
-- ### [Engenharia de IDP e IA](engineering/idp-pipeline.md)
-    Pipeline de ingestao, OCR Tesseract, motor determinístico de regras e avaliacao continua de IA.
-    - [Pipeline IDP e OCR Hibrido](engineering/idp-pipeline.md)
-    - [Motor de Regras Declarativo](engineering/rules-engine.md)
-    - [Harness Maker-Checker e Evals](engineering/harness-evals.md)
-
-- ### [Desenvolvimento e APIs](development/quickstart.md)
-    Guias operacionais para desenvolvimento local, contratos OpenAPI e protocolos de qualidade pre-commit.
+- ### [Desenvolvimento e Operacao Local](development/quickstart.md)
+    Manuais praticos de configuracao rapida com Make, Docker e Astral uv, alem de contratos OpenAPI.
     - [Guia de Inicio Rapido (Quickstart)](development/quickstart.md)
     - [Referencia da API REST (OpenAPI)](development/api-reference.md)
     - [Quality Gates e Protocolos de Teste](development/quality-gates.md)
@@ -76,22 +172,7 @@ Navegue pelos modulos tecnicos da plataforma:
 
 ---
 
-## Arquitetura de Alto Nivel
-
-```mermaid
-flowchart LR
-    A["Ingestao de PDF (MinIO S3)"] --> B["Extracao IDP & OCR Tesseract"]
-    B --> C["Estruturacao JSON Schema"]
-    C --> D["Motor de Regras BNDES"]
-    D --> E["Auditor Maker-Checker (LLM)"]
-    E --> F["Cockpit do Analista (React SPA)"]
-    F --> G["Revisao Humana (HITL)"]
-    G --> H["Trilha de Auditoria Imutavel (PostgreSQL)"]
-```
-
----
-
-## Pontos de Acesso em Ambiente Local
+## Acesso Operacional aos Servicos Locais
 
 | Servico | URL Host | Finalidade Operacional |
 | :--- | :--- | :--- |
