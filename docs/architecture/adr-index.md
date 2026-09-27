@@ -19,3 +19,5 @@ Para propor uma nova decisao arquitetural:
 | Identificador | Titulo | Status | Data | Autores |
 | :--- | :--- | :--- | :--- | :--- |
 | [ADR-001](adr-001-monorepo-modular.md) | Adocao de Monorepo Modular e Harness Engineering | Aprovado | 2026-09-26 | Conform.IA Engineering Team |
+| [ADR-002](adr-002-astral-uv-toolchain.md) | Adocao do Astral uv como Gerenciador de Pacotes e Workspace | Aprovado | 2026-09-27 | Conform.IA Engineering Team |
+| [ADR-003](adr-003-spa-vs-nextjs.md) | Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional | Aprovado | 2026-09-27 | Conform.IA Engineering Team |

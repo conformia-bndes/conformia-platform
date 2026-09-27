@@ -1,46 +1,102 @@
-# Conform.IA BNDES - Documentacao Tecnica
+# Conform.IA BNDES — Documentacao Tecnica e de Engenharia
 
-Bem-vindo ao portal de documentacao tecnica e engenharia do **Conform.IA BNDES**, plataforma SaaS voltada para o Processamento Inteligente de Documentos (IDP), verificacao automatizada de conformidade cadastral e regulatoria, e auditoria imutavel no contexto da Consulta Publica BNDES no 01/2025.
-
----
-
-## Finalidade do Sistema
-
-O Conform.IA BNDES automatiza o ciclo completo de admissibilidade documental para proponentes de operacoes de financiamento e investimento no BNDES. O sistema foi projetado para eliminar gargalos de analise manual, garantir conformidade legal estrita (tolerancia zero a fraudes e pendencias) e oferecer rastreabilidade probatoria auditavel para orgaos de controle interno e externo (CGU, TCU).
+Plataforma SaaS de Processamento Inteligente de Documentos (IDP) e Auditoria Imutavel concebida para atender aos requisitos da **Consulta Publica BNDES no 01/2025** (Checklist de Conformidade).
 
 ---
 
-## Pilares Estruturais da Solucao
+## Indicadores de Desempenho e Qualidade do Projeto
 
-1. **Ingestao Documental e IDP**: Extracao hibrida de texto e tabelas via analise vetorial nativa e OCR Tesseract com suporte ao idioma portugues.
-2. **Motor de Regras Declarativo**: Avaliacao deterministica de requisitos legais e editalicios estruturados em JSON Schema.
-3. **Harness Engineering e Padrao Maker-Checker**: Agentes de linguagem atuando sob contexto restrito e avaliacao independente de evidencias textuais para eliminacao de alucinacoes.
-4. **Trilha de Auditoria Transacional**: Persistencia de logs de decisao, pontuacao e justificativas tecnicas em banco de dados relacional (PostgreSQL).
+<div class="metric-grid" markdown>
+
+<div class="metric-card success" markdown>
+<div class="metric-value">0.00%</div>
+<div class="metric-label">Falsos Positivos (Tolerancia Zero)</div>
+</div>
+
+<div class="metric-card info" markdown>
+<div class="metric-value">100.0%</div>
+<div class="metric-label">Acuracia nos Benchmarks de Evals</div>
+</div>
+
+<div class="metric-card" markdown>
+<div class="metric-value">8 Sprints</div>
+<div class="metric-label">Cronograma ate 07/12/2026</div>
+</div>
+
+<div class="metric-card warning" markdown>
+<div class="metric-value">15 RFs</div>
+<div class="metric-label">Requisitos Funcionais Mapeados</div>
+</div>
+
+</div>
 
 ---
 
-## Mapa da Documentacao
+## Mapa Geral da Documentacao
 
-A documentacao esta organizada nos seguintes modulos:
+Navegue pelos modulos tecnicos da plataforma:
 
-- **Planejamento**:
-  - [Planejamento do Projeto](planning/project-plan.md): Parametros, requisitos RF01-RF15, arquitetura, sprints e metas ate 07/12/2026.
-- **Arquitetura**:
-  - [Visao Geral](architecture/overview.md): Diagrama de blocos, componentes e fluxo de dados.
-  - [Decisoes Arquiteturais (ADRs)](architecture/adr-index.md): Registro formal de decisoes tecnicas e compensacoes estruturais.
-- **Desafio BNDES**:
-  - [Analise do Edital](bndes/compliance-matrix.md): Mapeamento dos requisitos da Consulta Publica no 01/2025.
-  - [Tipologias de Documentos](bndes/document-types.md): Especificacoes de certidoes federais, trabalhistas, societarias e ambientais.
-- **Engenharia**:
-  - [Pipeline IDP](engineering/idp-pipeline.md): Arquitetura de extracao textual, tabular e OCR.
-  - [Motor de Regras](engineering/rules-engine.md): Avaliacao deterministica e hibrida.
-  - [Harness e Avaliacao de IA](engineering/harness-evals.md): Protocolos de avaliacao continua, metricas e benchmarks.
+<div class="grid cards" markdown>
+
+- ### [Planejamento Estrategico](planning/index.md)
+    Contexto do edital BNDES, requisitos funcionais RF01 a RF15, roadmap de sprints e Definition of Done.
+    - [Visao Geral do Planejamento](planning/index.md)
+    - [Requisitos de Negocio e RF01-RF15](planning/requirements.md)
+    - [Arquitetura e Segregacao Regras/IA](planning/architecture-design.md)
+    - [Cronograma de Sprints e Backlog](planning/sprints-roadmap.md)
+    - [Seguranca, LGPD e Auditoria](planning/governance-security.md)
+    - [Harness Engineering e Maker-Checker](planning/harness-engineering.md)
+
+- ### [Arquitetura e Decisoes (ADRs)](architecture/overview.md)
+    Topologia de micro-servicos, diagramas de fluxo, especificacao de componentes e registros formais de decisao.
+    - [Visao Geral da Arquitetura](architecture/overview.md)
+    - [Indice de ADRs](architecture/adr-index.md)
+    - [ADR-001: Monorepo Modular](architecture/adr-001-monorepo-modular.md)
+    - [ADR-002: Adoção do Astral uv](architecture/adr-002-astral-uv-toolchain.md)
+    - [ADR-003: React SPA vs Next.js](architecture/adr-003-spa-vs-nextjs.md)
+
+- ### [Desafio e Conformidade BNDES](bndes/compliance-matrix.md)
+    Mapeamento minucioso dos itens do edital BNDES e especificacao tecnica das tipologias de certidoes.
+    - [Matriz de Aderencia ao Edital](bndes/compliance-matrix.md)
+    - [Tipologias de Documentos (CND, FGTS, CNDT, Falencia)](bndes/document-types.md)
+
+- ### [Engenharia de IDP e IA](engineering/idp-pipeline.md)
+    Pipeline de ingestao, OCR Tesseract, motor determinístico de regras e avaliacao continua de IA.
+    - [Pipeline IDP e OCR Hibrido](engineering/idp-pipeline.md)
+    - [Motor de Regras Declarativo](engineering/rules-engine.md)
+    - [Harness Maker-Checker e Evals](engineering/harness-evals.md)
+
+- ### [Desenvolvimento e APIs](development/quickstart.md)
+    Guias operacionais para desenvolvimento local, contratos OpenAPI e protocolos de qualidade pre-commit.
+    - [Guia de Inicio Rapido (Quickstart)](development/quickstart.md)
+    - [Referencia da API REST (OpenAPI)](development/api-reference.md)
+    - [Quality Gates e Protocolos de Teste](development/quality-gates.md)
+
+</div>
 
 ---
 
-## Repositorio e Links Uteis
+## Arquitetura de Alto Nivel
 
-- Repositorio Oficial: [https://github.com/conformia-bndes/conformia-platform](https://github.com/conformia-bndes/conformia-platform)
-- Documentacao Publicada: [https://conformia-bndes.github.io/conformia-platform/](https://conformia-bndes.github.io/conformia-platform/)
-- API Swagger UI Local: `http://localhost:8000/docs`
-- Console MinIO Local: `http://localhost:9001`
+```mermaid
+flowchart LR
+    A["Ingestao de PDF (MinIO S3)"] --> B["Extracao IDP & OCR Tesseract"]
+    B --> C["Estruturacao JSON Schema"]
+    C --> D["Motor de Regras BNDES"]
+    D --> E["Auditor Maker-Checker (LLM)"]
+    E --> F["Cockpit do Analista (React SPA)"]
+    F --> G["Revisao Humana (HITL)"]
+    G --> H["Trilha de Auditoria Imutavel (PostgreSQL)"]
+```
+
+---
+
+## Pontos de Acesso em Ambiente Local
+
+| Servico | URL Host | Finalidade Operacional |
+| :--- | :--- | :--- |
+| **Frontend SPA** | [http://localhost:5173](http://localhost:5173) | Cockpit do analista de credito para revisao e envio de certidoes. |
+| **Backend API (Swagger Docs)** | [http://localhost:8000/docs](http://localhost:8000/docs) | Catalogo interativo OpenAPI / Swagger das rotas da API. |
+| **Healthcheck da API** | [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health) | Diagnostico em tempo real do PostgreSQL, Redis e MinIO. |
+| **MinIO Console** | [http://localhost:9001](http://localhost:9001) | Interface web do S3 Object Storage para inspecao de PDFs originais. |
+| **Documentacao MkDocs** | [http://127.0.0.1:8000](http://127.0.0.1:8000) | Servidor local com recarregamento a quente via `make docs`. |
