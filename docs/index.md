@@ -23,6 +23,8 @@ O Conform.IA BNDES automatiza o ciclo completo de admissibilidade documental par
 
 A documentacao esta organizada nos seguintes modulos:
 
+- **Planejamento**:
+  - [Planejamento do Projeto](planning/project-plan.md): Parametros, requisitos RF01-RF15, arquitetura, sprints e metas ate 07/12/2026.
 - **Arquitetura**:
   - [Visao Geral](architecture/overview.md): Diagrama de blocos, componentes e fluxo de dados.
   - [Decisoes Arquiteturais (ADRs)](architecture/adr-index.md): Registro formal de decisoes tecnicas e compensacoes estruturais.
