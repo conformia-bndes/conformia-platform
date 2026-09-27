@@ -1,0 +1,70 @@
+name: Relatorio de Defeito (Bug Report)
+description: Registre uma falha ou comportamento inesperado no Conform.IA BNDES.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Modulo Afetado
+      description: Selecione o subsistema onde a falha ocorreu.
+      options:
+        - Ingestao e OCR (IDP)
+        - Motor de Regras
+        - Orquestracao Maker-Checker (IA)
+        - Trilha de Auditoria
+        - Backend Core e API
+        - Frontend SPA
+        - Infraestrutura e Docker
+    validations:
+      required: true
+  - type: dropdown
+    id: ambiente
+    attributes:
+      label: Ambiente de Ocorrencia
+      description: Em qual ambiente o problema foi observado?
+      options:
+        - Desenvolvimento Local (Docker Compose)
+        - Integracao Continua (CI GitHub Actions)
+        - Staging / Homologacao
+    validations:
+      required: true
+  - type: textarea
+    id: passos_reproducao
+    attributes:
+      label: Passos para Reproducao
+      description: Detalhe os passos para reproduzir o comportamento reportado.
+      placeholder: |
+        1. Fazer upload do arquivo PDF...
+        2. Chamar o endpoint /api/v1/compliance/verify/...
+        3. Observar retorno...
+    validations:
+      required: true
+  - type: textarea
+    id: comportamento_esperado
+    attributes:
+      label: Comportamento Esperado
+      description: Descreva o resultado esperado segundo a especificacao tecnica ou editalicia.
+    validations:
+      required: true
+  - type: textarea
+    id: comportamento_observado
+    attributes:
+      label: Comportamento Observado
+      description: Descreva o que ocorreu na pratica, incluindo mensagens de erro ou codigos HTTP.
+    validations:
+      required: true
+  - type: checkboxes
+    id: impacto_auditoria
+    attributes:
+      label: Impacto em Conformidade / Auditoria
+      options:
+        - label: "Este bug afeta a precisao do laudo ou a integridade da trilha de auditoria"
+          required: false
+  - type: textarea
+    id: logs_evidencias
+    attributes:
+      label: Logs e Evidencias Tecnicas
+      description: Cole trechos relevantes de logs do terminal ou traces de execucao.
+    validations:
+      required: false

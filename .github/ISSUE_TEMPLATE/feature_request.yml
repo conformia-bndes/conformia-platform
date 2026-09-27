@@ -1,0 +1,40 @@
+name: Proposta de Funcionalidade (Feature Request)
+description: Proponha uma nova funcionalidade, regra normativa ou melhoria arquitetural.
+title: "[FEAT] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: categoria
+    attributes:
+      label: Categoria da Proposta
+      description: Selecione a area principal da melhoria.
+      options:
+        - Nova Regra de Conformidade (rules/schemas)
+        - Otimizacao de Pipeline IDP / OCR
+        - Melhoria no Validador Maker-Checker
+        - Interface de Usuario do Analista BNDES
+        - Trilha de Auditoria e Exportacao de Laudos
+        - Infraestrutura e Observabilidade
+    validations:
+      required: true
+  - type: textarea
+    id: motivacao_negocio
+    attributes:
+      label: Requisito de Negocio / Base Normativa
+      description: Qual necessidade da Consulta Publica BNDES 01/2025 ou beneficio operacional esta proposta atende?
+    validations:
+      required: true
+  - type: textarea
+    id: descricao_solucao
+    attributes:
+      label: Descricao Detalhada da Solucao Proposta
+      description: Descreva como a funcionalidade deve operar e interagir com os modulos existentes.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios_aceite
+    attributes:
+      label: Criterios de Aceitacao (DoD)
+      description: Quais testes ou evidencias comprovam que a funcionalidade foi concluida com sucesso?
+    validations:
+      required: true
