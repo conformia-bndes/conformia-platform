@@ -171,7 +171,7 @@ make setup
 Caso utilize `uv` diretamente na linha de comando:
 ```bash
 # Sincronizar dependencias de desenvolvimento do workspace
-uv sync --extra dev
+uv sync --all-packages --all-extras
 
 # Executar testes ou benchmarks no ambiente isolado
 uv run pytest backend/tests/ -v

@@ -62,7 +62,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          uv sync --extra dev
+          uv sync --all-packages --all-extras
 
       - name: Run Linters (Black & Flake8)
         run: |

@@ -29,7 +29,7 @@ Execute o comando de preparação para criar o arquivo `.env` e sincronizar as d
 === "Com Astral uv e npm"
 `bash
     cp .env.example .env
-    uv sync --extra dev
+    uv sync --all-packages --all-extras
     cd frontend && npm install
     `
 
