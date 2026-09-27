@@ -77,7 +77,8 @@ def upload_document(
             detail=f"Falha ao gravar arquivo em disco: {str(e)}",
         )
 
-    # Upload para o MinIO / S3
+    # Upload para o MinIO / S3 com fallback para armazenamento local
+    storage_path = destination_path
     try:
         storage_path = storage_service.upload_file(
             file_data=content,
