@@ -61,26 +61,133 @@ body, .md-typeset {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Cabecalho Minimalista com Efeito de Vidro Apple */
+/* Cabecalho Apple com Efeito de Vidro e Alto Contraste */
 .md-header {
-  background-color: rgba(255, 255, 255, 0.8) !important;
+  background-color: rgba(246, 246, 248, 0.94) !important;
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--apple-border) !important;
-  box-shadow: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
 
 [data-md-color-scheme="slate"] .md-header {
-  background-color: rgba(22, 22, 23, 0.8) !important;
+  background-color: rgba(22, 22, 23, 0.94) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
 }
 
-.md-header__title, .md-header__button {
+.md-header__title {
   color: var(--apple-text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.md-header__button {
+  color: var(--apple-text-primary) !important;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.md-header__button:hover {
+  opacity: 1;
+  color: var(--apple-blue) !important;
+}
+
+/* Barra de Busca Minimalista Spotlight */
+.md-search__inner {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease;
+}
+
+[data-md-color-scheme="slate"] .md-search__inner {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.md-search__input {
+  color: var(--apple-text-primary) !important;
+  font-size: 13px !important;
+}
+
+.md-search__input::placeholder {
+  color: var(--apple-text-tertiary) !important;
+}
+
+.md-search__icon {
+  color: var(--apple-text-secondary) !important;
+}
+
+/* Botao de Repositorio GitHub no Cabecalho (Pill Badge Apple) */
+.md-header__source {
+  margin-left: 0.75rem;
+}
+
+.md-header__source .md-source {
+  display: inline-flex !important;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 6px 14px !important;
+  color: var(--apple-text-primary) !important;
+  text-decoration: none !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  opacity: 1 !important;
+}
+
+[data-md-color-scheme="slate"] .md-header__source .md-source {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #f5f5f7 !important;
+}
+
+.md-header__source .md-source:hover {
+  background-color: var(--apple-blue) !important;
+  border-color: var(--apple-blue) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
+}
+
+.md-source__icon {
+  margin-right: 8px !important;
+  display: flex !important;
+  align-items: center;
+}
+
+.md-source__icon svg {
+  fill: currentColor !important;
+  width: 17px !important;
+  height: 17px !important;
+  transition: fill 0.2s ease;
+}
+
+.md-source__repository {
+  color: inherit !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  letter-spacing: -0.01em;
+  max-width: none !important;
+}
+
+.md-source__facts {
+  color: inherit !important;
+  opacity: 0.85;
+  font-size: 11px !important;
 }
 
 .md-tabs {
-  background-color: transparent !important;
-  border-bottom: 1px solid var(--apple-border) !important;
+  background-color: rgba(246, 246, 248, 0.7) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: rgba(22, 22, 23, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .md-tabs__link {
