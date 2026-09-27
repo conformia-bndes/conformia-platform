@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConformiaComplianceRuleSchema",
+  "description": "Esquema declarativo para definição de regras de conformidade documental no Conform.IA BNDES",
+  "type": "object",
+  "required": ["id", "code", "title", "category", "type", "failure_message"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^RULE-[A-Z0-9]+-[0-9]{3}$",
+      "description": "Identificador único da regra (Ex: RULE-BNDES-001)"
+    },
+    "code": {
+      "type": "string",
+      "description": "Código mnemônico do requisito legal ou editalício (Ex: CND_FEDERAL)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Título compreensível da verificação de conformidade"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["FISCAL", "TRABALHISTA", "JURIDICA", "AMBIENTAL", "FINANCEIRA", "INTEGRIDADE"],
+      "description": "Categoria temática do requisito no BNDES"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["DETERMINISTIC", "SEMANTIC", "HYBRID"],
+      "description": "Estratégia de execução da regra: Determinística estrita, Semântica LLM ou Híbrida Maker-Checker"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+      "default": "HIGH",
+      "description": "Severidade de bloqueio de conformidade na esteira de crédito"
+    },
+    "legal_basis": {
+      "type": "string",
+      "description": "Artigo de lei, resolução CMN ou item editalício de referência"
+    },
+    "required_keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Termos ou expressões textuais obrigatórios no documento"
+    },
+    "anti_keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Termos ou frases cuja presença implica em não-conformidade imediata"
+    },
+    "regex_patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Expressões regulares para validação de padrões (Ex: CNPJ, certidão negativa)"
+    },
+    "failure_message": {
+      "type": "string",
+      "description": "Mensagem detalhada reportada ao analista caso o documento falhe na regra"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+site_name: "Conform.IA BNDES - Documentacao Tecnica"
+site_description: "Documentacao de Arquitetura e Engenharia da Plataforma Conform.IA BNDES"
+site_url: "https://conformia-bndes.github.io/conformia-platform/"
+repo_url: "https://github.com/conformia-bndes/conformia-platform"
+repo_name: "conformia-bndes/conformia-platform"
+
+theme:
+  name: material
+  language: pt
+  palette:
+    primary: indigo
+    accent: blue
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Inicio: index.md
+  - Arquitetura:
+      - Visao Geral: architecture/overview.md
+      - Decisoes Arquiteturais (ADRs): architecture/adr-index.md
+  - Desafio BNDES:
+      - Analise do Edital: bndes/compliance-matrix.md
+      - Tipologias de Documentos: bndes/document-types.md
+  - Engenharia:
+      - Pipeline IDP: engineering/idp-pipeline.md
+      - Motor de Regras: engineering/rules-engine.md
+      - Harness e Avaliacao de IA: engineering/harness-evals.md

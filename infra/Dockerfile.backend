@@ -1,0 +1,65 @@
+# ==============================================================================
+# Conform.IA BNDES Platform - Backend Dockerfile
+# Multi-stage build Python 3.11 com Tesseract OCR, Poppler e dependências IDP
+# ==============================================================================
+
+# Stage 1: Build & Wheels
+FROM python:3.11-slim as builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY backend/pyproject.toml backend/requirements.txt ./
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Stage 2: Runtime Environment
+FROM python:3.11-slim as runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata/
+
+WORKDIR /app
+
+# Instalação de utilitários de sistema essenciais para processamento documental (OCR / PDF)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-por \
+    poppler-utils \
+    libgl1 \
+    libglib2.0-0 \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia ambiente virtual pré-compilado do builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Cria usuário não-root para segurança operacional
+RUN useradd -m -u 1000 conformia && \
+    chown -R conformia:conformia /app
+
+# Copia o código da aplicação
+COPY --chown=conformia:conformia ./backend /app
+
+# Porta padrão FastAPI
+EXPOSE 8000
+
+# Execução padrão (sobrescrita no docker-compose para hot-reload e workers)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

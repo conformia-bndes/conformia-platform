@@ -1,0 +1,132 @@
+{
+  "$schema": "./rule_schema.json",
+  "version": "1.0.0",
+  "name": "BNDES_SAMPLE_CHECKLIST_2025",
+  "description": "Checklist referencial de conformidade cadastral e regulatória para operações de crédito e investimentos no BNDES (Consulta Pública nº 01/2025).",
+  "rules": [
+    {
+      "id": "RULE-BNDES-001",
+      "code": "CND_FEDERAL",
+      "title": "Certidão Negativa de Débitos Federais e Dívida Ativa da União",
+      "category": "FISCAL",
+      "type": "DETERMINISTIC",
+      "severity": "CRITICAL",
+      "legal_basis": "Decreto-Lei nº 147/1967 e Lei nº 8.212/1991, art. 47",
+      "required_keywords": [
+        "CERTIDÃO NEGATIVA",
+        "TRIBUTOS FEDERAIS",
+        "DÍVIDA ATIVA DA UNIÃO"
+      ],
+      "anti_keywords": [
+        "CONSTA PENDÊNCIA",
+        "DÉBITOS EXISTENTES"
+      ],
+      "regex_patterns": [
+        "\\b[0-9]{2}\\.[0-9]{3}\\.[0-9]{3}\\/[0-9]{4}\\-[0-9]{2}\\b",
+        "(CERTIDÃO NEGATIVA DE DÉBITOS|CERTIDÃO POSITIVA COM EFEITOS DE NEGATIVA)"
+      ],
+      "failure_message": "Documento não comprova regularidade fiscal perante a Secretaria Especial da Receita Federal e PGFN."
+    },
+    {
+      "id": "RULE-BNDES-002",
+      "code": "CRF_FGTS",
+      "title": "Certificado de Regularidade do FGTS (CRF Caixa)",
+      "category": "TRABALHISTA",
+      "type": "DETERMINISTIC",
+      "severity": "CRITICAL",
+      "legal_basis": "Lei nº 8.036/1990, art. 27",
+      "required_keywords": [
+        "CERTIFICADO DE REGULARIDADE",
+        "FGTS",
+        "SITUAÇÃO REGULAR"
+      ],
+      "anti_keywords": [
+        "IRREGULAR",
+        "NÃO HABILITADO"
+      ],
+      "regex_patterns": [
+        "CRF[0-9]{8,14}"
+      ],
+      "failure_message": "A empresa proponente não apresentou comprovação de regularidade com o Fundo de Garantia por Tempo de Serviço."
+    },
+    {
+      "id": "RULE-BNDES-003",
+      "code": "CNDT_TRABALHISTA",
+      "title": "Certidão Negativa de Débitos Trabalhistas (CNDT)",
+      "category": "TRABALHISTA",
+      "type": "DETERMINISTIC",
+      "severity": "CRITICAL",
+      "legal_basis": "Lei nº 12.440/2011 e art. 642-A da CLT",
+      "required_keywords": [
+        "JUSTIÇA DO TRABALHO",
+        "CERTIDÃO NEGATIVA DE DÉBITOS TRABALHISTAS",
+        "NÃO CONSTAM"
+      ],
+      "anti_keywords": [
+        "CONSTA DÉBITO",
+        "INADIMPLÊNCIA ATIVA"
+      ],
+      "regex_patterns": [],
+      "failure_message": "Identificada pendência ou ausência da Certidão Negativa de Débitos Trabalhistas junto ao TST."
+    },
+    {
+      "id": "RULE-BNDES-004",
+      "code": "FALENCIA_RECUPERACAO",
+      "title": "Certidão dos Distribuidores Cíveis de Falência e Recuperação Judicial",
+      "category": "JURIDICA",
+      "type": "HYBRID",
+      "severity": "CRITICAL",
+      "legal_basis": "Lei nº 11.101/2005",
+      "required_keywords": [
+        "FALÊNCIA",
+        "RECUPERAÇÃO JUDICIAL",
+        "NADA CONSTA"
+      ],
+      "anti_keywords": [
+        "CONSTA DISTRIBUIÇÃO",
+        "DECRETADA A FALÊNCIA"
+      ],
+      "regex_patterns": [],
+      "failure_message": "O proponente possui apontamento ativo de falência ou processo de recuperação judicial sem comprovação de acolhimento plano."
+    },
+    {
+      "id": "RULE-BNDES-005",
+      "code": "LICENCA_AMBIENTAL",
+      "title": "Comprovante de Regularidade / Licenciamento Ambiental Vigente",
+      "category": "AMBIENTAL",
+      "type": "HYBRID",
+      "severity": "HIGH",
+      "legal_basis": "Resolução CMN nº 4.327/2014 e Políticas Socioambientais do BNDES",
+      "required_keywords": [
+        "LICENÇA AMBIENTAL",
+        "VÁLIDA ATÉ",
+        "ÓRGÃO AMBIENTAL"
+      ],
+      "anti_keywords": [
+        "LICENÇA SUSPENSA",
+        "EMBARGADO"
+      ],
+      "regex_patterns": [],
+      "failure_message": "Licença ambiental vencida, suspensa ou não anexada para empreendimento elegível."
+    },
+    {
+      "id": "RULE-BNDES-006",
+      "code": "INTEGRIDADE_CEIS_CNEP",
+      "title": "Consulta de Idoneidade nos Cadastros CEIS e CNEP (Portal da Transparência)",
+      "category": "INTEGRIDADE",
+      "type": "DETERMINISTIC",
+      "severity": "CRITICAL",
+      "legal_basis": "Lei nº 12.846/2013 (Lei Anticorrupção) e Diretrizes de Compliance BNDES",
+      "required_keywords": [
+        "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS",
+        "NADA CONSTA"
+      ],
+      "anti_keywords": [
+        "IMPEDIMENTO DE LICITAR",
+        "DECLARAÇÃO DE INIDONEIDADE"
+      ],
+      "regex_patterns": [],
+      "failure_message": "Constatada sanção impeditiva vigente de inidoneidade ou suspensão nos cadastros de integridade pública."
+    }
+  ]
+}

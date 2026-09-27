@@ -1,0 +1,33 @@
+# Conform.IA BNDES - Code Owners
+# Roteamento automatico de revisao por equipes da organizacao
+
+# Infraestrutura e Governanca CI/CD
+/infra/              @conformia-bndes/devops @conformia-bndes/maintainers
+/.github/            @conformia-bndes/devops @conformia-bndes/maintainers
+
+# Documentacao Tecnica e ADRs
+/docs/               @conformia-bndes/maintainers @conformia-bndes/qa
+/mkdocs.yml          @conformia-bndes/maintainers @conformia-bndes/qa
+
+# Diretrizes de Agentes e Harness Context
+/.agents/            @conformia-bndes/ai-evals @conformia-bndes/maintainers
+
+# Backend Core & API
+/backend/app/api/    @conformia-bndes/backend @conformia-bndes/maintainers
+/backend/app/db/     @conformia-bndes/backend @conformia-bndes/maintainers
+/backend/app/idp/    @conformia-bndes/backend
+
+# Inteligencia Artificial e Harness Evals
+/backend/app/ai/     @conformia-bndes/ai-evals
+/evals/              @conformia-bndes/ai-evals
+
+# Motor de Regras e Schemas de Conformidade
+/rules/              @conformia-bndes/backend @conformia-bndes/maintainers
+/rules/schemas/      @conformia-bndes/backend
+
+# Frontend Web Application
+/frontend/           @conformia-bndes/frontend
+
+# Qualidade e Testes Automatizados
+/tests/              @conformia-bndes/qa
+/backend/tests/      @conformia-bndes/qa
