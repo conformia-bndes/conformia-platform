@@ -1,0 +1,16 @@
+# ==============================================================================
+# Conform.IA BNDES Platform - Gitleaks Secret Scanner Configuration
+# ==============================================================================
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Arquivos de exemplo e fixtures de testes permitidos"
+paths = [
+    '''\.env\.example$''',
+    '''docs/.*''',
+    '''evals/.*''',
+    '''backend/tests/.*''',
+    '''Makefile$''',
+]

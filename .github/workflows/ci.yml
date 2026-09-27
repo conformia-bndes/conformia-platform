@@ -97,9 +97,8 @@ jobs:
 
       - name: Run Linters (Black & Flake8)
         run: |
-          black --check backend/
-          flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 backend/ --count --max-complexity=10 --max-line-length=100 --statistics
+          black --config backend/pyproject.toml --check backend/
+          flake8 backend/ --config=backend/.flake8 --count --statistics
 
       - name: Run Pytest Suite
         env:
@@ -164,10 +163,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Secret Scanning (Gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Gitleaks CLI
+        run: |
+          GITLEAKS_VERSION="8.18.4"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz -C /tmp
+          sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Run Secret Scanning (Gitleaks)
+        run: |
+          gitleaks detect --source . --config .gitleaks.toml --verbose --redact
 
       - name: Set up Python for dependency scan
         uses: actions/setup-python@v5
@@ -178,4 +183,5 @@ jobs:
         run: |
           pip install pip-audit
           pip-audit -r backend/requirements.txt
+
 

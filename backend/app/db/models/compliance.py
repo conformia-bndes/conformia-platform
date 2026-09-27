@@ -12,7 +12,10 @@ class ComplianceCheck(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     document_id = Column(
-        String(36), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True
+        String(36),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     rule_id = Column(String(100), nullable=False, index=True)
     rule_title = Column(String(255), nullable=False)

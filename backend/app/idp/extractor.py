@@ -78,7 +78,8 @@ class DocumentExtractor:
 
         except Exception as e:
             logger.error(
-                f"Falha na extração documental do arquivo {file_path}: {str(e)}", exc_info=True
+                f"Falha na extração documental do arquivo {file_path}: {str(e)}",
+                exc_info=True,
             )
             raise RuntimeError(f"Erro ao extrair conteúdo do documento: {str(e)}") from e
 

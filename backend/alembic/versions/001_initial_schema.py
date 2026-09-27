@@ -52,13 +52,19 @@ def upgrade() -> None:
         sa.Column("rule_title", sa.String(length=255), nullable=False),
         sa.Column("category", sa.String(length=100), nullable=False),
         sa.Column(
-            "status", sa.String(length=50), nullable=False, server_default="MANUAL_REVIEW_REQUIRED"
+            "status",
+            sa.String(length=50),
+            nullable=False,
+            server_default="MANUAL_REVIEW_REQUIRED",
         ),
         sa.Column("confidence_score", sa.Float(), nullable=False, server_default="1.0"),
         sa.Column("evidence", sa.JSON(), nullable=True),
         sa.Column("findings", sa.Text(), nullable=True),
         sa.Column(
-            "checker_type", sa.String(length=50), nullable=False, server_default="DETERMINISTIC"
+            "checker_type",
+            sa.String(length=50),
+            nullable=False,
+            server_default="DETERMINISTIC",
         ),
         sa.Column("created_at", sa.DateTime(), nullable=False),
     )
@@ -75,7 +81,10 @@ def upgrade() -> None:
         sa.Column("entity_id", sa.String(length=36), nullable=False),
         sa.Column("action", sa.String(length=100), nullable=False),
         sa.Column(
-            "performed_by", sa.String(length=100), nullable=False, server_default="SYSTEM_HARNESS"
+            "performed_by",
+            sa.String(length=100),
+            nullable=False,
+            server_default="SYSTEM_HARNESS",
         ),
         sa.Column("details", sa.JSON(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),

@@ -26,5 +26,8 @@ class Document(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     compliance_checks = relationship(
-        "ComplianceCheck", back_populates="document", cascade="all, delete-orphan", lazy="selectin"
+        "ComplianceCheck",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
