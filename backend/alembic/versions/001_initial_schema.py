@@ -1,7 +1,7 @@
 """Initial database schema with documents, compliance_checks and audit_logs
 
 Revision ID: 001_initial_schema
-Revises: 
+Revises:
 Create Date: 2026-09-26 23:40:00.000000
 
 """
@@ -10,7 +10,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision: str = "001_initial_schema"
