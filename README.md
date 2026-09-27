@@ -16,6 +16,7 @@ Plataforma SaaS de Processamento Inteligente de Documentos (IDP) para verificaca
 A concessao de apoio financeiro pelo BNDES exige a comprovacao estrita de regularidade documental por parte das empresas proponentes (certidoes negativas de tributos federais, regularidade com o FGTS, certidoes de falencia e concordata, debitos trabalhistas e licencas socioambientais). O processo manual tradicional gera sobrecarga operacional e estende o tempo medio de analise.
 
 O Conform.IA BNDES endereca esse desafio por meio de:
+
 1. **Pipeline IDP Hibrido**: Extracao vetorial nativa de PDFs com fallback automatico para OCR Tesseract em paginas digitalizadas.
 2. **Motor de Regras Declarativo**: Avaliacao baseada em schemas JSON normativos com tolerancia zero a pendencias criticas.
 3. **Harness Engineering e Padrao Maker-Checker**: Agentes de linguagem operando sob contexto estritamente delimitado com auditoria algoritmica para eliminacao de alucinacoes.
@@ -30,6 +31,7 @@ A documentacao tecnica completa, abrangendo especificacoes de engenharia, matriz
 - **Portal de Documentacao**: [https://conformia-bndes.github.io/conformia-platform/](https://conformia-bndes.github.io/conformia-platform/)
 
 Para executar a documentacao localmente com recarregamento a quente:
+
 ```bash
 make docs
 # Acesso local em http://127.0.0.1:8000
@@ -82,14 +84,14 @@ flowchart TD
 
 ## 4. Matriz de Servicos e Portas
 
-| Servico | Tecnologia | Porta Host | Finalidade |
-| :--- | :--- | :--- | :--- |
-| **frontend** | React 18 / Vite / Tailwind | `5173` | Interface web para analistas de credito do BNDES |
-| **backend** | FastAPI / Python 3.11 | `8000` | API RESTful, ingestao e motor de conformidade |
-| **worker** | Celery 5 / Python 3.11 | - | Execucao assincrona de OCR, extracao e regras de IA |
-| **postgres** | PostgreSQL 16 Alpine | `5432` | Banco relacional para laudos, documentos e auditoria |
-| **redis** | Redis 7 Alpine | `6379` | Broker de mensagens Celery e cache |
-| **minio** | MinIO (S3 Compatible) | `9000` / `9001` | Armazenamento de arquivos PDF ingeridos |
+| Servico      | Tecnologia                 | Porta Host      | Finalidade                                           |
+| :----------- | :------------------------- | :-------------- | :--------------------------------------------------- |
+| **frontend** | React 18 / Vite / Tailwind | `5173`          | Interface web para analistas de credito do BNDES     |
+| **backend**  | FastAPI / Python 3.11      | `8000`          | API RESTful, ingestao e motor de conformidade        |
+| **worker**   | Celery 5 / Python 3.11     | -               | Execucao assincrona de OCR, extracao e regras de IA  |
+| **postgres** | PostgreSQL 16 Alpine       | `5432`          | Banco relacional para laudos, documentos e auditoria |
+| **redis**    | Redis 7 Alpine             | `6379`          | Broker de mensagens Celery e cache                   |
+| **minio**    | MinIO (S3 Compatible)      | `9000` / `9001` | Armazenamento de arquivos PDF ingeridos              |
 
 ---
 
@@ -157,18 +159,21 @@ conformia-platform/
 ## 6. Guia Rapido de Inicializacao
 
 ### Pre-requisitos
+
 - Docker Engine >= 24.0 e Docker Compose Plugin >= 2.20
 - Make (utilitario de comandos)
 - Astral `uv` >= 0.5.0 (gerenciador de pacotes e workspace Python ultrarrapido) ou Python 3.11+
 - Node.js 20+ e npm >= 10 (para desenvolvimento frontend local)
 
 ### 1. Configuracao de Ambiente e Dependencias
+
 ```bash
 make setup
 # O comando cria o arquivo .env e sincroniza dependencias via uv sync (ou pip/npm)
 ```
 
 Caso utilize `uv` diretamente na linha de comando:
+
 ```bash
 # Sincronizar dependencias de desenvolvimento do workspace
 uv sync --all-packages --all-extras
@@ -179,34 +184,39 @@ uv run python evals/eval_pipeline.py
 ```
 
 ### 2. Inicializacao dos Servicos
+
 ```bash
 make up
 # Executa docker compose -f infra/docker-compose.yml up --build -d
 ```
 
 ### 3. Rotas e Endpoints de Acesso Local
+
 - **Frontend SPA**: [http://localhost:5173](http://localhost:5173)
 - **Documentacao Swagger (OpenAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Healthcheck da API**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
-- **MinIO Console**: [http://localhost:9001](http://localhost:9001) *(Usuario: `conformia_minio_admin` / Senha: `conformia_minio_secret`)*
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001) _(Usuario: `conformia_minio_admin` / Senha: `conformia_minio_secret`)_
 
 ---
 
 ## 7. Qualidade, Testes e Evals
 
 ### Testes Automatizados do Backend
+
 ```bash
 make test
 # Executa a suite de testes com pytest e relatorio de cobertura (via uv run se instalado)
 ```
 
 ### Pipeline de Avaliacao Continua (Harness Evals)
+
 ```bash
 make eval
 # Executa a validacao contra casos de teste com tolerancia zero a falsos positivos
 ```
 
 ### Formatacao e Linters
+
 ```bash
 make lint
 # Executa Flake8, Black e ESLint
