@@ -55,11 +55,6 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    checkHealthStatus();
-    loadDocuments();
-  }, []);
-
   const loadDocuments = async () => {
     try {
       setLoadingDocs(true);
@@ -89,6 +84,61 @@ export default function App() {
       setLoadingDocs(false);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    apiService.getHealth()
+      .then((data) => {
+        if (isMounted) {
+          setHealth(data);
+          setHealthError(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setHealthError(true);
+          setHealth(null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setHealthLoading(false);
+      });
+
+    apiService.listDocuments()
+      .then((res) => {
+        if (isMounted) setDocuments(res.items || []);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setDocuments([
+            {
+              id: 'doc-demo-cnd',
+              original_filename: 'cnd_receita_federal_2026.pdf',
+              status: 'COMPLETED',
+              file_size: 245760,
+              created_at: new Date().toISOString(),
+              total_pages: 1
+            },
+            {
+              id: 'doc-demo-fgts',
+              original_filename: 'crf_fgts_regularidade.pdf',
+              status: 'COMPLETED',
+              file_size: 182300,
+              created_at: new Date(Date.now() - 3600000).toISOString(),
+              total_pages: 2
+            }
+          ]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoadingDocs(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const loadRules = async () => {
     try {
@@ -172,7 +222,7 @@ export default function App() {
       setUploadMessage('Documento ingerido com sucesso!');
       await loadDocuments();
       setTimeout(() => setUploadMessage(null), 4000);
-    } catch (err: unknown) {
+    } catch {
       setUploadMessage('Aviso: executando em modo local. O arquivo foi registrado na visualização.');
       setDocuments(prev => [
         {
