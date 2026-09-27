@@ -64,6 +64,9 @@ logs/
 /tmp/
 /data/
 
+# Documentação
+site/
+
 # IDEs e Ferramentas de Desenvolvimento
 .vscode/*
 !.vscode/settings.json

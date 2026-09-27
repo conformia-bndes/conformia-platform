@@ -35,7 +35,10 @@ nav:
   - Inicio: index.md
   - Arquitetura:
       - Visao Geral: architecture/overview.md
-      - Decisoes Arquiteturais (ADRs): architecture/adr-index.md
+      - Decisoes Arquiteturais (ADRs):
+          - Indice: architecture/adr-index.md
+          - ADR-001 Monorepo Modular: architecture/adr-001-monorepo-modular.md
+          - Template de ADR: architecture/adr-template.md
   - Desafio BNDES:
       - Analise do Edital: bndes/compliance-matrix.md
       - Tipologias de Documentos: bndes/document-types.md
