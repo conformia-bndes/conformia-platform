@@ -12,43 +12,8 @@ permissions:
   security-events: write
 
 jobs:
-  changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      infra: ${{ steps.filter.outputs.infra }}
-      security: ${{ steps.filter.outputs.security }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
-        id: filter
-        with:
-          filters: |
-            backend:
-              - 'backend/**'
-              - 'rules/**'
-              - 'evals/**'
-              - 'infra/Dockerfile.backend'
-              - 'uv.lock'
-              - 'pyproject.toml'
-              - '.flake8'
-              - '.github/workflows/ci.yml'
-            frontend:
-              - 'frontend/**'
-              - 'infra/Dockerfile.frontend'
-              - '.github/workflows/ci.yml'
-            infra:
-              - 'infra/**'
-              - '.github/workflows/ci.yml'
-            security:
-              - '**'
-
   backend:
     name: Backend Lint & Test
-    needs: changes
-    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
 
     services:
@@ -124,8 +89,6 @@ jobs:
 
   frontend:
     name: Frontend Lint, Test & Build
-    needs: changes
-    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
 
     defaults:
@@ -157,8 +120,6 @@ jobs:
 
   security:
     name: Security & Secret Scan
-    needs: changes
-    if: ${{ needs.changes.outputs.security == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
