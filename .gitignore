@@ -52,6 +52,8 @@ yarn-error.log*
 pnpm-debug.log*
 frontend/dist/
 frontend/dist-ssr/
+frontend/.vite/
+.vite/
 *.local
 
 # Logs e Dados Temporários
