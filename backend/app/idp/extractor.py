@@ -43,21 +43,24 @@ class DocumentExtractor:
                     # Detecção de páginas digitalizadas (OCR fallback)
                     if len(page_text.strip()) < self.min_char_threshold:
                         logger.info(
-                            f"Página {page_idx}/{total_pages} com pouco texto nativo ({len(page_text.strip())} chars). "
-                            "Tentando extração OCR via Tesseract."
+                            f"Pagina {page_idx}/{total_pages} com pouco texto nativo "
+                            f"({len(page_text.strip())} chars). "
+                            "Tentando extracao OCR via Tesseract."
                         )
                         ocr_text = self._perform_ocr(page)
                         if ocr_text.strip():
                             page_text = ocr_text
                             is_scanned = True
 
-                    extracted_pages.append({
-                        "page_number": page_idx,
-                        "text": page_text.strip(),
-                        "tables": tables,
-                        "is_scanned": is_scanned,
-                        "char_count": len(page_text.strip()),
-                    })
+                    extracted_pages.append(
+                        {
+                            "page_number": page_idx,
+                            "text": page_text.strip(),
+                            "tables": tables,
+                            "is_scanned": is_scanned,
+                            "char_count": len(page_text.strip()),
+                        }
+                    )
                     full_text_list.append(page_text.strip())
 
             full_text = "\n\n--- [QUEBRA DE PÁGINA] ---\n\n".join(full_text_list)
@@ -74,7 +77,9 @@ class DocumentExtractor:
             }
 
         except Exception as e:
-            logger.error(f"Falha na extração documental do arquivo {file_path}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Falha na extração documental do arquivo {file_path}: {str(e)}", exc_info=True
+            )
             raise RuntimeError(f"Erro ao extrair conteúdo do documento: {str(e)}") from e
 
     def _perform_ocr(self, page) -> str:
@@ -83,9 +88,12 @@ class DocumentExtractor:
         """
         try:
             import pytesseract
+
             img = page.to_image(resolution=300).original
             text = pytesseract.image_to_string(img, lang=self.ocr_lang)
             return text
         except Exception as err:
-            logger.warning(f"OCR indisponível ou falhou para a página {page.page_number}: {str(err)}")
+            logger.warning(
+                f"OCR indisponível ou falhou para a página {page.page_number}: {str(err)}"
+            )
             return ""

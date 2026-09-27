@@ -35,6 +35,7 @@ def db_session():
 @pytest.fixture(scope="function")
 def client(db_session):
     """Retorna um TestClient do FastAPI com a dependência get_db mockada para a base em memória."""
+
     def override_get_db():
         try:
             yield db_session

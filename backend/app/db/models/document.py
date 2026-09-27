@@ -17,17 +17,14 @@ class Document(Base):
     file_size = Column(Integer, nullable=False)
     storage_path = Column(String(500), nullable=False)
     status = Column(String(50), nullable=False, default="PENDING", index=True)
-    
+
     # Metadados e texto extraído pelo pipeline IDP
     extracted_text = Column(Text, nullable=True)
     extracted_metadata = Column(JSON, nullable=True)
-    
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     compliance_checks = relationship(
-        "ComplianceCheck",
-        back_populates="document",
-        cascade="all, delete-orphan",
-        lazy="selectin"
+        "ComplianceCheck", back_populates="document", cascade="all, delete-orphan", lazy="selectin"
     )

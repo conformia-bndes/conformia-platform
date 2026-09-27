@@ -29,13 +29,16 @@ def get_health(db: Session = Depends(get_db)):
     redis_status = "healthy"
     try:
         import redis
+
         r = redis.from_url(settings.REDIS_URL, socket_connect_timeout=2)
         r.ping()
     except Exception as e:
         logger.warning(f"Redis health check failed: {e}")
         redis_status = "degraded"
 
-    overall_status = "healthy" if db_status == "healthy" and redis_status == "healthy" else "degraded"
+    overall_status = (
+        "healthy" if db_status == "healthy" and redis_status == "healthy" else "degraded"
+    )
 
     return {
         "status": overall_status,
@@ -43,9 +46,5 @@ def get_health(db: Session = Depends(get_db)):
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "timestamp": datetime.utcnow().isoformat(),
-        "services": {
-            "database": db_status,
-            "redis": redis_status,
-            "minio": "ready"
-        }
+        "services": {"database": db_status, "redis": redis_status, "minio": "ready"},
     }

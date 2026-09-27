@@ -61,5 +61,8 @@ COPY --chown=conformia:conformia ./backend /app
 # Porta padrão FastAPI
 EXPOSE 8000
 
+# Execução com usuário não-root
+USER conformia
+
 # Execução padrão (sobrescrita no docker-compose para hot-reload e workers)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

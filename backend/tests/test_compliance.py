@@ -8,11 +8,12 @@ def test_rules_engine_deterministic_compliant():
     engine = RulesEngine()
     mock_data = {
         "full_text": (
-            "REPÚBLICA FEDERATIVA DO BRASIL - MINISTÉRIO DA FAZENDA\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
-            "Constatada a não existência de pendências para o CNPJ 00.000.000/0001-91."
+            "REPUBLICA FEDERATIVA DO BRASIL - MINISTERIO DA FAZENDA\n"
+            "CERTIDAO NEGATIVA DE DEBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E A DIVIDA ATIVA DA UNIAO\n"
+            "Constatada a nao existencia de pendencias para o CNPJ 00.000.000/0001-91."
         ),
-        "metadata": {"total_pages": 1}
+        "metadata": {"total_pages": 1},
     }
     result = engine.evaluate(mock_data)
     assert result["total_rules"] >= 1
@@ -28,7 +29,7 @@ def test_rules_engine_anti_keyword_violation():
             "MINISTÉRIO DA FAZENDA\n"
             "CERTIDÃO POSITIVA - CONSTA PENDÊNCIA RELATIVA AOS TRIBUTOS FEDERAIS"
         ),
-        "metadata": {"total_pages": 1}
+        "metadata": {"total_pages": 1},
     }
     result = engine.evaluate(mock_data)
     cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
@@ -54,10 +55,11 @@ def test_api_verify_document_compliance_flow(client, db_session):
         storage_path="/tmp/cnd.pdf",
         status="COMPLETED",
         extracted_text=(
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO. "
+            "CERTIDAO NEGATIVA DE DEBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E A DIVIDA ATIVA DA UNIAO. "
             "CERTIFICADO DE REGULARIDADE DO FGTS REGULAR. "
-            "FALÊNCIA RECUPERAÇÃO JUDICIAL NADA CONSTA."
-        )
+            "FALENCIA RECUPERACAO JUDICIAL NADA CONSTA."
+        ),
     )
     db_session.add(doc)
     db_session.commit()

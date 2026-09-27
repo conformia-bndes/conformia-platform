@@ -29,5 +29,4 @@
 /frontend/           @conformia-bndes/frontend
 
 # Qualidade e Testes Automatizados
-/tests/              @conformia-bndes/qa
 /backend/tests/      @conformia-bndes/qa

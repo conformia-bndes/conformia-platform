@@ -2,16 +2,13 @@
 
 from functools import lru_cache
 from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
 
     # Informações do Projeto
@@ -21,13 +18,14 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str = "conformia_default_secret_key_change_in_production_12345"
+    API_KEY: str = "conformia_dev_api_key_2026"
 
     # CORS
     ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
     ]
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
@@ -36,6 +34,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             if v.startswith("[") and v.endswith("]"):
                 import json
+
                 try:
                     return json.loads(v)
                 except Exception:

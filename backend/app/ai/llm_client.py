@@ -24,15 +24,19 @@ class LLMClient:
         opera em modo heurístico seguro (mock determinístico) documentado.
         """
         if not self.api_key:
-            logger.info("Chave de API LLM não configurada. Executando em modo heurístico controlado (Dev/Mock).")
+            logger.info(
+                "Chave de API LLM nao configurada. "
+                "Executando em modo heuristico controlado (Dev/Mock)."
+            )
             return self._mock_response(prompt)
 
         try:
             # Integração padrão com OpenAI / provedores compatíveis
             import httpx
+
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
             messages = []
             if system_prompt:
@@ -47,36 +51,50 @@ class LLMClient:
                     "messages": messages,
                     "temperature": settings.LLM_TEMPERATURE,
                 },
-                timeout=30.0
+                timeout=30.0,
             )
             response.raise_for_status()
             data = response.json()
             return data["choices"][0]["message"]["content"]
         except Exception as e:
-            logger.warning(f"Falha na chamada LLM externa: {str(e)}. Recorrendo ao fallback determinístico.")
+            logger.warning(
+                f"Falha na chamada LLM externa: {str(e)}. Recorrendo ao fallback determinístico."
+            )
             return self._mock_response(prompt)
 
     def _mock_response(self, prompt: str) -> str:
         """Fallback determinístico para ambiente de desenvolvimento local e CI."""
         lower_prompt = prompt.lower()
         if "maker" in lower_prompt:
-            return json.dumps({
-                "assessment": "COMPLIANT",
-                "extracted_value": "Certidão válida até 31/12/2026",
-                "confidence": 0.95,
-                "reasoning": "Texto do documento contém evidências claras de regularidade fiscal e prazo vigente."
-            })
+            return json.dumps(
+                {
+                    "assessment": "COMPLIANT",
+                    "extracted_value": "Certidao valida ate 31/12/2026",
+                    "confidence": 0.95,
+                    "reasoning": (
+                        "Texto do documento contem evidencias claras "
+                        "de regularidade fiscal e prazo vigente."
+                    ),
+                }
+            )
         elif "checker" in lower_prompt:
-            return json.dumps({
-                "validation": "APPROVED",
-                "critique": "A evidência citada pelo Maker está presente no trecho documental fornecido.",
-                "hallucination_detected": False,
-                "confidence": 0.98
-            })
-        return json.dumps({
-            "status": "PROCESSED",
-            "message": "Heurística de desenvolvimento aplicada com sucesso."
-        })
+            return json.dumps(
+                {
+                    "validation": "APPROVED",
+                    "critique": (
+                        "A evidencia citada pelo Maker esta presente "
+                        "no trecho documental fornecido."
+                    ),
+                    "hallucination_detected": False,
+                    "confidence": 0.98,
+                }
+            )
+        return json.dumps(
+            {
+                "status": "PROCESSED",
+                "message": "Heurística de desenvolvimento aplicada com sucesso.",
+            }
+        )
 
 
 class MakerCheckerValidator:
@@ -90,21 +108,22 @@ class MakerCheckerValidator:
     def __init__(self, client: Optional[LLMClient] = None):
         self.client = client or LLMClient()
 
-    def evaluate_rule(
-        self,
-        rule_definition: Dict[str, Any],
-        document_text: str
-    ) -> Dict[str, Any]:
+    def evaluate_rule(self, rule_definition: Dict[str, Any], document_text: str) -> Dict[str, Any]:
         """
         Executa o ciclo Maker-Checker sob a regra e o texto do documento.
         """
         # Fase 1: O Maker analisa
         maker_system = (
-            "Você é o MAKER de conformidade documental do BNDES. Analise o texto e proponha uma "
-            "avaliação baseada estritamente nos dados presentes. Responda em JSON válido com as chaves: "
-            "'assessment' (COMPLIANT, NON_COMPLIANT, MANUAL_REVIEW_REQUIRED), 'extracted_value', 'confidence', 'reasoning'."
+            "Voce e o MAKER de conformidade documental do BNDES. Analise o texto e "
+            "proponha uma avaliacao baseada estritamente nos dados presentes. "
+            "Responda em JSON valido com as chaves: 'assessment' "
+            "(COMPLIANT, NON_COMPLIANT, MANUAL_REVIEW_REQUIRED), "
+            "'extracted_value', 'confidence', 'reasoning'."
         )
-        maker_prompt = f"REGRA:\n{json.dumps(rule_definition, indent=2, ensure_ascii=False)}\n\nDOCUMENTO:\n{document_text[:3000]}"
+        maker_prompt = (
+            f"REGRA:\n{json.dumps(rule_definition, indent=2, ensure_ascii=False)}\n\n"
+            f"DOCUMENTO:\n{document_text[:3000]}"
+        )
         maker_raw = self.client.generate(maker_prompt, system_prompt=maker_system)
 
         try:
@@ -114,14 +133,15 @@ class MakerCheckerValidator:
                 "assessment": "MANUAL_REVIEW_REQUIRED",
                 "extracted_value": None,
                 "confidence": 0.5,
-                "reasoning": "Não foi possível deserializar a resposta do Maker."
+                "reasoning": "Nao foi possivel deserializar a resposta do Maker.",
             }
 
         # Fase 2: O Checker valida
         checker_system = (
-            "Você é o CHECKER auditor de conformidade documental do BNDES. Sua função é verificar se a "
-            "proposta do MAKER é estritamente sustentada pelo texto original do documento, sem alucinações. "
-            "Responda em JSON válido com: 'validation' ('APPROVED', 'REJECTED'), 'critique', 'hallucination_detected' (bool), 'confidence'."
+            "Voce e o CHECKER auditor de conformidade documental do BNDES. Sua funcao e "
+            "verificar se a proposta do MAKER e estritamente sustentada pelo texto original "
+            "do documento, sem alucinacoes. Responda em JSON valido com: 'validation' "
+            "('APPROVED', 'REJECTED'), 'critique', 'hallucination_detected' (bool), 'confidence'."
         )
         checker_prompt = (
             f"TEXTO DO DOCUMENTO:\n{document_text[:3000]}\n\n"
@@ -136,16 +156,19 @@ class MakerCheckerValidator:
                 "validation": "REJECTED",
                 "critique": "Erro ao deserializar resposta do Checker.",
                 "hallucination_detected": True,
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
-        # Síntese final
-        is_approved = (
-            checker_result.get("validation") == "APPROVED" and
-            not checker_result.get("hallucination_detected", False)
+        # Sintese final
+        is_approved = checker_result.get("validation") == "APPROVED" and not checker_result.get(
+            "hallucination_detected", False
         )
 
         final_status = maker_result.get("assessment") if is_approved else "MANUAL_REVIEW_REQUIRED"
+
+        final_confidence = (
+            maker_result.get("confidence", 0.5) + checker_result.get("confidence", 0.5)
+        ) / 2.0
 
         return {
             "rule_id": rule_definition.get("id"),
@@ -153,5 +176,5 @@ class MakerCheckerValidator:
             "maker_output": maker_result,
             "checker_output": checker_result,
             "is_verified": is_approved,
-            "final_confidence": (maker_result.get("confidence", 0.5) + checker_result.get("confidence", 0.5)) / 2.0
+            "final_confidence": round(final_confidence, 2),
         }

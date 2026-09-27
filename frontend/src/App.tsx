@@ -2,17 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   FileText,
   CheckCircle2,
-  AlertTriangle,
   XCircle,
   UploadCloud,
   ShieldCheck,
-  Activity,
   History,
   ListFilter,
   RefreshCw,
-  ExternalLink,
-  ChevronRight,
-  Database,
   X
 } from 'lucide-react';
 import {

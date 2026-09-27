@@ -1,6 +1,3 @@
-"""Compliance verification, rules management and audit trail endpoints."""
-
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -12,29 +9,27 @@ router = APIRouter()
 
 
 @router.post("/verify/{document_id}", summary="Disparar Verificação de Conformidade Documental")
-def verify_document_compliance(
-    document_id: str,
-    db: Session = Depends(get_db)
-):
+def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
     """
     Executa o motor de regras determinísticas e orquestração Maker-Checker no texto do documento,
     gerando o laudo de conformidade e registrando a trilha de auditoria imutável.
     """
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento não encontrado.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Documento não encontrado."
+        )
 
     if not doc.extracted_text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="O documento selecionado não possui texto extraído para validação."
+            detail="O documento selecionado não possui texto extraído para validação.",
         )
 
     engine = RulesEngine()
-    evaluation = engine.evaluate({
-        "full_text": doc.extracted_text,
-        "metadata": doc.extracted_metadata or {}
-    })
+    evaluation = engine.evaluate(
+        {"full_text": doc.extracted_text, "metadata": doc.extracted_metadata or {}}
+    )
 
     # Limpa checagens anteriores do mesmo documento para idempotência
     db.query(ComplianceCheck).filter(ComplianceCheck.document_id == document_id).delete()
@@ -50,7 +45,7 @@ def verify_document_compliance(
             confidence_score=res.get("confidence_score", 1.0),
             checker_type=res.get("checker_type", "DETERMINISTIC"),
             findings=res.get("findings"),
-            evidence=res.get("evidence")
+            evidence=res.get("evidence"),
         )
         db.add(check)
         saved_checks.append(check)
@@ -65,8 +60,8 @@ def verify_document_compliance(
             "status": evaluation.get("status"),
             "compliance_score": evaluation.get("compliance_score"),
             "total_rules": evaluation.get("total_rules"),
-            "compliant_rules": evaluation.get("compliant_rules")
-        }
+            "compliant_rules": evaluation.get("compliant_rules"),
+        },
     )
     db.add(audit_entry)
     db.commit()
@@ -86,10 +81,10 @@ def verify_document_compliance(
                 "status": c.status,
                 "confidence_score": c.confidence_score,
                 "checker_type": c.checker_type,
-                "findings": c.findings
+                "findings": c.findings,
             }
             for c in saved_checks
-        ]
+        ],
     }
 
 
@@ -97,10 +92,7 @@ def verify_document_compliance(
 def get_active_rules():
     """Retorna o catálogo de regras ativas configuradas no motor de conformidade."""
     engine = RulesEngine()
-    return {
-        "total_rules": len(engine.rules),
-        "rules": engine.rules
-    }
+    return {"total_rules": len(engine.rules), "rules": engine.rules}
 
 
 @router.get("/results/{document_id}", summary="Obter Relatório de Conformidade de um Documento")
@@ -110,7 +102,7 @@ def get_compliance_results(document_id: str, db: Session = Depends(get_db)):
     if not checks:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Nenhuma verificação de conformidade encontrada para este documento."
+            detail="Nenhuma verificação de conformidade encontrada para este documento.",
         )
 
     compliant_count = sum(1 for c in checks if c.status == "COMPLIANT")
@@ -131,10 +123,10 @@ def get_compliance_results(document_id: str, db: Session = Depends(get_db)):
                 "confidence_score": c.confidence_score,
                 "checker_type": c.checker_type,
                 "findings": c.findings,
-                "evidence": c.evidence
+                "evidence": c.evidence,
             }
             for c in checks
-        ]
+        ],
     }
 
 
@@ -147,14 +139,14 @@ def get_audit_trail(skip: int = 0, limit: int = 50, db: Session = Depends(get_db
         "total": total,
         "items": [
             {
-                "id": l.id,
-                "entity_type": l.entity_type,
-                "entity_id": l.entity_id,
-                "action": l.action,
-                "performed_by": l.performed_by,
-                "details": l.details,
-                "timestamp": l.created_at.isoformat()
+                "id": log_item.id,
+                "entity_type": log_item.entity_type,
+                "entity_id": log_item.entity_id,
+                "action": log_item.action,
+                "performed_by": log_item.performed_by,
+                "details": log_item.details,
+                "timestamp": log_item.created_at.isoformat(),
             }
-            for l in logs
-        ]
+            for log_item in logs
+        ],
     }

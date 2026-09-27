@@ -1,0 +1,7 @@
+{
+  "id": "DATASET-COMPLIANT-001",
+  "document_type": "CND_FEDERAL",
+  "text": "REPUBLICA FEDERATIVA DO BRASIL - MINISTERIO DA FAZENDA\nSECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\nCERTIDAO NEGATIVA DE DEBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E A DIVIDA ATIVA DA UNIAO\nCNPJ: 12.345.678/0001-90\nE certificado que nao constam pendencias em nome do sujeito passivo.\nValida ate: 31/12/2030",
+  "expected_status": "COMPLIANT",
+  "expected_rule": "RULE-BNDES-001"
+}

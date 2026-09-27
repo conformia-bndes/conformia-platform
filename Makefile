@@ -51,16 +51,20 @@ logs:
 ps:
 	$(DOCKER_COMPOSE) ps
 
+migrate:
+	alembic -c backend/alembic.ini upgrade head
+
 test:
 	pytest backend/tests/ -v --cov=backend/app --cov-report=term-missing
+	cd frontend && npm test
 
 eval:
 	python evals/eval_pipeline.py
 
 lint:
-	flake8 backend/ --count --max-line-length=100 --statistics || true
-	black --check backend/ || true
-	cd frontend && npm run lint || true
+	flake8 backend/ --count --max-line-length=100 --statistics
+	black --check backend/
+	cd frontend && npm run lint
 
 format:
 	black backend/

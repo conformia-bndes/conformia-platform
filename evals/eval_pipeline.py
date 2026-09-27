@@ -69,8 +69,23 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
         "expected_results": {
             "RULE-BNDES-004": "NON_COMPLIANT"
         }
+    },
+    {
+        "id": "CASE-005",
+        "description": "CND Federal com Validade Expirada (Não Conforme Temporal)",
+        "input_text": (
+            "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "É certificado que não constam pendências em nome do sujeito passivo.\n"
+            "Válida até: 01/01/2020"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "NON_COMPLIANT"
+        }
     }
 ]
+
 
 
 def run_evaluation() -> bool:
