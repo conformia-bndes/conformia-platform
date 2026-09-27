@@ -4,12 +4,13 @@
 # ==============================================================================
 
 # Stage 1: Build & Wheels
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    UV_LINK_MODE=copy
 
 WORKDIR /build
 
@@ -20,15 +21,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+ENV VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 
 COPY backend/pyproject.toml backend/requirements.txt ./
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+RUN uv venv /opt/venv && \
+    uv pip install --no-cache -r requirements.txt
 
 # Stage 2: Runtime Environment
-FROM python:3.11-slim as runtime
+FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

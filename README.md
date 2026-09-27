@@ -116,7 +116,8 @@ conformia-platform/
 │   │   └── main.py               # Ponto de entrada FastAPI com CORS e middleware
 │   ├── tests/                    # Suite de testes automatizados com pytest
 │   ├── pyproject.toml            # Configuracoes de empacotamento, black e pytest
-│   └── requirements.txt          # Dependencias pinadas do backend
+│   ├── requirements.txt          # Dependencias pinadas do backend
+│   └── requirements.lock         # Lockfile deterministico exportado com hashes
 ├── docs/                         # Documentacao tecnica completa (MkDocs Material)
 │   ├── index.md                  # Pagina inicial da documentacao
 │   ├── architecture/             # Visao geral de arquitetura e registros ADR
@@ -134,7 +135,7 @@ conformia-platform/
 │   └── vite.config.ts            # Configuracao do servidor de desenvolvimento Vite
 ├── infra/                        # Infraestrutura conteinerizada oficial
 │   ├── docker-compose.yml        # Orquestracao unificada de servicos
-│   ├── Dockerfile.backend        # Multi-stage Python 3.11 com Tesseract OCR e Poppler
+│   ├── Dockerfile.backend        # Multi-stage Python 3.11 com Tesseract OCR e Poppler (uv)
 │   ├── Dockerfile.frontend       # Multi-stage Node 20 com Vite e Nginx
 │   └── nginx.conf                # Configuracao de proxy reverso de producao
 ├── rules/
@@ -142,9 +143,12 @@ conformia-platform/
 │       ├── rule_schema.json           # JSON Schema declarativo de regras
 │       └── bndes_sample_checklist.json # Checklist referencial BNDES 2025
 ├── .env.example                  # Modelo de variaveis de ambiente documentadas
+├── .flake8                       # Configuracao global de linter Flake8
 ├── .gitignore                    # Regras de exclusao de artefatos locais e segredos
-├── Makefile                      # Automacao de comandos de desenvolvimento
+├── Makefile                      # Automacao de comandos de desenvolvimento (uv / make)
 ├── mkdocs.yml                    # Configuracao do gerador de documentacao MkDocs
+├── pyproject.toml                # Configuracao raiz do monorepo e workspace Astral uv
+├── uv.lock                       # Lockfile deterministico do workspace Python (uv)
 └── README.md                     # Documento central de apresentacao do repositorio
 ```
 
@@ -155,12 +159,23 @@ conformia-platform/
 ### Pre-requisitos
 - Docker Engine >= 24.0 e Docker Compose Plugin >= 2.20
 - Make (utilitario de comandos)
-- Python 3.11+ e Node.js 20+ (para execucao fora de conteineres)
+- Astral `uv` >= 0.5.0 (gerenciador de pacotes e workspace Python ultrarrapido) ou Python 3.11+
+- Node.js 20+ e npm >= 10 (para desenvolvimento frontend local)
 
-### 1. Configuracao de Variaveis de Ambiente
+### 1. Configuracao de Ambiente e Dependencias
 ```bash
 make setup
-# O comando cria o arquivo .env a partir de .env.example
+# O comando cria o arquivo .env e sincroniza dependencias via uv sync (ou pip/npm)
+```
+
+Caso utilize `uv` diretamente na linha de comando:
+```bash
+# Sincronizar dependencias de desenvolvimento do workspace
+uv sync --extra dev
+
+# Executar testes ou benchmarks no ambiente isolado
+uv run pytest backend/tests/ -v
+uv run python evals/eval_pipeline.py
 ```
 
 ### 2. Inicializacao dos Servicos
@@ -182,7 +197,7 @@ make up
 ### Testes Automatizados do Backend
 ```bash
 make test
-# Executa a suite de testes com pytest e relatorio de cobertura
+# Executa a suite de testes com pytest e relatorio de cobertura (via uv run se instalado)
 ```
 
 ### Pipeline de Avaliacao Continua (Harness Evals)
@@ -194,7 +209,10 @@ make eval
 ### Formatacao e Linters
 ```bash
 make lint
+# Executa Flake8, Black e ESLint
+
 make format
+# Formata o codigo Python com Black
 ```
 
 ---

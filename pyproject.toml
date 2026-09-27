@@ -12,3 +12,7 @@ exclude = '''
   | node_modules
 )/
 '''
+
+[tool.uv.workspace]
+members = ["backend"]
+
