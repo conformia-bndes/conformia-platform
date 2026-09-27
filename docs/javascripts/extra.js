@@ -3,17 +3,32 @@
  * Padrao: Vanilla JS, sem dependencias externas, alta performance
  */
 
-document.addEventListener("DOMContentLoaded", () => {
+const enhanceDocumentation = () => {
   // Atalho de teclado para busca rapida pressionando '/'
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
-      const searchInput = document.querySelector(".md-search__input");
-      if (searchInput) {
-        e.preventDefault();
-        searchInput.focus();
+  if (!document.documentElement.dataset.searchShortcutReady) {
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "/" &&
+        !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+      ) {
+        const searchInput = document.querySelector(".md-search__input");
+        if (searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+        }
       }
-    }
-  });
+    });
+    document.documentElement.dataset.searchShortcutReady = "true";
+  }
+
+  if (window.mermaid) {
+    window.mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "base",
+    });
+    window.mermaid.run({ nodes: document.querySelectorAll(".mermaid") });
+  }
 
   // Marcacao automatica de tabelas longas para rolagem horizontal suave
   document.querySelectorAll(".md-typeset table").forEach((table) => {
@@ -24,4 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
       wrapper.appendChild(table);
     }
   });
-});
+};
+
+if (typeof document$ !== "undefined") {
+  document$.subscribe(enhanceDocumentation);
+} else {
+  document.addEventListener("DOMContentLoaded", enhanceDocumentation);
+}

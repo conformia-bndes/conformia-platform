@@ -4,9 +4,13 @@
    ============================================================================== */
 
 :root {
-  --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --apple-mono: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  
+  --apple-font:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --apple-mono:
+    "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+
   /* Cores - Modo Claro Apple */
   --apple-bg: #fbfbfd;
   --apple-card-bg: #ffffff;
@@ -23,7 +27,7 @@
   --apple-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
   --apple-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
   --apple-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
-  
+
   --radius-pill: 980px;
   --radius-card: 18px;
   --radius-sm: 14px;
@@ -54,7 +58,8 @@
    1. Tipografia e Renderizacao Global
    ------------------------------------------------------------------------------ */
 
-body, .md-typeset {
+body,
+.md-typeset {
   font-family: var(--apple-font) !important;
   color: var(--apple-text-primary);
   -webkit-font-smoothing: antialiased;
@@ -84,7 +89,9 @@ body, .md-typeset {
 .md-header__button {
   color: var(--apple-text-primary) !important;
   opacity: 0.85;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
 }
 
 .md-header__button:hover {
@@ -120,64 +127,65 @@ body, .md-typeset {
 
 /* Botao de Repositorio GitHub no Cabecalho (Pill Badge Apple) */
 .md-header__source {
-  margin-left: 0.75rem;
+  display: flex;
+  align-items: center;
+  margin: 0 0.65rem 0 0.4rem;
 }
 
 .md-header__source .md-source {
   display: inline-flex !important;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.06) !important;
-  border: 1px solid rgba(0, 0, 0, 0.14) !important;
-  border-radius: var(--radius-pill) !important;
-  padding: 6px 14px !important;
-  color: var(--apple-text-primary) !important;
+  min-height: 0;
+  box-sizing: border-box;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  color: #111111 !important;
   text-decoration: none !important;
-  font-size: 12.5px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.15;
+  transition: color 0.2s ease !important;
+  box-shadow: none !important;
   opacity: 1 !important;
 }
 
 [data-md-color-scheme="slate"] .md-header__source .md-source {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: #f5f5f7 !important;
 }
 
 .md-header__source .md-source:hover {
-  background-color: var(--apple-blue) !important;
-  border-color: var(--apple-blue) !important;
-  color: #ffffff !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.35);
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--apple-blue) !important;
+  transform: none;
+  box-shadow: none !important;
 }
 
 .md-source__icon {
-  margin-right: 8px !important;
-  display: flex !important;
-  align-items: center;
+  display: none !important;
 }
 
 .md-source__icon svg {
   fill: currentColor !important;
-  width: 17px !important;
-  height: 17px !important;
+  width: 14px !important;
+  height: 14px !important;
   transition: fill 0.2s ease;
 }
 
 .md-source__repository {
   color: inherit !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
-  letter-spacing: -0.01em;
+  display: inline !important;
+  font-weight: 600 !important;
+  font-size: inherit !important;
+  letter-spacing: 0;
   max-width: none !important;
+  white-space: nowrap !important;
 }
 
 .md-source__facts {
-  color: inherit !important;
-  opacity: 0.85;
-  font-size: 11px !important;
+  display: none !important;
 }
 
 .md-tabs {
@@ -191,14 +199,34 @@ body, .md-typeset {
 }
 
 .md-tabs__link {
-  color: var(--apple-text-secondary) !important;
-  font-weight: 400 !important;
+  color: #4f4f55 !important;
+  font-weight: 500 !important;
   font-size: 13px !important;
   transition: color 0.2s ease;
 }
 
-.md-tabs__link--active, .md-tabs__link:hover {
+.md-tabs__link--active,
+.md-tabs__link:hover {
   color: var(--apple-text-primary) !important;
+}
+
+@keyframes doc-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.md-content__inner {
+  animation: doc-content-enter 0.35s ease-out both;
+}
+
+[data-md-color-scheme="slate"] .md-tabs__link {
+  color: #c7c7ce !important;
 }
 
 /* ------------------------------------------------------------------------------
@@ -312,9 +340,10 @@ body, .md-typeset {
   padding: 10px 24px;
   border-radius: var(--radius-pill);
   text-decoration: none !important;
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
-              background-color 0.2s ease,
-              box-shadow 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-shadow: 0 2px 10px rgba(0, 113, 227, 0.25);
 }
 
@@ -341,8 +370,9 @@ body, .md-typeset {
   padding: 9px 22px;
   border-radius: var(--radius-pill);
   text-decoration: none !important;
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
-              background-color 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+    background-color 0.2s ease;
 }
 
 .md-typeset .apple-btn-secondary:hover {
@@ -472,9 +502,10 @@ body, .md-typeset {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1),
-              box-shadow 0.28s cubic-bezier(0.25, 1, 0.5, 1),
-              border-color 0.28s ease;
+  transition:
+    transform 0.28s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.28s cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 0.28s ease;
 }
 
 .apple-card:hover {
@@ -558,9 +589,10 @@ body, .md-typeset {
   justify-content: space-between;
   gap: 1rem;
   box-shadow: var(--apple-shadow-sm);
-  transition: transform 0.24s cubic-bezier(0.25, 1, 0.5, 1),
-              box-shadow 0.24s cubic-bezier(0.25, 1, 0.5, 1),
-              border-color 0.24s ease;
+  transition:
+    transform 0.24s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.24s cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 0.24s ease;
 }
 
 .apple-nav-card:hover {
@@ -681,7 +713,10 @@ body, .md-typeset {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
