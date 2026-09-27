@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/architecture/adr-index/">
+        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/architecture/adr-003-spa-vs-nextjs/">
       
       
-        <link rel="prev" href="../overview/">
+        <link rel="prev" href="../adr-002-astral-uv-toolchain/">
       
       
-        <link rel="next" href="../adr-001-monorepo-modular/">
+        <link rel="next" href="../adr-template/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Indice - Conform.IA BNDES - Documentacao Tecnica</title>
+        <title>ADR-003 React SPA vs Next.js - Conform.IA BNDES - Documentacao Tecnica</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#indice-de-registros-de-decisao-arquitetural-adrs" class="md-skip">
+        <a href="#adr-003-adocao-de-react-vite-spa-em-substituicao-ao-nextjs-para-o-cockpit-operacional" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Indice
+              ADR-003 React SPA vs Next.js
             
           </span>
         </div>
@@ -824,37 +824,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Indice
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../adr-index/" class="md-nav__link">
         
   
   
@@ -870,48 +843,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Processo de Submissao de ADRs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tabela de Decisoes Arquiteturais
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -977,10 +908,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../adr-003-spa-vs-nextjs/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-003 React SPA vs Next.js
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -996,6 +954,104 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-contexto-e-problema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Contexto e Problema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Decisao
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Decisao">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#justificativas-tecnicas-da-decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Justificativas Tecnicas da Decisao:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-consequencias-e-compensacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Consequencias e Compensacoes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Consequencias e Compensacoes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positivas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positivas:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negativas-mitigacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negativas / Mitigacoes:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1478,10 +1534,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
+  <a href="#1-contexto-e-problema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Processo de Submissao de ADRs
+        1. Contexto e Problema
       
     </span>
   </a>
@@ -1489,13 +1545,69 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
+  <a href="#2-decisao" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabela de Decisoes Arquiteturais
+        2. Decisao
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. Decisao">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#justificativas-tecnicas-da-decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Justificativas Tecnicas da Decisao:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-consequencias-e-compensacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Consequencias e Compensacoes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Consequencias e Compensacoes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positivas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positivas:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negativas-mitigacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negativas / Mitigacoes:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1560,7 +1672,7 @@
     
     
       <li class="md-path__item">
-        <a href="./" class="md-path__link">
+        <a href="../adr-index/" class="md-path__link">
           
   <span class="md-ellipsis">
     Decisoes Arquiteturais (ADRs)
@@ -1585,51 +1697,65 @@
   
 
 
-<h1 id="indice-de-registros-de-decisao-arquitetural-adrs">Indice de Registros de Decisao Arquitetural (ADRs)</h1>
-<p>Este documento centraliza todos os Registros de Decisao Arquitetural (Architectural Decision Records - ADRs) do projeto Conform.IA BNDES. As decisoes aqui registradas documentam escolhas estruturais, compensacoes tecnicas (trade-offs) e diretrizes adotadas.</p>
-<hr />
-<h2 id="processo-de-submissao-de-adrs">Processo de Submissao de ADRs</h2>
-<p>Para propor uma nova decisao arquitetural:
-1. Copie o arquivo modelo <a href="../adr-template/"><code>adr-template.md</code></a>.
-2. Nomeie o novo arquivo seguindo o padrao incremental: <code>adr-XXX-nome-da-decisao.md</code>.
-3. Preencha todos os campos tecnicos obrigatorios (Status, Contexto, Decisao, Consequencias).
-4. Submeta via Pull Request para revisao das equipes mantenedoras (@conformia-bndes/maintainers).</p>
-<hr />
-<h2 id="tabela-de-decisoes-arquiteturais">Tabela de Decisoes Arquiteturais</h2>
+<h1 id="adr-003-adocao-de-react-vite-spa-em-substituicao-ao-nextjs-para-o-cockpit-operacional">ADR-003: Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional</h1>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Identificador</th>
-<th style="text-align: left;">Titulo</th>
-<th style="text-align: left;">Status</th>
-<th style="text-align: left;">Data</th>
-<th style="text-align: left;">Autores</th>
+<th style="text-align: left;">Parametro</th>
+<th style="text-align: left;">Detalhe</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="../adr-001-monorepo-modular/">ADR-001</a></td>
-<td style="text-align: left;">Adocao de Monorepo Modular e Harness Engineering</td>
+<td style="text-align: left;"><strong>Status</strong></td>
 <td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-26</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-002-astral-uv-toolchain/">ADR-002</a></td>
-<td style="text-align: left;">Adocao do Astral uv como Gerenciador de Pacotes e Workspace</td>
-<td style="text-align: left;">Aprovado</td>
+<td style="text-align: left;"><strong>Data</strong></td>
 <td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-003-spa-vs-nextjs/">ADR-003</a></td>
-<td style="text-align: left;">Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Autor</strong></td>
+<td style="text-align: left;">Equipe de Engenharia Conform.IA BNDES</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Decisores</strong></td>
+<td style="text-align: left;">Staff Software Engineers &amp; Arquitetura de Solucoes</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="1-contexto-e-problema">1. Contexto e Problema</h2>
+<p>Durante a definicao da camada de apresentacao da plataforma Conform.IA BNDES, cogitou-se a utilizacao do framework <strong>Next.js</strong> (React Server Components / SSR) para o desenvolvimento do frontend.</p>
+<p>A equipe realizou uma avaliacao arquitetural comparando <strong>Next.js</strong> com a abordagem de <strong>Single Page Application (SPA) baseada em React 18 + Vite + Tailwind CSS</strong>, considerando as caracteristicas operacionais do desafio do BNDES:
+1. Trata-se de uma aplicacao corporativa interna (intranet/cockpit de analistas de credito), protegida integralmente por autenticacao e controle de acesso (RBAC).
+2. O sistema exige a renderizacao interativa de documentos PDF em tela dividida (<em>split-view</em>) com marcacoes dinamicas de coordenadas (<em>bounding boxes</em>).
+3. Todo o processamento de regras, IA, OCR e banco de dados reside no backend Python/FastAPI.</p>
+<h2 id="2-decisao">2. Decisao</h2>
+<p>Decidiu-se <strong>manter e consolidar o frontend como uma Single Page Application (SPA) estatica utilizando React 18, Vite, TypeScript e Tailwind CSS</strong>, rejeitando a adocao do Next.js para este caso de uso.</p>
+<h3 id="justificativas-tecnicas-da-decisao">Justificativas Tecnicas da Decisao:</h3>
+<ol>
+<li><strong>Inexistencia de Requisito de SEO</strong>:
+   O Next.js tem seu valor comprovado em portais publicos, e-commerces e aplicacoes que dependem de indexacao por robos de busca (SEO). O Conform.IA BNDES e um cockpit fechado e autenticado; o Server-Side Rendering (SSR) nao agrega nenhum valor de negocio ao produto.</li>
+<li><strong>Eliminacao de Servidor Intermediario Desnecessario (BFF Fantasma)</strong>:
+   A adocao do Next.js obrigaria a manutencao de um servidor Node.js em producao apenas para intermediar HTML e chamadas de API para o FastAPI. Com React + Vite, o build produz artefatos estaticos puros servidos por um proxy reverso <strong>Nginx</strong> (container leve de menos de 25MB, consumo minimo de CPU/RAM e cache HTTP de borda).</li>
+<li><strong>Evitacao de Conflitos de Hidratacao com Visualizadores de PDF e Canvas</strong>:
+   Bibliotecas de inspecao de PDFs no browser (<code>pdfjs-dist</code>, <code>react-pdf</code>) dependem exclusivamente de objetos do navegador (<code>window</code>, <code>document</code>, <code>HTMLCanvasElement</code>). No ambiente SSR do Next.js, essas ferramentas geram recorrentes erros de hidratacao e obrigam o uso de diretivas <code>'use client'</code> e imports dinamicos sem SSR em quase todas as telas operacionais.</li>
+<li><strong>Desempenho e Produtividade</strong>:
+   O Vite oferece Hot Module Replacement (HMR) em milissegundos e pipeline de testes nativo com Vitest, maximizando a velocidade de iteracao da equipe.</li>
+</ol>
+<h2 id="3-consequencias-e-compensacoes">3. Consequencias e Compensacoes</h2>
+<h3 id="positivas">Positivas:</h3>
+<ul>
+<li>Infraestrutura mais simples e economica (menos um container de runtime pesado na stack Docker).</li>
+<li>Zero atrito no desenvolvimento de recursos visuais complexos de PDF e marcacoes de evidencia.</li>
+<li>Pipeline de CI/CD para o frontend extremamente rapido (build estatico em menos de 20 segundos).</li>
+</ul>
+<h3 id="negativas-mitigacoes">Negativas / Mitigacoes:</h3>
+<ul>
+<li>O carregamento inicial depende do download do bundle JavaScript (mitigado por code-splitting via <code>React.lazy</code>, Vite e compressao gzip/brotli no Nginx).</li>
+<li>Gerenciamento de estado assincrono e cache de dados de rede devem ser conduzidos no cliente (mitigado pela adocao do <code>@tanstack/react-query</code>).</li>
+</ul>
 
 
 
@@ -1667,7 +1793,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Rodapé" >
         
           
-          <a href="../overview/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Visao Geral">
+          <a href="../adr-002-astral-uv-toolchain/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: ADR-002 Adoção do Astral uv">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1677,20 +1803,20 @@
                 Anterior
               </span>
               <div class="md-ellipsis">
-                Visao Geral
+                ADR-002 Adoção do Astral uv
               </div>
             </div>
           </a>
         
         
           
-          <a href="../adr-001-monorepo-modular/" class="md-footer__link md-footer__link--next" aria-label="Próximo: ADR-001 Monorepo Modular">
+          <a href="../adr-template/" class="md-footer__link md-footer__link--next" aria-label="Próximo: Template de ADR">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Próximo
               </span>
               <div class="md-ellipsis">
-                ADR-001 Monorepo Modular
+                Template de ADR
               </div>
             </div>
             <div class="md-footer__button md-icon">

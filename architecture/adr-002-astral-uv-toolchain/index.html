@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/architecture/adr-index/">
+        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/architecture/adr-002-astral-uv-toolchain/">
       
       
-        <link rel="prev" href="../overview/">
+        <link rel="prev" href="../adr-001-monorepo-modular/">
       
       
-        <link rel="next" href="../adr-001-monorepo-modular/">
+        <link rel="next" href="../adr-003-spa-vs-nextjs/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Indice - Conform.IA BNDES - Documentacao Tecnica</title>
+        <title>ADR-002 Adoção do Astral uv - Conform.IA BNDES - Documentacao Tecnica</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#indice-de-registros-de-decisao-arquitetural-adrs" class="md-skip">
+        <a href="#adr-002-adocao-do-astral-uv-como-gerenciador-de-pacotes-e-workspace" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Indice
+              ADR-002 Adoção do Astral uv
             
           </span>
         </div>
@@ -824,37 +824,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Indice
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../adr-index/" class="md-nav__link">
         
   
   
@@ -870,48 +843,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Processo de Submissao de ADRs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tabela de Decisoes Arquiteturais
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -949,10 +880,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../adr-002-astral-uv-toolchain/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-002 Adoção do Astral uv
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -968,6 +926,87 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-contexto-e-problema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Contexto e Problema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-decisao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Decisao
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-consequencias-e-compensacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Consequencias e Compensacoes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Consequencias e Compensacoes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positivas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positivas:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negativas-mitigacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negativas / Mitigacoes:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1478,10 +1517,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
+  <a href="#1-contexto-e-problema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Processo de Submissao de ADRs
+        1. Contexto e Problema
       
     </span>
   </a>
@@ -1489,13 +1528,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
+  <a href="#2-decisao" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabela de Decisoes Arquiteturais
+        2. Decisao
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-consequencias-e-compensacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Consequencias e Compensacoes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Consequencias e Compensacoes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positivas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positivas:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negativas-mitigacoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negativas / Mitigacoes:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1560,7 +1638,7 @@
     
     
       <li class="md-path__item">
-        <a href="./" class="md-path__link">
+        <a href="../adr-index/" class="md-path__link">
           
   <span class="md-ellipsis">
     Decisoes Arquiteturais (ADRs)
@@ -1585,51 +1663,55 @@
   
 
 
-<h1 id="indice-de-registros-de-decisao-arquitetural-adrs">Indice de Registros de Decisao Arquitetural (ADRs)</h1>
-<p>Este documento centraliza todos os Registros de Decisao Arquitetural (Architectural Decision Records - ADRs) do projeto Conform.IA BNDES. As decisoes aqui registradas documentam escolhas estruturais, compensacoes tecnicas (trade-offs) e diretrizes adotadas.</p>
-<hr />
-<h2 id="processo-de-submissao-de-adrs">Processo de Submissao de ADRs</h2>
-<p>Para propor uma nova decisao arquitetural:
-1. Copie o arquivo modelo <a href="../adr-template/"><code>adr-template.md</code></a>.
-2. Nomeie o novo arquivo seguindo o padrao incremental: <code>adr-XXX-nome-da-decisao.md</code>.
-3. Preencha todos os campos tecnicos obrigatorios (Status, Contexto, Decisao, Consequencias).
-4. Submeta via Pull Request para revisao das equipes mantenedoras (@conformia-bndes/maintainers).</p>
-<hr />
-<h2 id="tabela-de-decisoes-arquiteturais">Tabela de Decisoes Arquiteturais</h2>
+<h1 id="adr-002-adocao-do-astral-uv-como-gerenciador-de-pacotes-e-workspace">ADR-002: Adocao do Astral uv como Gerenciador de Pacotes e Workspace</h1>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Identificador</th>
-<th style="text-align: left;">Titulo</th>
-<th style="text-align: left;">Status</th>
-<th style="text-align: left;">Data</th>
-<th style="text-align: left;">Autores</th>
+<th style="text-align: left;">Parametro</th>
+<th style="text-align: left;">Detalhe</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="../adr-001-monorepo-modular/">ADR-001</a></td>
-<td style="text-align: left;">Adocao de Monorepo Modular e Harness Engineering</td>
+<td style="text-align: left;"><strong>Status</strong></td>
 <td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-26</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-002-astral-uv-toolchain/">ADR-002</a></td>
-<td style="text-align: left;">Adocao do Astral uv como Gerenciador de Pacotes e Workspace</td>
-<td style="text-align: left;">Aprovado</td>
+<td style="text-align: left;"><strong>Data</strong></td>
 <td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-003-spa-vs-nextjs/">ADR-003</a></td>
-<td style="text-align: left;">Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Autor</strong></td>
+<td style="text-align: left;">Equipe de Engenharia Conform.IA BNDES</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Decisores</strong></td>
+<td style="text-align: left;">Staff Software Engineers</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="1-contexto-e-problema">1. Contexto e Problema</h2>
+<p>O ecossistema Python tradicionalmente dependia de multiplas ferramentas fragmentadas para gestao de dependencias e ambientes virtuais (<code>pip</code>, <code>virtualenv</code>, <code>pip-tools</code>, <code>poetry</code>). No contexto deste monorepo, a instalacao de dependencias pesadas no Docker e nos ambientes locais de desenvolvedores enfrentava tempos de build elevados (dezenas de segundos por container) e risco de inconsistencias entre desenvolvedores pela ausencia de um lockfile unificado de workspace.</p>
+<h2 id="2-decisao">2. Decisao</h2>
+<p>Adotou-se o <strong>Astral <code>uv</code></strong> como ferramenta oficial e unificada para o gerenciamento de pacotes, resolucao de dependencias e workspaces Python no projeto Conform.IA BNDES.</p>
+<p>As diretrizes tecnicas implementadas abrangem:
+1. Configuracao de workspace nativo no root <code>pyproject.toml</code> (<code>[tool.uv.workspace] members = ["backend"]</code>).
+2. Geracao e manutencao compulsoria do lockfile deterministico <code>uv.lock</code>.
+3. Integracao multi-stage no Dockerfile via imagem oficial <code>COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/</code>.
+4. Utilizacao da action oficial <code>astral-sh/setup-uv@v5</code> com cache no GitHub Actions CI.
+5. Suporte transparente no <code>Makefile</code> com deteccao automatica do utilitario <code>uv</code>.</p>
+<h2 id="3-consequencias-e-compensacoes">3. Consequencias e Compensacoes</h2>
+<h3 id="positivas">Positivas:</h3>
+<ul>
+<li><strong>Velocidade Extrema</strong>: Resolucao e instalacao de dependencias reduzida de ~45s para &lt; 1s localmente e 160ms em containers Docker.</li>
+<li><strong>Determinismo Absoluto</strong>: O <code>uv.lock</code> garante que exatamente os mesmos hashes SHA-256 de pacotes sejam instalados em desenvolvimento, CI e producao.</li>
+<li><strong>Simplificacao Operacional</strong>: Eliminou a necessidade de gerenciar multiplas ferramentas ou scripts complexos de ativacao de virtualenv.</li>
+</ul>
+<h3 id="negativas-mitigacoes">Negativas / Mitigacoes:</h3>
+<ul>
+<li>Exige que novos colaboradores tenham o binario do <code>uv</code> instalado em suas maquinas de desenvolvimento (documentado no <code>README.md</code> e mitigado pelo fallback automatico para <code>pip</code> no <code>Makefile</code>).</li>
+</ul>
 
 
 
@@ -1667,7 +1749,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Rodapé" >
         
           
-          <a href="../overview/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Visao Geral">
+          <a href="../adr-001-monorepo-modular/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: ADR-001 Monorepo Modular">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1677,20 +1759,20 @@
                 Anterior
               </span>
               <div class="md-ellipsis">
-                Visao Geral
+                ADR-001 Monorepo Modular
               </div>
             </div>
           </a>
         
         
           
-          <a href="../adr-001-monorepo-modular/" class="md-footer__link md-footer__link--next" aria-label="Próximo: ADR-001 Monorepo Modular">
+          <a href="../adr-003-spa-vs-nextjs/" class="md-footer__link md-footer__link--next" aria-label="Próximo: ADR-003 React SPA vs Next.js">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Próximo
               </span>
               <div class="md-ellipsis">
-                ADR-001 Monorepo Modular
+                ADR-003 React SPA vs Next.js
               </div>
             </div>
             <div class="md-footer__button md-icon">

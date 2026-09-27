@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/architecture/adr-index/">
+        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/planning/architecture-design/">
       
       
-        <link rel="prev" href="../overview/">
+        <link rel="prev" href="../requirements/">
       
       
-        <link rel="next" href="../adr-001-monorepo-modular/">
+        <link rel="next" href="../sprints-roadmap/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Indice - Conform.IA BNDES - Documentacao Tecnica</title>
+        <title>Arquitetura da Solucao - Conform.IA BNDES - Documentacao Tecnica</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#indice-de-registros-de-decisao-arquitetural-adrs" class="md-skip">
+        <a href="#arquitetura-de-software-e-engenharia-de-solucao" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Indice
+              Arquitetura da Solucao
             
           </span>
         </div>
@@ -245,11 +245,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../planning/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -265,13 +267,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../overview/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../architecture/overview/" class="md-tabs__link">
           
   
   
@@ -425,28 +425,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -464,7 +467,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -482,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -510,7 +513,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/requirements/" class="md-nav__link">
+      <a href="../requirements/" class="md-nav__link">
         
   
   
@@ -535,10 +538,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../planning/architecture-design/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura da Solucao
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -554,6 +584,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-topologia-de-servicos-e-fluxo-de-dados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Topologia de Servicos e Fluxo de Dados
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-matriz-de-tecnologias-e-justificativa-de-engenharia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Matriz de Tecnologias e Justificativa de Engenharia
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-por-que-separar-regras-de-negocio-de-modelos-de-ia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Por que Separar Regras de Negocio de Modelos de IA?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-modelo-de-resultado-de-conformidade-schema-de-laudo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Modelo de Resultado de Conformidade (Schema de Laudo)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -566,7 +660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/sprints-roadmap/" class="md-nav__link">
+      <a href="../sprints-roadmap/" class="md-nav__link">
         
   
   
@@ -594,7 +688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/governance-security/" class="md-nav__link">
+      <a href="../governance-security/" class="md-nav__link">
         
   
   
@@ -622,7 +716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/harness-engineering/" class="md-nav__link">
+      <a href="../harness-engineering/" class="md-nav__link">
         
   
   
@@ -650,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/project-plan/" class="md-nav__link">
+      <a href="../project-plan/" class="md-nav__link">
         
   
   
@@ -682,31 +776,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -724,7 +815,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -742,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../overview/" class="md-nav__link">
+      <a href="../../architecture/overview/" class="md-nav__link">
         
   
   
@@ -767,31 +858,28 @@
                 
   
   
-    
   
   
-  
     
     
     
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
         
           
-          
         
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
             
   
   
@@ -809,7 +897,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -824,37 +912,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Indice
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../architecture/adr-index/" class="md-nav__link">
         
   
   
@@ -870,48 +931,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Processo de Submissao de ADRs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tabela de Decisoes Arquiteturais
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -924,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-001-monorepo-modular/" class="md-nav__link">
+      <a href="../../architecture/adr-001-monorepo-modular/" class="md-nav__link">
         
   
   
@@ -952,7 +971,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-002-astral-uv-toolchain/" class="md-nav__link">
+      <a href="../../architecture/adr-002-astral-uv-toolchain/" class="md-nav__link">
         
   
   
@@ -980,7 +999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-003-spa-vs-nextjs/" class="md-nav__link">
+      <a href="../../architecture/adr-003-spa-vs-nextjs/" class="md-nav__link">
         
   
   
@@ -1008,7 +1027,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-template/" class="md-nav__link">
+      <a href="../../architecture/adr-template/" class="md-nav__link">
         
   
   
@@ -1478,10 +1497,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
+  <a href="#1-topologia-de-servicos-e-fluxo-de-dados" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Processo de Submissao de ADRs
+        1. Topologia de Servicos e Fluxo de Dados
       
     </span>
   </a>
@@ -1489,10 +1508,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
+  <a href="#2-matriz-de-tecnologias-e-justificativa-de-engenharia" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabela de Decisoes Arquiteturais
+        2. Matriz de Tecnologias e Justificativa de Engenharia
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-por-que-separar-regras-de-negocio-de-modelos-de-ia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Por que Separar Regras de Negocio de Modelos de IA?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-modelo-de-resultado-de-conformidade-schema-de-laudo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Modelo de Resultado de Conformidade (Schema de Laudo)
       
     </span>
   </a>
@@ -1542,28 +1583,10 @@
     
     
       <li class="md-path__item">
-        <a href="../overview/" class="md-path__link">
+        <a href="../" class="md-path__link">
           
   <span class="md-ellipsis">
-    Arquitetura
-  </span>
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-    
-    
-      <li class="md-path__item">
-        <a href="./" class="md-path__link">
-          
-  <span class="md-ellipsis">
-    Decisoes Arquiteturais (ADRs)
+    Planejamento
   </span>
 
         </a>
@@ -1585,51 +1608,145 @@
   
 
 
-<h1 id="indice-de-registros-de-decisao-arquitetural-adrs">Indice de Registros de Decisao Arquitetural (ADRs)</h1>
-<p>Este documento centraliza todos os Registros de Decisao Arquitetural (Architectural Decision Records - ADRs) do projeto Conform.IA BNDES. As decisoes aqui registradas documentam escolhas estruturais, compensacoes tecnicas (trade-offs) e diretrizes adotadas.</p>
+<h1 id="arquitetura-de-software-e-engenharia-de-solucao">Arquitetura de Software e Engenharia de Solucao</h1>
+<p>Este documento estabelece as diretrizes arquiteturais, a topologia de servicos, a matriz de selecao tecnologica e o modelo de resultado adotado na plataforma Conform.IA BNDES.</p>
 <hr />
-<h2 id="processo-de-submissao-de-adrs">Processo de Submissao de ADRs</h2>
-<p>Para propor uma nova decisao arquitetural:
-1. Copie o arquivo modelo <a href="../adr-template/"><code>adr-template.md</code></a>.
-2. Nomeie o novo arquivo seguindo o padrao incremental: <code>adr-XXX-nome-da-decisao.md</code>.
-3. Preencha todos os campos tecnicos obrigatorios (Status, Contexto, Decisao, Consequencias).
-4. Submeta via Pull Request para revisao das equipes mantenedoras (@conformia-bndes/maintainers).</p>
+<h2 id="1-topologia-de-servicos-e-fluxo-de-dados">1. Topologia de Servicos e Fluxo de Dados</h2>
+<p>A solucao adota uma arquitetura conteinerizada desacoplada, separando o ciclo HTTP da API do processamento computacionalmente intensivo de IDP e IA:</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph ClientTier["Camada do Cliente"]
+        Browser["Navegador do Analista BNDES"]
+        SPA["React 18 SPA (Vite / Tailwind / Nginx)"]
+    end
+
+    subgraph APITier["Camada de API Core"]
+        FastAPI["FastAPI 0.115+ (ASGI / Uvicorn)"]
+        StorageAdapter["Storage Service (S3 Client)"]
+        TaskDispatcher["Celery Task Dispatcher"]
+    end
+
+    subgraph AsyncTier["Camada Assincrona de Extracao e IA"]
+        Worker["Celery 5 Workers"]
+        Extractor["DocumentExtractor (pdfplumber + Tesseract)"]
+        RulesEngine["RulesEngine (Motor Declarativo JSON)"]
+        MakerChecker["LLM Maker-Checker Harness"]
+    end
+
+    subgraph PersistenceTier["Persistencia e Mensageria"]
+        Postgres[("PostgreSQL 16\n(Metadados, Checks, Auditoria)")]
+        Redis[("Redis 7\n(Broker e Cache)")]
+        MinIO[("MinIO S3\n(Documentos PDF Criptografados)")]
+    end
+
+    Browser --&gt;|HTTPS| SPA
+    SPA --&gt;|REST / JSON| FastAPI
+    FastAPI --&gt; StorageAdapter --&gt; MinIO
+    FastAPI --&gt; TaskDispatcher --&gt; Redis
+    Redis --&gt; Worker
+    Worker --&gt; Extractor --&gt; RulesEngine --&gt; MakerChecker
+    RulesEngine --&gt; Postgres
+    MakerChecker --&gt; Postgres
+    FastAPI --&gt; Postgres</code></pre>
 <hr />
-<h2 id="tabela-de-decisoes-arquiteturais">Tabela de Decisoes Arquiteturais</h2>
+<h2 id="2-matriz-de-tecnologias-e-justificativa-de-engenharia">2. Matriz de Tecnologias e Justificativa de Engenharia</h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Identificador</th>
-<th style="text-align: left;">Titulo</th>
-<th style="text-align: left;">Status</th>
-<th style="text-align: left;">Data</th>
-<th style="text-align: left;">Autores</th>
+<th style="text-align: left;">Componente</th>
+<th style="text-align: left;">Tecnologia Selecionada</th>
+<th style="text-align: left;">Justificativa Tecnica e Compensacoes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="../adr-001-monorepo-modular/">ADR-001</a></td>
-<td style="text-align: left;">Adocao de Monorepo Modular e Harness Engineering</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-26</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Frontend SPA</strong></td>
+<td style="text-align: left;">React 18 + Vite + Tailwind CSS</td>
+<td style="text-align: left;">Compilacao estatica servida via Nginx (container &lt; 25MB), zero necessidade de servidor Node.js em producao, sem problemas de hidratacao com visualizadores de PDF e HMR instantaneo.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-002-astral-uv-toolchain/">ADR-002</a></td>
-<td style="text-align: left;">Adocao do Astral uv como Gerenciador de Pacotes e Workspace</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Backend API</strong></td>
+<td style="text-align: left;">Python 3.11/3.13 + FastAPI + Uvicorn</td>
+<td style="text-align: left;">Ecossistema maduro para engenharia de dados e IA, suporte assincrono de alto rendimento e contratos tipados com Pydantic v2.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-003-spa-vs-nextjs/">ADR-003</a></td>
-<td style="text-align: left;">Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Gerenciador de Pacotes</strong></td>
+<td style="text-align: left;">Astral <code>uv</code></td>
+<td style="text-align: left;">Resolucao de dependencias em milissegundos, workspace monorepo nativo e lockfile deterministico (<code>uv.lock</code>) para reprodutibilidade estrita.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Banco Relacional</strong></td>
+<td style="text-align: left;">PostgreSQL 16 Alpine</td>
+<td style="text-align: left;">Persistencia transacional ACID, suporte a consultas relacionais e integridade referencial compulsoria para trilhas de auditoria.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Broker de Mensagens</strong></td>
+<td style="text-align: left;">Redis 7 Alpine</td>
+<td style="text-align: left;">Fila em memoria de baixissima latencia para despacho assincrono entre API e workers de extracao.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Processamento Assincrono</strong></td>
+<td style="text-align: left;">Celery 5</td>
+<td style="text-align: left;">Isolamento de operacoes bloqueantes (OCR, extracao e chamadas a modelos de IA) do ciclo de vida das requisicoes HTTP da API.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Armazenamento de Objetos</strong></td>
+<td style="text-align: left;">MinIO S3 Compatible</td>
+<td style="text-align: left;">Compatibilidade estrita com a API AWS S3, facilitando execucao local e migracao transparente para nuvens soberanas brasileiras.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Extracao Vetorial e OCR</strong></td>
+<td style="text-align: left;">pdfplumber + Tesseract OCR 5 + Poppler</td>
+<td style="text-align: left;">Solucao auditavel, sem envio de documentos confidenciais a nuvens de terceiros e com calibracao para o idioma portugues (<code>por</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Orquestracao Local</strong></td>
+<td style="text-align: left;">Docker Compose v2</td>
+<td style="text-align: left;">Orquestracao declarativa unificada em <code>infra/docker-compose.yml</code>, eliminando divergencias entre ambientes.</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="3-por-que-separar-regras-de-negocio-de-modelos-de-ia">3. Por que Separar Regras de Negocio de Modelos de IA?</h2>
+<p>Um dos riscos mais criticos em aplicacoes de IA no setor publico e a <strong>alucinacao de modelos</strong> ou o afrouxamento inadvertido de criterios normativos devido a mudancas sutis em prompts.</p>
+<p>Para mitigar esse risco de forma definitiva:</p>
+<ol>
+<li><strong>Regras Determinísticas e Matematicas</strong> (validade temporal, calculo de datas, expressoes regulares de CNPJ, identificacao literal de certidao negativa):</li>
+<li>Sao executadas pelo <strong>Motor de Regras</strong> determinístico.</li>
+<li>Nao dependem de inferencia probabilistica.</li>
+<li>Qualquer falha gera imediatamente o status <code>NON_COMPLIANT</code>.</li>
+<li><strong>Avaliacao Semantica Assistida por IA</strong> (interpretacao de clausulas societarias complexas, ressalvas juridicas em certidoes narrativas):</li>
+<li>Sao executadas pelo pipeline <strong>Maker-Checker</strong>.</li>
+<li>O modelo <strong>Maker</strong> aponta a evidencia e formula uma hipotese.</li>
+<li>O modelo/algoritmo <strong>Checker</strong> valida se o texto citado existe textualmente no documento original antes de admitir o laudo.</li>
+<li>Se houver qualquer divergencia ou baixa confianca, o status e obrigatoriamente degradado para <code>MANUAL_REVIEW_REQUIRED</code>.</li>
+</ol>
+<hr />
+<h2 id="4-modelo-de-resultado-de-conformidade-schema-de-laudo">4. Modelo de Resultado de Conformidade (Schema de Laudo)</h2>
+<p>Cada verificacao de criterio normativo produz um registro estruturado no seguinte padrao:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"report_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rep-8a9d1b-2026"</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"document_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"doc-550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"checklist_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"evaluated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-09-27T03:45:00Z"</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"overall_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"COMPLIANT"</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"checks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">"rule_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RULE-BNDES-001"</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CND_FEDERAL"</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"COMPLIANT"</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CRITICAL"</span><span class="p">,</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="nt">"evidence"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">        </span><span class="nt">"page_number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">        </span><span class="nt">"exact_quote"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Certidão Negativa de Débitos Relativos a Créditos Tributários Federais"</span><span class="p">,</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="nt">"bounding_box"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">120</span><span class="p">,</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w"> </span><span class="mi">480</span><span class="p">,</span><span class="w"> </span><span class="mi">85</span><span class="p">],</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">        </span><span class="nt">"confidence_score"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.99</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">      </span><span class="p">},</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="nt">"evaluated_by"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RULES_ENGINE_DETERMINISTIC"</span><span class="p">,</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="nt">"notes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Validade regular ate 15/12/2026 com base no Decreto-Lei nº 147/1967."</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="p">}</span>
+</span></code></pre></div>
 
 
 
@@ -1667,7 +1784,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Rodapé" >
         
           
-          <a href="../overview/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Visao Geral">
+          <a href="../requirements/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Requisitos e Escopo">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1677,20 +1794,20 @@
                 Anterior
               </span>
               <div class="md-ellipsis">
-                Visao Geral
+                Requisitos e Escopo
               </div>
             </div>
           </a>
         
         
           
-          <a href="../adr-001-monorepo-modular/" class="md-footer__link md-footer__link--next" aria-label="Próximo: ADR-001 Monorepo Modular">
+          <a href="../sprints-roadmap/" class="md-footer__link md-footer__link--next" aria-label="Próximo: Cronograma e Sprints">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Próximo
               </span>
               <div class="md-ellipsis">
-                ADR-001 Monorepo Modular
+                Cronograma e Sprints
               </div>
             </div>
             <div class="md-footer__button md-icon">

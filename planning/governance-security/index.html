@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/architecture/adr-index/">
+        <link rel="canonical" href="https://conformia-bndes.github.io/conformia-platform/planning/governance-security/">
       
       
-        <link rel="prev" href="../overview/">
+        <link rel="prev" href="../sprints-roadmap/">
       
       
-        <link rel="next" href="../adr-001-monorepo-modular/">
+        <link rel="next" href="../harness-engineering/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Indice - Conform.IA BNDES - Documentacao Tecnica</title>
+        <title>Seguranca e Governanca - Conform.IA BNDES - Documentacao Tecnica</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#indice-de-registros-de-decisao-arquitetural-adrs" class="md-skip">
+        <a href="#seguranca-lgpd-governanca-e-auditoria" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Indice
+              Seguranca e Governanca
             
           </span>
         </div>
@@ -245,11 +245,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../planning/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -265,13 +267,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../overview/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../architecture/overview/" class="md-tabs__link">
           
   
   
@@ -425,28 +425,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -464,7 +467,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -482,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -510,7 +513,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/requirements/" class="md-nav__link">
+      <a href="../requirements/" class="md-nav__link">
         
   
   
@@ -538,7 +541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/architecture-design/" class="md-nav__link">
+      <a href="../architecture-design/" class="md-nav__link">
         
   
   
@@ -566,7 +569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/sprints-roadmap/" class="md-nav__link">
+      <a href="../sprints-roadmap/" class="md-nav__link">
         
   
   
@@ -591,10 +594,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../planning/governance-security/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Seguranca e Governanca
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -610,6 +640,87 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-principios-de-seguranca-e-privacidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Principios de Seguranca e Privacidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-matriz-de-gestao-de-riscos-e-mitigacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Matriz de Gestao de Riscos e Mitigacao
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-trilha-de-auditoria-transacional-audit_logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Trilha de Auditoria Transacional (audit_logs)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Trilha de Auditoria Transacional (audit_logs)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estrutura-do-snapshot-de-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estrutura do Snapshot de Auditoria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-tratamento-formal-de-excecoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tratamento Formal de Excecoes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -622,7 +733,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/harness-engineering/" class="md-nav__link">
+      <a href="../harness-engineering/" class="md-nav__link">
         
   
   
@@ -650,7 +761,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/project-plan/" class="md-nav__link">
+      <a href="../project-plan/" class="md-nav__link">
         
   
   
@@ -682,31 +793,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -724,7 +832,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -742,7 +850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../overview/" class="md-nav__link">
+      <a href="../../architecture/overview/" class="md-nav__link">
         
   
   
@@ -767,31 +875,28 @@
                 
   
   
-    
   
   
-  
     
     
     
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
         
           
-          
         
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
             
   
   
@@ -809,7 +914,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -824,37 +929,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Indice
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../architecture/adr-index/" class="md-nav__link">
         
   
   
@@ -870,48 +948,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Processo de Submissao de ADRs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tabela de Decisoes Arquiteturais
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -924,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-001-monorepo-modular/" class="md-nav__link">
+      <a href="../../architecture/adr-001-monorepo-modular/" class="md-nav__link">
         
   
   
@@ -952,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-002-astral-uv-toolchain/" class="md-nav__link">
+      <a href="../../architecture/adr-002-astral-uv-toolchain/" class="md-nav__link">
         
   
   
@@ -980,7 +1016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-003-spa-vs-nextjs/" class="md-nav__link">
+      <a href="../../architecture/adr-003-spa-vs-nextjs/" class="md-nav__link">
         
   
   
@@ -1008,7 +1044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr-template/" class="md-nav__link">
+      <a href="../../architecture/adr-template/" class="md-nav__link">
         
   
   
@@ -1478,10 +1514,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#processo-de-submissao-de-adrs" class="md-nav__link">
+  <a href="#1-principios-de-seguranca-e-privacidade" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Processo de Submissao de ADRs
+        1. Principios de Seguranca e Privacidade
       
     </span>
   </a>
@@ -1489,10 +1525,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tabela-de-decisoes-arquiteturais" class="md-nav__link">
+  <a href="#2-matriz-de-gestao-de-riscos-e-mitigacao" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabela de Decisoes Arquiteturais
+        2. Matriz de Gestao de Riscos e Mitigacao
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-trilha-de-auditoria-transacional-audit_logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Trilha de Auditoria Transacional (audit_logs)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Trilha de Auditoria Transacional (audit_logs)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estrutura-do-snapshot-de-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estrutura do Snapshot de Auditoria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-tratamento-formal-de-excecoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tratamento Formal de Excecoes
       
     </span>
   </a>
@@ -1542,28 +1617,10 @@
     
     
       <li class="md-path__item">
-        <a href="../overview/" class="md-path__link">
+        <a href="../" class="md-path__link">
           
   <span class="md-ellipsis">
-    Arquitetura
-  </span>
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-    
-    
-      <li class="md-path__item">
-        <a href="./" class="md-path__link">
-          
-  <span class="md-ellipsis">
-    Decisoes Arquiteturais (ADRs)
+    Planejamento
   </span>
 
         </a>
@@ -1585,51 +1642,85 @@
   
 
 
-<h1 id="indice-de-registros-de-decisao-arquitetural-adrs">Indice de Registros de Decisao Arquitetural (ADRs)</h1>
-<p>Este documento centraliza todos os Registros de Decisao Arquitetural (Architectural Decision Records - ADRs) do projeto Conform.IA BNDES. As decisoes aqui registradas documentam escolhas estruturais, compensacoes tecnicas (trade-offs) e diretrizes adotadas.</p>
+<h1 id="seguranca-lgpd-governanca-e-auditoria">Seguranca, LGPD, Governanca e Auditoria</h1>
+<p>Este documento consolida as diretrizes de seguranca da informacao, protecao de dados pessoais (LGPD), gestao de riscos e auditoria transacional da plataforma Conform.IA BNDES.</p>
 <hr />
-<h2 id="processo-de-submissao-de-adrs">Processo de Submissao de ADRs</h2>
-<p>Para propor uma nova decisao arquitetural:
-1. Copie o arquivo modelo <a href="../adr-template/"><code>adr-template.md</code></a>.
-2. Nomeie o novo arquivo seguindo o padrao incremental: <code>adr-XXX-nome-da-decisao.md</code>.
-3. Preencha todos os campos tecnicos obrigatorios (Status, Contexto, Decisao, Consequencias).
-4. Submeta via Pull Request para revisao das equipes mantenedoras (@conformia-bndes/maintainers).</p>
+<h2 id="1-principios-de-seguranca-e-privacidade">1. Principios de Seguranca e Privacidade</h2>
+<p>A plataforma opera sob os principios estritos de <strong>Security by Design</strong> e <strong>Privacy by Design</strong>:</p>
+<ul>
+<li><strong>Minimizacao de Dados</strong>: O sistema processa estritamente os campos necessarios a comprovacao de regularidade cadastral e documental exigida pelo BNDES.</li>
+<li><strong>Isolamento de Credenciais</strong>: Segredos, tokens e chaves de conexao sao gerenciados exclusivamente fora do repositorio, via variaveis de ambiente auditadas por ferramentas SAST.</li>
+<li><strong>Criptografia de Ponta a Ponta</strong>: Trafego protegido por TLS 1.3 em transito e dados em repouso armazenados em volumes protegidos no PostgreSQL e MinIO.</li>
+<li><strong>Segregacao de Ambientes</strong>: O ambiente de desenvolvimento utiliza exclusivamente documentos sinteticos, sem presenca de dados reais de clientes ou proponentes do BNDES.</li>
+</ul>
 <hr />
-<h2 id="tabela-de-decisoes-arquiteturais">Tabela de Decisoes Arquiteturais</h2>
+<h2 id="2-matriz-de-gestao-de-riscos-e-mitigacao">2. Matriz de Gestao de Riscos e Mitigacao</h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Identificador</th>
-<th style="text-align: left;">Titulo</th>
-<th style="text-align: left;">Status</th>
-<th style="text-align: left;">Data</th>
-<th style="text-align: left;">Autores</th>
+<th style="text-align: left;">Risco Tecnico ou Operacional</th>
+<th style="text-align: left;">Severidade</th>
+<th style="text-align: left;">Impacto</th>
+<th style="text-align: left;">Estrategia de Mitigacao Implementada</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="../adr-001-monorepo-modular/">ADR-001</a></td>
-<td style="text-align: left;">Adocao de Monorepo Modular e Harness Engineering</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-26</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Alucinacao de modelo de IA</strong></td>
+<td style="text-align: left;">Critica</td>
+<td style="text-align: left;">Aprovacao indevida de certidao com debitos ativos.</td>
+<td style="text-align: left;">Padrao <strong>Maker-Checker</strong> compulsorio: citacao literal exata da evidencia e verificacao deterministica antes de qualquer aprovacao.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-002-astral-uv-toolchain/">ADR-002</a></td>
-<td style="text-align: left;">Adocao do Astral uv como Gerenciador de Pacotes e Workspace</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Degradacao de OCR em certidoes digitalizadas</strong></td>
+<td style="text-align: left;">Alta</td>
+<td style="text-align: left;">Falha na extracao de datas de validade ou CNPJ.</td>
+<td style="text-align: left;">Pre-processamento de imagem, binarizacao adaptativa e exigencia de status <code>MANUAL_REVIEW_REQUIRED</code> quando a confianca for baixa.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="../adr-003-spa-vs-nextjs/">ADR-003</a></td>
-<td style="text-align: left;">Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional</td>
-<td style="text-align: left;">Aprovado</td>
-<td style="text-align: left;">2026-09-27</td>
-<td style="text-align: left;">Conform.IA Engineering Team</td>
+<td style="text-align: left;"><strong>Vazamento de PII ou violacao da LGPD</strong></td>
+<td style="text-align: left;">Critica</td>
+<td style="text-align: left;">Sancoes administrativas e quebra de sigilo bancario.</td>
+<td style="text-align: left;">Sanitizacao de traces e logs (OpenTelemetry sem CPF ou dados bancarios), minimizacao de dados e destruicao controlada.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Ambiguidade em normas e editais</strong></td>
+<td style="text-align: left;">Alta</td>
+<td style="text-align: left;">Divergencia interpretativa entre analistas e modelos.</td>
+<td style="text-align: left;">Regras declarativas em JSON Schema versionado, revisadas tecnicamente e cobertas por testes de regressao.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Indisponibilidade de APIs governamentais</strong></td>
+<td style="text-align: left;">Media</td>
+<td style="text-align: left;">Paralizacao de esteiras de verificacao de credito.</td>
+<td style="text-align: left;">Arquitetura desacoplada via adaptadores e filas de re-tentativa com backoff exponencial no Celery.</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="3-trilha-de-auditoria-transacional-audit_logs">3. Trilha de Auditoria Transacional (<code>audit_logs</code>)</h2>
+<p>Para garantir a prestacao de contas e a conformidade perante orgaos de fiscalizacao e controle (Tribunal de Contas da Uniao - TCU e Controladoria-Geral da Uniao - CGU), nenhuma decisao automatizada ou humana pode ser opaca ou efemera.</p>
+<h3 id="estrutura-do-snapshot-de-auditoria">Estrutura do Snapshot de Auditoria</h3>
+<p>Toda avaliacao gera um registro imutavel no PostgreSQL contendo:</p>
+<ol>
+<li><strong>Identificador Unico da Avaliacao</strong> (<code>report_id</code> UUID).</li>
+<li><strong>Hash Criptografico do Arquivo</strong> (<code>sha256</code> do PDF original analisado).</li>
+<li><strong>Versao Normativa da Regra</strong> (versao exata do checklist em <code>rules/schemas/</code>).</li>
+<li><strong>Citacao Literal da Evidencia</strong> (trecho textual exato, numero da pagina e coordenadas).</li>
+<li><strong>Agente ou Usuario Executor</strong> (identificador do processo automatizado ou do analista humano).</li>
+<li><strong>Timestamp UTC Imutavel</strong> (data e hora exata da deliberacao).</li>
+<li><strong>Parecer Tecnico Consolidado</strong> (justificativa tecnica e situacao de deferimento/indeferimento).</li>
+</ol>
+<hr />
+<h2 id="4-tratamento-formal-de-excecoes">4. Tratamento Formal de Excecoes</h2>
+<p>No contexto de concessoes de credito publico, <strong>uma excecao nunca significa ignorar uma regra</strong>.</p>
+<p>Quando uma certidao apresenta ressalva amparada por decisao judicial liminar ou autorizacao formal da diretoria do BNDES:</p>
+<ul>
+<li>O sistema mantem o historico da nao conformidade original registrada.</li>
+<li>O analista humano insere um parecer circunstanciado informando o numero do processo judicial ou termo de autorizacao.</li>
+<li>O status da regra e alterado para <code>EXCEPTION_AUTHORIZED</code>.</li>
+<li>O registro de auditoria armazena simultaneamente o laudo tecnico original da IA e a motivacao formal da excecao humana.</li>
+</ul>
 
 
 
@@ -1667,7 +1758,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Rodapé" >
         
           
-          <a href="../overview/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Visao Geral">
+          <a href="../sprints-roadmap/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Cronograma e Sprints">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1677,20 +1768,20 @@
                 Anterior
               </span>
               <div class="md-ellipsis">
-                Visao Geral
+                Cronograma e Sprints
               </div>
             </div>
           </a>
         
         
           
-          <a href="../adr-001-monorepo-modular/" class="md-footer__link md-footer__link--next" aria-label="Próximo: ADR-001 Monorepo Modular">
+          <a href="../harness-engineering/" class="md-footer__link md-footer__link--next" aria-label="Próximo: Harness Engineering">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Próximo
               </span>
               <div class="md-ellipsis">
-                ADR-001 Monorepo Modular
+                Harness Engineering
               </div>
             </div>
             <div class="md-footer__button md-icon">
