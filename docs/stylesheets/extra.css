@@ -15,18 +15,20 @@
   --apple-text-secondary: #6e6e73;
   --apple-text-tertiary: #86868b;
   --apple-border: rgba(0, 0, 0, 0.08);
-  --apple-border-strong: rgba(0, 0, 0, 0.14);
-  --apple-border-hover: rgba(0, 0, 0, 0.22);
+  --apple-border-strong: rgba(0, 0, 0, 0.16);
+  --apple-border-hover: rgba(0, 0, 0, 0.24);
   --apple-blue: #0071e3;
   --apple-blue-hover: #0077ed;
-  --apple-blue-subtle: rgba(0, 113, 227, 0.06);
-  --apple-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --apple-blue-subtle: rgba(0, 113, 227, 0.08);
+  --apple-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
   --apple-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
   --apple-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
   
   --radius-pill: 980px;
   --radius-card: 18px;
-  --radius-sm: 10px;
+  --radius-sm: 14px;
+  --apple-radius: 18px;
+  --apple-radius-sm: 14px;
 }
 
 [data-md-color-scheme="slate"] {
@@ -38,12 +40,12 @@
   --apple-text-secondary: #a1a1a6;
   --apple-text-tertiary: #86868b;
   --apple-border: rgba(255, 255, 255, 0.12);
-  --apple-border-strong: rgba(255, 255, 255, 0.2);
-  --apple-border-hover: rgba(255, 255, 255, 0.32);
+  --apple-border-strong: rgba(255, 255, 255, 0.22);
+  --apple-border-hover: rgba(255, 255, 255, 0.36);
   --apple-blue: #2997ff;
   --apple-blue-hover: #47a6ff;
-  --apple-blue-subtle: rgba(41, 151, 255, 0.1);
-  --apple-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --apple-blue-subtle: rgba(41, 151, 255, 0.12);
+  --apple-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
   --apple-shadow-md: 0 6px 24px rgba(0, 0, 0, 0.5);
   --apple-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7);
 }
@@ -59,7 +61,7 @@ body, .md-typeset {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Cabecalho Minimalista com Blur Apple */
+/* Cabecalho Minimalista com Efeito de Vidro Apple */
 .md-header {
   background-color: rgba(255, 255, 255, 0.8) !important;
   backdrop-filter: saturate(180%) blur(20px);
@@ -93,72 +95,87 @@ body, .md-typeset {
 }
 
 /* ------------------------------------------------------------------------------
-   2. Hero Section Apple (Limpa, Aberta e Respirada)
+   2. Landing Page Layout - Expansivo e Respirado
    ------------------------------------------------------------------------------ */
 
-.apple-hero {
-  padding: 4.5rem 1rem 3.5rem;
+.apple-landing-wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+}
+
+/* ------------------------------------------------------------------------------
+   3. Hero Section Apple (Minimalista, Foco e Negrito)
+   ------------------------------------------------------------------------------ */
+
+.md-typeset .apple-hero {
+  padding: 3.5rem 1rem 3rem;
   text-align: center;
   max-width: 860px;
   margin: 0 auto;
 }
 
 @media (max-width: 640px) {
-  .apple-hero {
-    padding: 2.5rem 0.5rem 2rem;
+  .md-typeset .apple-hero {
+    padding: 2rem 0.5rem 1.75rem;
   }
 }
 
-.apple-eyebrow {
+.md-typeset .apple-eyebrow {
   display: inline-block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--apple-blue);
-  margin-bottom: 1rem;
+  background: var(--apple-blue-subtle);
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 1.25rem;
 }
 
-.apple-title {
-  font-size: 3.5rem;
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
-  color: var(--apple-text-primary);
-  margin: 0 0 1rem;
+.md-typeset .apple-title,
+.md-typeset h1.apple-title {
+  font-size: 3.6rem !important;
+  font-weight: 700 !important;
+  line-height: 1.06 !important;
+  letter-spacing: -0.04em !important;
+  color: var(--apple-text-primary) !important;
+  margin: 0 0 1rem !important;
 }
 
 @media (max-width: 640px) {
-  .apple-title {
-    font-size: 2.3rem;
+  .md-typeset .apple-title,
+  .md-typeset h1.apple-title {
+    font-size: 2.25rem !important;
   }
 }
 
-.apple-headline {
-  font-size: 1.5rem;
+.md-typeset .apple-headline {
+  font-size: 1.45rem;
   font-weight: 500;
   line-height: 1.35;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   color: var(--apple-text-primary);
   margin: 0 0 1.25rem;
 }
 
 @media (max-width: 640px) {
-  .apple-headline {
+  .md-typeset .apple-headline {
     font-size: 1.15rem;
   }
 }
 
-.apple-subheadline {
+.md-typeset .apple-subheadline {
   font-size: 1.05rem;
   line-height: 1.6;
   color: var(--apple-text-secondary);
-  max-width: 680px;
+  max-width: 660px;
   margin: 0 auto 2.25rem;
 }
 
 @media (max-width: 640px) {
-  .apple-subheadline {
+  .md-typeset .apple-subheadline {
     font-size: 0.95rem;
     margin-bottom: 1.75rem;
   }
@@ -168,43 +185,43 @@ body, .md-typeset {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.9rem;
+  gap: 0.85rem;
   align-items: center;
 }
 
 /* ------------------------------------------------------------------------------
-   3. Botoes Apple (Pill / Alta Resposta Tatil)
+   4. Botoes Apple (Pill / Alta Resposta Tatil)
    ------------------------------------------------------------------------------ */
 
-.apple-btn-primary {
+.md-typeset .apple-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background-color: var(--apple-blue);
   color: #ffffff !important;
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: -0.01em;
-  padding: 11px 24px;
+  padding: 10px 24px;
   border-radius: var(--radius-pill);
   text-decoration: none !important;
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
               background-color 0.2s ease,
               box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 113, 227, 0.25);
 }
 
-.apple-btn-primary:hover {
+.md-typeset .apple-btn-primary:hover {
   background-color: var(--apple-blue-hover);
   transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.35);
 }
 
-.apple-btn-primary:active {
+.md-typeset .apple-btn-primary:active {
   transform: scale(0.98);
 }
 
-.apple-btn-secondary {
+.md-typeset .apple-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -212,26 +229,26 @@ body, .md-typeset {
   color: var(--apple-blue) !important;
   border: 1px solid var(--apple-blue);
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: -0.01em;
-  padding: 10px 22px;
+  padding: 9px 22px;
   border-radius: var(--radius-pill);
   text-decoration: none !important;
   transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
               background-color 0.2s ease;
 }
 
-.apple-btn-secondary:hover {
+.md-typeset .apple-btn-secondary:hover {
   background-color: var(--apple-blue-subtle);
   transform: scale(1.02);
 }
 
-.apple-btn-secondary:active {
+.md-typeset .apple-btn-secondary:active {
   transform: scale(0.98);
 }
 
 /* ------------------------------------------------------------------------------
-   4. Stat Strip Minimalista (Sem Bordas Coloridas Grosseiras)
+   5. Stat Strip Minimalista
    ------------------------------------------------------------------------------ */
 
 .apple-stat-strip {
@@ -264,7 +281,7 @@ body, .md-typeset {
 }
 
 .apple-stat-number {
-  font-size: 2.8rem;
+  font-size: 3rem;
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1.05;
@@ -274,7 +291,7 @@ body, .md-typeset {
 
 @media (max-width: 640px) {
   .apple-stat-number {
-    font-size: 2.2rem;
+    font-size: 2.25rem;
   }
 }
 
@@ -282,19 +299,55 @@ body, .md-typeset {
   font-size: 13px;
   font-weight: 400;
   color: var(--apple-text-secondary);
-  margin-top: 0.45rem;
+  margin-top: 0.5rem;
   line-height: 1.4;
 }
 
 /* ------------------------------------------------------------------------------
-   5. Apple Bento Grid (Cards Limpos com Bordas Finas e Sombras Difusas)
+   6. Secao Titulos Estilo Apple
+   ------------------------------------------------------------------------------ */
+
+.apple-section-header {
+  text-align: center;
+  max-width: 720px;
+  margin: 4rem auto 2rem;
+}
+
+.apple-section-header h2,
+.md-typeset .apple-section-header h2,
+.md-typeset h2.apple-section-title {
+  font-size: 2.1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--apple-text-primary) !important;
+  margin: 0 0 0.5rem !important;
+  border-bottom: none !important;
+}
+
+@media (max-width: 640px) {
+  .apple-section-header h2,
+  .md-typeset .apple-section-header h2,
+  .md-typeset h2.apple-section-title {
+    font-size: 1.6rem !important;
+  }
+}
+
+.apple-section-desc {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--apple-text-secondary);
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------------------
+   7. Apple Bento Grid (Cards com Cantos Arredondados e Sombra Suave)
    ------------------------------------------------------------------------------ */
 
 .apple-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-  margin: 2.5rem 0;
+  margin: 1.5rem 0 3.5rem;
 }
 
 @media (max-width: 900px) {
@@ -307,7 +360,7 @@ body, .md-typeset {
   background-color: var(--apple-card-bg);
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius);
-  padding: 2rem;
+  padding: 2.25rem 2rem;
   box-shadow: var(--apple-shadow-sm);
   display: flex;
   flex-direction: column;
@@ -333,23 +386,26 @@ body, .md-typeset {
   margin-bottom: 0.8rem;
 }
 
-.apple-card-title {
-  font-size: 1.35rem;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  color: var(--apple-text-primary);
-  margin: 0 0 0.75rem;
+.apple-card-title,
+.md-typeset .apple-card-title {
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--apple-text-primary) !important;
+  margin: 0 0 0.85rem !important;
+  border-bottom: none !important;
 }
 
 .apple-card-desc {
   font-size: 0.95rem;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--apple-text-secondary);
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.75rem;
 }
 
-.apple-card-link {
+.apple-card-link,
+.md-typeset .apple-card-link {
   font-size: 14px;
   font-weight: 500;
   color: var(--apple-blue) !important;
@@ -362,18 +418,18 @@ body, .md-typeset {
 }
 
 .apple-card:hover .apple-card-link {
-  gap: 0.6rem;
+  gap: 0.65rem;
 }
 
 /* ------------------------------------------------------------------------------
-   6. Apple Nav Grid (Navegacao Curada em 4 Modulos)
+   8. Apple Nav Grid (Navegacao Curada em 4 Modulos)
    ------------------------------------------------------------------------------ */
 
 .apple-nav-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
-  margin: 2rem 0;
+  margin: 1.5rem 0 3.5rem;
 }
 
 @media (max-width: 720px) {
@@ -382,11 +438,12 @@ body, .md-typeset {
   }
 }
 
-.apple-nav-card {
+.apple-nav-card,
+.md-typeset .apple-nav-card {
   background-color: var(--apple-card-bg);
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius-sm);
-  padding: 1.5rem 1.75rem;
+  padding: 1.6rem 1.85rem;
   text-decoration: none !important;
   color: inherit !important;
   display: flex;
@@ -412,15 +469,17 @@ body, .md-typeset {
   letter-spacing: 0.08em;
   color: var(--apple-text-tertiary);
   display: block;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.35rem;
 }
 
-.apple-nav-title {
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--apple-text-primary);
-  margin: 0 0 0.35rem;
+.apple-nav-title,
+.md-typeset .apple-nav-title {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--apple-text-primary) !important;
+  margin: 0 0 0.35rem !important;
+  border-bottom: none !important;
 }
 
 .apple-nav-text {
@@ -442,65 +501,82 @@ body, .md-typeset {
 }
 
 /* ------------------------------------------------------------------------------
-   7. Tabelas de Servicos Limpas (Estilo Ficha Tecnica Apple)
+   9. Tabelas de Servicos Limpas (Estilo Ficha Tecnica Apple)
    ------------------------------------------------------------------------------ */
 
-.md-typeset table:not([class]) {
+.apple-table-wrap {
   width: 100%;
-  border-collapse: collapse;
+  margin: 1.5rem 0 3.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.apple-table,
+.md-typeset table.apple-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid var(--apple-border);
+  border: 1px solid var(--apple-border) !important;
   border-radius: var(--apple-radius-sm);
   overflow: hidden;
   box-shadow: var(--apple-shadow-sm);
+  margin: 0 !important;
 }
 
-.md-typeset table:not([class]) th {
-  background-color: var(--apple-card-secondary);
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--apple-text-secondary);
-  border-bottom: 1px solid var(--apple-border);
-  padding: 0.9rem 1.2rem;
-  text-align: left;
+.apple-table th,
+.md-typeset table.apple-table th {
+  background-color: var(--apple-card-secondary) !important;
+  color: var(--apple-text-secondary) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  padding: 12px 18px !important;
+  border-bottom: 1px solid var(--apple-border) !important;
+  text-align: left !important;
 }
 
-.md-typeset table:not([class]) td {
-  padding: 0.9rem 1.2rem;
-  border-bottom: 1px solid var(--apple-border);
-  font-size: 14px;
+.apple-table td,
+.md-typeset table.apple-table td {
+  padding: 14px 18px !important;
+  border-bottom: 1px solid var(--apple-border) !important;
+  font-size: 13.5px !important;
+  color: var(--apple-text-primary) !important;
 }
 
-.md-typeset table:not([class]) tr:last-child td {
-  border-bottom: none;
+.apple-table tr:last-child td,
+.md-typeset table.apple-table tr:last-child td {
+  border-bottom: none !important;
 }
 
-.md-typeset table:not([class]) tr:hover td {
-  background-color: var(--apple-blue-subtle);
-  transition: background-color 0.15s ease;
+.apple-table a,
+.md-typeset table.apple-table a {
+  color: var(--apple-blue) !important;
+  text-decoration: none !important;
+  font-family: var(--apple-mono) !important;
+  font-size: 12.5px !important;
+  white-space: nowrap !important;
+}
+
+.apple-table a:hover,
+.md-typeset table.apple-table a:hover {
+  text-decoration: underline !important;
 }
 
 /* ------------------------------------------------------------------------------
-   8. Acessibilidade (WCAG 2.2 - Reduced Motion e Foco)
+   10. Acessibilidade, Foco e Dark Mode Overrides
    ------------------------------------------------------------------------------ */
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-  .apple-btn-primary:hover,
-  .apple-btn-secondary:hover,
-  .apple-card:hover,
-  .apple-nav-card:hover {
-    transform: none !important;
-  }
+:focus-visible {
+  outline: 2px solid var(--apple-blue);
+  outline-offset: 2px;
 }
 
-:focus-visible {
-  outline: 2px solid var(--apple-blue) !important;
-  outline-offset: 3px !important;
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
