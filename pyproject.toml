@@ -13,6 +13,29 @@ exclude = '''
 )/
 '''
 
+[project]
+name = "conformia-platform"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "mkdocs-material>=9.6,<10",
+  "mkdocs-git-revision-date-localized-plugin>=1.4,<2",
+  "mkdocs-minify-plugin>=0.8,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.1.1",
+  "pytest-asyncio>=0.23.6",
+  "pytest-cov>=4.1.1",
+  "flake8>=7.0.0",
+  "black>=24.10.0",
+  "isort>=5.13.2",
+  "mypy>=1.9.0",
+]
+
+[tool.uv]
+package = false
+
 [tool.uv.workspace]
 members = ["backend"]
-

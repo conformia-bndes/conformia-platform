@@ -18,9 +18,23 @@
 
 ## 2. Opções Consideradas
 
-- **Opção 1**: [Descrição e avaliação sumária]
-- **Opção 2**: [Descrição e avaliação sumária]
-- **Opção 3**: [Descrição e avaliação sumária]
+### Opção 1: [Nome da alternativa]
+
+- [Descrição da alternativa]
+- _Vantagens_: [Benefícios principais]
+- _Desvantagens_: [Custos, riscos ou limitações]
+
+### Opção 2: [Nome da alternativa escolhida]
+
+- [Descrição da alternativa]
+- _Vantagens_: [Benefícios principais]
+- _Desvantagens_: [Custos, riscos ou limitações]
+
+### Opção 3: [Nome da alternativa, se aplicável]
+
+- [Descrição da alternativa]
+- _Vantagens_: [Benefícios principais]
+- _Desvantagens_: [Custos, riscos ou limitações]
 
 ---
 

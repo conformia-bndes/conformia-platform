@@ -8,11 +8,11 @@ O Conform.IA BNDES estabelece padrões rigorosos de qualidade, segurança e conf
 
 <div class="grid cards" markdown>
 
-- ### 1. Verificacao Estatica
+- ### 1. Verificação Estática
 
   Linter e formatação automática em Python (`black`, `flake8`) e TypeScript/React (`eslint`).
 
-- ### 2. Testes de Regressao
+- ### 2. Testes de Regressão
 
   Suíte completa de testes unitários e de integração via `pytest` (backend) e `vitest` (frontend).
 
@@ -52,8 +52,8 @@ pip-audit -r backend/requirements.txt
 Como a plataforma é destinada a atender requisitos institucionais de um banco público de desenvolvimento federal (BNDES) e estará sujeita a auditorias de órgãos de controle externo (TCU, CGU):
 
 - É **terminantemente proibido o uso de emojis** em:
-  - Codigo-fonte (comentarios, variaveis, docstrings, retornos de API).
-  - Documentacao tecnica (Markdown, MkDocs, README).
+  - Código-fonte (comentários, variáveis, docstrings, retornos de API).
+  - Documentação técnica (Markdown, MkDocs, README).
   - Templates de Pull Request e Issues.
   - Mensagens de commit do Git.
-- A comunicacao deve ser estritamente tecnica, formal, sobria e precisa.
+- A comunicação deve ser estritamente técnica, formal, sóbria e precisa.

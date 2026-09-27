@@ -2,13 +2,11 @@
 
 ## Metadados
 
-| Parâmetro             | Detalhe                                            |
-| :-------------------- | :------------------------------------------------- |
-| **Status**            | Aprovado                                           |
-| **Data**              | 2026-09-27                                         |
-| **Autores**           | Equipe de Engenharia Conform.IA BNDES              |
-| **Revisores**         | Staff Software Engineers e Arquitetura de Soluções |
-| **Épico / Requisito** | Consulta Pública BNDES nº 01/2025                  |
+- **Status**: Aprovado
+- **Data**: 2026-09-27
+- **Autores**: Equipe de Engenharia Conform.IA BNDES
+- **Revisores**: Staff Software Engineers e Arquitetura de Soluções
+- **Épico / Requisito**: Consulta Pública BNDES nº 01/2025
 
 ---
 
@@ -38,9 +36,9 @@ A equipe realizou uma avaliação arquitetural comparando **Next.js** com a abor
 
 ## 3. Decisão Adotada
 
-Decide-se **manter e consolidar o frontend como uma Single Page Application (SPA) estática utilizando React 18, Vite, TypeScript e Tailwind CSS**, rejeitando a adoção do Next.js para este caso de uso.
+Adota-se **manter e consolidar o frontend como uma Single Page Application (SPA) estática utilizando React 18, Vite, TypeScript e Tailwind CSS**, rejeitando a adoção do Next.js para este caso de uso.
 
-### Justificativas Técnicas da Decisão
+As justificativas técnicas da decisão são:
 
 1. **Inexistência de requisito de SEO**: o cockpit é fechado e autenticado; SSR não agrega valor de negócio ao produto.
 2. **Eliminação de servidor intermediário desnecessário**: React + Vite produz artefatos estáticos servidos por um proxy reverso **Nginx**, sem um servidor Node.js adicional em produção.

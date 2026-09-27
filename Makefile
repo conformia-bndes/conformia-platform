@@ -38,11 +38,11 @@ setup:
 	@test -f .env || cp .env.example .env
 	@echo "Arquivo .env configurado."
 	@echo "Instalando dependencias locais..."
-	$(if $(UV),uv sync --extra dev,pip install -e ./backend || true)
+	$(if $(UV),uv sync --all-packages --all-extras,pip install -e ./backend || true)
 	cd frontend && (npm install || true)
 
 uv-sync:
-	uv sync --extra dev
+	uv sync --all-packages --all-extras
 
 uv-lock:
 	uv lock

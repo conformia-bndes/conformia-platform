@@ -28,9 +28,9 @@ A dispersão desses componentes em múltiplos repositórios isolados (polyrepo) 
 
 ### Opção 1: Múltiplos Repositórios Independentes (Polyrepo)
 
-- Repositorios separados para `backend`, `frontend`, `rules` e `infra`.
-- _Vantagens_: Isolamento estrito de permissoes de commit por equipe.
-- _Desvantagens_: Complexidade de sincronizacao de contratos de API e JSON schemas de regras; dificuldade para inicializacao local unificada via Docker Compose; pipelines de CI fragmentados.
+- Repositórios separados para `backend`, `frontend`, `rules` e `infra`.
+- _Vantagens_: Isolamento estrito de permissões de commit por equipe.
+- _Desvantagens_: Complexidade de sincronização de contratos de API e esquemas JSON de regras; dificuldade para inicialização local unificada via Docker Compose; pipelines de CI fragmentados.
 
 ### Opção 2: Monorepo Modular Unificado (Opção Escolhida)
 
@@ -48,10 +48,10 @@ As fronteiras de código são estabelecidas por pastas especializadas com propri
 
 - Infraestrutura: `infra/`
 - Backend e IDP: `backend/`
-- Schemas Normativos: `rules/schemas/`
-- Benchmarks de Regressao: `evals/`
+- Esquemas normativos: `rules/schemas/`
+- Benchmarks de regressão: `evals/`
 - Frontend: `frontend/`
-- Documentacao: `docs/`
+- Documentação: `docs/`
 - Contexto de Agentes: `.agents/`
 
 ---

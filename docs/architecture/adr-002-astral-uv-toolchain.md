@@ -2,13 +2,11 @@
 
 ## Metadados
 
-| Parâmetro             | Detalhe                               |
-| :-------------------- | :------------------------------------ |
-| **Status**            | Aprovado                              |
-| **Data**              | 2026-09-27                            |
-| **Autores**           | Equipe de Engenharia Conform.IA BNDES |
-| **Revisores**         | Staff Software Engineers              |
-| **Épico / Requisito** | Consulta Pública BNDES nº 01/2025     |
+- **Status**: Aprovado
+- **Data**: 2026-09-27
+- **Autores**: Equipe de Engenharia Conform.IA BNDES
+- **Revisores**: Staff Software Engineers
+- **Épico / Requisito**: Consulta Pública BNDES nº 01/2025
 
 ---
 
