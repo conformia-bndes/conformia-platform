@@ -7,11 +7,11 @@ hide:
 <div class="apple-landing-wrap">
 
 <div class="apple-hero">
-  <span class="apple-eyebrow">Consulta Publica BNDES no 01/2025</span>
+  <span class="apple-eyebrow">Consulta Pública BNDES nº 01/2025</span>
   <h1 class="apple-title">Conform.IA BNDES</h1>
-  <p class="apple-headline">Processamento Inteligente de Documentos e Auditoria Imutavel</p>
+  <p class="apple-headline">Processamento Inteligente de Documentos e Auditoria Imutável</p>
   <p class="apple-subheadline">
-    Plataforma de alta precisao pericial para verificacao automatizada de conformidade cadastral, fiscal, trabalhista e regulatoria em operacoes de credito e investimentos no BNDES.
+    Plataforma de alta precisão pericial para verificação automatizada de conformidade cadastral, fiscal, trabalhista e regulatória em operações de crédito e investimentos no BNDES.
   </p>
   <div class="apple-cta-group">
     <a href="development/quickstart/" class="apple-btn-primary">Iniciar Exploracao</a>
@@ -39,8 +39,8 @@ hide:
 </div>
 
 <div class="apple-section-header">
-  <h2 class="apple-section-title">Pilares Fundamentais da Solucao</h2>
-  <p class="apple-section-desc">Arquitetura concebida para atender aos requisitos de conformidade com precisao pericial e rastreabilidade total.</p>
+  <h2 class="apple-section-title">Pilares Fundamentais da Solução</h2>
+  <p class="apple-section-desc">Arquitetura concebida para atender aos requisitos de conformidade com precisão pericial e rastreabilidade total.</p>
 </div>
 
 <div class="apple-grid-3">
@@ -68,13 +68,13 @@ hide:
 
   <div class="apple-card">
     <div>
-      <span class="apple-card-tag">Governanca</span>
-      <h3 class="apple-card-title">Auditoria Imutavel e LGPD</h3>
+      <span class="apple-card-tag">Governança</span>
+      <h3 class="apple-card-title">Auditoria Imutável e LGPD</h3>
       <p class="apple-card-desc">
         Registro transacional append-only de cada analise com hash SHA-256 do documento original, carimbo temporal UTC e parecer pericial estruturado para o TCU e a CGU.
       </p>
     </div>
-    <a href="planning/governance-security/" class="apple-card-link">Ver Diretrizes de Governanca &rarr;</a>
+    <a href="planning/governance-security/" class="apple-card-link">Ver Diretrizes de Governança &rarr;</a>
   </div>
 </div>
 
@@ -86,7 +86,7 @@ hide:
 <div class="apple-nav-grid">
   <a href="planning/" class="apple-nav-card">
     <div>
-      <span class="apple-nav-category">Estrategia</span>
+      <span class="apple-nav-category">Estratégia</span>
       <h4 class="apple-nav-title">Planejamento e Requisitos</h4>
       <p class="apple-nav-text">Entendimento do edital, requisitos RF01 a RF15, matriz de dores operacionais e roadmap de sprints.</p>
     </div>
@@ -96,7 +96,7 @@ hide:
   <a href="architecture/overview/" class="apple-nav-card">
     <div>
       <span class="apple-nav-category">Engenharia</span>
-      <h4 class="apple-nav-title">Arquitetura e Decisoes (ADRs)</h4>
+      <h4 class="apple-nav-title">Arquitetura e Decisões (ADRs)</h4>
       <p class="apple-nav-text">Topologia de servicos conteinerizados, diagramas C4 e registros de decisao tecnica (ADR-001 a ADR-003).</p>
     </div>
     <span class="apple-nav-arrow">&rarr;</span>

@@ -1,6 +1,6 @@
-# Referencia da API REST (OpenAPI / Swagger)
+# Referência da API REST (OpenAPI / Swagger)
 
-A API do Conform.IA BNDES segue padroes RESTful, com comunicacao via JSON e documentacao interativa gerada automaticamente pelo FastAPI.
+A API do Conform.IA BNDES segue padrões RESTful, com comunicação via JSON e documentação interativa gerada automaticamente pelo FastAPI.
 
 - **Swagger UI Interativo**: `http://localhost:8000/docs`
 - **ReDoc Alternativo**: `http://localhost:8000/redoc`
@@ -8,12 +8,14 @@ A API do Conform.IA BNDES segue padroes RESTful, com comunicacao via JSON e docu
 
 ---
 
-## 1. Modulo de Saude do Sistema (`/health`)
+## 1. Módulo de Saúde do Sistema (`/health`)
 
 ### `GET /api/v1/health`
-Retorna o diagnostico operacional de todos os servicos da infraestrutura.
+
+Retorna o diagnóstico operacional de todos os serviços da infraestrutura.
 
 **Resposta de Sucesso (`200 OK`):**
+
 ```json
 {
   "status": "healthy",
@@ -31,17 +33,19 @@ Retorna o diagnostico operacional de todos os servicos da infraestrutura.
 
 ---
 
-## 2. Modulo de Documentos e IDP (`/documents`)
+## 2. Módulo de Documentos e IDP (`/documents`)
 
 ### `POST /api/v1/documents/upload`
-Recebe um arquivo PDF para ingestao, executa validacao de magic bytes (`%PDF-`), grava no MinIO S3 e dispara extracao textual vetorial/OCR.
+
+Recebe um arquivo PDF para ingestão, executa validação de magic bytes (`%PDF-`), grava no MinIO S3 e dispara extração textual vetorial/OCR.
 
 - **Content-Type**: `multipart/form-data`
 - **Parametros**:
-  - `file`: Arquivo binario PDF (maximo 50MB).
+  - `file`: Arquivo binário PDF (máximo 50 MB).
   - `async_process` (query param, boolean, default: `false`): Executar via Celery background worker.
 
 **Resposta (`201 Created`):**
+
 ```json
 {
   "id": "doc-550e8400-e29b-41d4-a716-446655440000",
@@ -54,21 +58,25 @@ Recebe um arquivo PDF para ingestao, executa validacao de magic bytes (`%PDF-`),
 ```
 
 ### `GET /api/v1/documents`
+
 Lista paginada de documentos processados na plataforma.
 
 - **Query Params**: `skip` (default: 0), `limit` (default: 50).
 
 ### `GET /api/v1/documents/{document_id}`
-Recupera os metadados cadastrais extraidos e o preview textual do documento.
+
+Recupera os metadados cadastrais extraídos e o preview textual do documento.
 
 ---
 
-## 3. Modulo de Conformidade e Regras (`/compliance`)
+## 3. Módulo de Conformidade e Regras (`/compliance`)
 
 ### `POST /api/v1/compliance/verify/{document_id}`
-Executa a avaliacao automatizada das regras do checklist BNDES contra o documento ingerido.
+
+Executa a avaliação automatizada das regras do checklist BNDES contra o documento ingerido.
 
 **Resposta (`200 OK`):**
+
 ```json
 {
   "report_id": "rep-7f8e9a-2026",
@@ -83,4 +91,5 @@ Executa a avaliacao automatizada das regras do checklist BNDES contra o document
 ```
 
 ### `GET /api/v1/compliance/rules`
-Retorna todas as regras ativas configuradas no catalogo declarativo JSON Schema do BNDES.
+
+Retorna todas as regras ativas configuradas no catálogo declarativo JSON Schema do BNDES.

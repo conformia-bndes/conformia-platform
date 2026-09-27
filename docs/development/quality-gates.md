@@ -1,21 +1,23 @@
 # Protocolos de Qualidade e Quality Gates
 
-O Conform.IA BNDES estabelece padroes rigorosos de qualidade, seguranca e conformidade que devem ser atendidos antes de qualquer commit ou integracao na branch `main`.
+O Conform.IA BNDES estabelece padrões rigorosos de qualidade, segurança e conformidade que devem ser atendidos antes de qualquer commit ou integração na branch `main`.
 
 ---
 
-## 1. O Tripe de Qualidade
+## 1. O Tripé de Qualidade
 
 <div class="grid cards" markdown>
 
 - ### 1. Verificacao Estatica
-    Linter e formatacao automatica em Python (`black`, `flake8`) e TypeScript/React (`eslint`).
+
+  Linter e formatação automática em Python (`black`, `flake8`) e TypeScript/React (`eslint`).
 
 - ### 2. Testes de Regressao
-    Suite completa de testes unitarios e de integracao via `pytest` (backend) e `vitest` (frontend).
+
+  Suíte completa de testes unitários e de integração via `pytest` (backend) e `vitest` (frontend).
 
 - ### 3. Harness Evals
-    Benchmark deterministico de acuracia documental com tolerancia zero a falsos positivos.
+  Benchmark determinístico de acurácia documental com tolerância zero a falsos positivos.
 
 </div>
 
@@ -26,30 +28,30 @@ O Conform.IA BNDES estabelece padroes rigorosos de qualidade, seguranca e confor
 Antes de submeter um Pull Request, execute os comandos do gate de qualidade:
 
 ```bash
-# 1. Execucao de Testes Automatizados
+# 1. Execução de Testes Automatizados
 uv run pytest backend/tests/ -v --cov=backend/app --cov-report=term-missing
 cd frontend && npm test
 
-# 2. Execucao do Benchmark de Evals
+# 2. Execução do Benchmark de Evals
 uv run python evals/eval_pipeline.py
 
-# 3. Validacao de Linters e Formatacao
+# 3. Validação de Linters e Formatação
 uv run black --check backend/
 uv run flake8 backend/
 cd frontend && npm run lint
 
-# 4. Varredura Local de Segredos e Dependencias
+# 4. Varredura Local de Segredos e Dependências
 gitleaks detect --source . --config .gitleaks.toml --verbose
 pip-audit -r backend/requirements.txt
 ```
 
 ---
 
-## 3. Politica Estrita de Ausencia de Emojis
+## 3. Política Estrita de Ausência de Emojis
 
-Como a plataforma e destinada a atender requisitos institucionais de um banco publico de desenvolvimento federal (BNDES) e estara sujeita a auditorias de orgaos de controle externo (TCU, CGU):
+Como a plataforma é destinada a atender requisitos institucionais de um banco público de desenvolvimento federal (BNDES) e estará sujeita a auditorias de órgãos de controle externo (TCU, CGU):
 
-- E **terminantemente proibido o uso de emojis** em:
+- É **terminantemente proibido o uso de emojis** em:
   - Codigo-fonte (comentarios, variaveis, docstrings, retornos de API).
   - Documentacao tecnica (Markdown, MkDocs, README).
   - Templates de Pull Request e Issues.

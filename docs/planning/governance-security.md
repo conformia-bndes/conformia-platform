@@ -1,10 +1,10 @@
-# Seguranca, LGPD, Governanca e Auditoria
+# Segurança, LGPD, Governança e Auditoria
 
-Este documento consolida as diretrizes de seguranca da informacao, protecao de dados pessoais (LGPD), gestao de riscos e auditoria transacional da plataforma Conform.IA BNDES.
+Este documento consolida as diretrizes de segurança da informação, proteção de dados pessoais (LGPD), gestão de riscos e auditoria transacional da plataforma Conform.IA BNDES.
 
 ---
 
-## 1. Principios de Seguranca e Privacidade
+## 1. Princípios de Segurança e Privacidade
 
 A plataforma opera sob os principios estritos de **Security by Design** e **Privacy by Design**:
 
@@ -15,25 +15,25 @@ A plataforma opera sob os principios estritos de **Security by Design** e **Priv
 
 ---
 
-## 2. Matriz de Gestao de Riscos e Mitigacao
+## 2. Matriz de Gestão de Riscos e Mitigação
 
-| Risco Tecnico ou Operacional | Severidade | Impacto | Estrategia de Mitigacao Implementada |
-| :--- | :--- | :--- | :--- |
-| **Alucinacao de modelo de IA** | Critica | Aprovacao indevida de certidao com debitos ativos. | Padrao **Maker-Checker** compulsorio: citacao literal exata da evidencia e verificacao deterministica antes de qualquer aprovacao. |
-| **Degradacao de OCR em certidoes digitalizadas** | Alta | Falha na extracao de datas de validade ou CNPJ. | Pre-processamento de imagem, binarizacao adaptativa e exigencia de status `MANUAL_REVIEW_REQUIRED` quando a confianca for baixa. |
-| **Vazamento de PII ou violacao da LGPD** | Critica | Sancoes administrativas e quebra de sigilo bancario. | Sanitizacao de traces e logs (OpenTelemetry sem CPF ou dados bancarios), minimizacao de dados e destruicao controlada. |
-| **Ambiguidade em normas e editais** | Alta | Divergencia interpretativa entre analistas e modelos. | Regras declarativas em JSON Schema versionado, revisadas tecnicamente e cobertas por testes de regressao. |
-| **Indisponibilidade de APIs governamentais** | Media | Paralizacao de esteiras de verificacao de credito. | Arquitetura desacoplada via adaptadores e filas de re-tentativa com backoff exponencial no Celery. |
+| Risco Técnico ou Operacional                     | Severidade | Impacto                                               | Estratégia de Mitigação Implementada                                                                                               |
+| :----------------------------------------------- | :--------- | :---------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| **Alucinacao de modelo de IA**                   | Critica    | Aprovacao indevida de certidao com debitos ativos.    | Padrao **Maker-Checker** compulsorio: citacao literal exata da evidencia e verificacao deterministica antes de qualquer aprovacao. |
+| **Degradacao de OCR em certidoes digitalizadas** | Alta       | Falha na extracao de datas de validade ou CNPJ.       | Pre-processamento de imagem, binarizacao adaptativa e exigencia de status `MANUAL_REVIEW_REQUIRED` quando a confianca for baixa.   |
+| **Vazamento de PII ou violacao da LGPD**         | Critica    | Sancoes administrativas e quebra de sigilo bancario.  | Sanitizacao de traces e logs (OpenTelemetry sem CPF ou dados bancarios), minimizacao de dados e destruicao controlada.             |
+| **Ambiguidade em normas e editais**              | Alta       | Divergencia interpretativa entre analistas e modelos. | Regras declarativas em JSON Schema versionado, revisadas tecnicamente e cobertas por testes de regressao.                          |
+| **Indisponibilidade de APIs governamentais**     | Media      | Paralizacao de esteiras de verificacao de credito.    | Arquitetura desacoplada via adaptadores e filas de re-tentativa com backoff exponencial no Celery.                                 |
 
 ---
 
 ## 3. Trilha de Auditoria Transacional (`audit_logs`)
 
-Para garantir a prestacao de contas e a conformidade perante orgaos de fiscalizacao e controle (Tribunal de Contas da Uniao - TCU e Controladoria-Geral da Uniao - CGU), nenhuma decisao automatizada ou humana pode ser opaca ou efemera.
+Para garantir a prestação de contas e a conformidade perante órgãos de fiscalização e controle (Tribunal de Contas da União — TCU e Controladoria-Geral da União — CGU), nenhuma decisão automatizada ou humana pode ser opaca ou efêmera.
 
 ### Estrutura do Snapshot de Auditoria
 
-Toda avaliacao gera um registro imutavel no PostgreSQL contendo:
+Toda avaliação gera um registro imutável no PostgreSQL contendo:
 
 1. **Identificador Unico da Avaliacao** (`report_id` UUID).
 2. **Hash Criptografico do Arquivo** (`sha256` do PDF original analisado).

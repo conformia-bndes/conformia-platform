@@ -4,7 +4,7 @@ O pipeline de IDP do Conform.IA BNDES e responsavel pela conversao de documentos
 
 ---
 
-## 1. Arquitetura do Extrator Hibrido
+## 1. Arquitetura do Extrator Híbrido
 
 O processamento adota uma abordagem em duas etapas:
 
@@ -13,7 +13,7 @@ flowchart TD
     PDF[Arquivo PDF Ingerido] --> Parser[Extrator Vetorial Nativo - pdfplumber]
     Parser --> CheckDensity{Densidade de Caracteres >= Limiar?}
     CheckDensity -- Sim --> TextExtraction[Extracao de Texto e Tabelas Nativas]
-    CheckDensity -- Nao (Documento Digitalizado) --> ImageRender[Renderizacao de Pagina em 300 DPI]
+    CheckDensity -- Não (Documento Digitalizado) --> ImageRender[Renderização de Página em 300 DPI]
     ImageRender --> Preprocess[Normalizacao de Imagem e Escala de Cinza]
     Preprocess --> Tesseract[Tesseract OCR - Idioma por]
     Tesseract --> OCRExtraction[Extracao Textual Via OCR]
@@ -69,5 +69,6 @@ O extrator retorna uma estrutura formal serializavel com o seguinte formato:
 ---
 
 ## 4. Tratamento de Excecoes e Resiliencia
+
 - Documentos corrompidos ou com senha geram erro `RuntimeError` capturado de forma transparente pela API, registrando status `EXTRACTION_FAILED` no banco relacional.
 - Limite maximo de processamento por documento configurado no worker Celery (`task_time_limit: 600 segundos`).

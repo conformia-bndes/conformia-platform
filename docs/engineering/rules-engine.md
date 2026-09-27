@@ -6,7 +6,7 @@ O Motor de Regras do Conform.IA BNDES (`app.services.rules_engine.RulesEngine`) 
 
 ## 1. Tipologia de Regras de Conformidade
 
-O sistema suporta tres modalidades de avaliacao:
+O sistema suporta três modalidades de avaliação:
 
 ```mermaid
 flowchart LR
@@ -21,20 +21,23 @@ flowchart LR
 ```
 
 ### 1.1 Regras Deterministicas (`DETERMINISTIC`)
-- Executadas via busca booleana exata, correspondencia de expressoes regulares e validacao de termos impeditivos (*anti-keywords*).
+
+- Executadas via busca booleana exata, correspondencia de expressoes regulares e validacao de termos impeditivos (_anti-keywords_).
 - **Exemplo**: Certidao Negativa de Debitos Federais. Se os termos `"CERTIDAO NEGATIVA"`, `"TRIBUTOS FEDERAIS"` e `"DIVIDA ATIVA DA UNIAO"` estiverem presentes, e nenhum termo como `"CONSTA PENDENCIA"` for detectado, o resultado e `COMPLIANT`.
 
 ### 1.2 Regras Hibridas (`HYBRID`)
+
 - Aplicadas a documentos onde o vocabulário pode variar por comarca ou orgao regional (ex: certidoes de falencia).
-- O motor realiza uma triagem deterministica inicial. Se os termos fundamentais forem localizados, o texto relevante e submetido ao orquestrador **Maker-Checker** para auditoria semantica e confirmacao de ausencia de passivos.
+- O motor realiza uma triagem determinística inicial. Se os termos fundamentais forem localizados, o texto relevante é submetido ao orquestrador **Maker-Checker** para auditoria semântica e confirmação de ausência de passivos.
 
 ---
 
 ## 2. Estrutura do Esquema Declarativo (JSON Schema)
 
-As regras sao externalizadas do codigo-fonte da aplicacao e versionadas em `rules/schemas/rule_schema.json`. O checklist de referencia reside em `rules/schemas/bndes_sample_checklist.json`.
+As regras são externalizadas do código-fonte da aplicação e versionadas em `rules/schemas/rule_schema.json`. O checklist de referência reside em `rules/schemas/bndes_sample_checklist.json`.
 
 Propriedades fundamentais de cada regra:
+
 - `id`: Identificador unico (ex: `RULE-BNDES-001`).
 - `code`: Mnemonico operacional (ex: `CND_FEDERAL`).
 - `category`: Classificacao tematica (`FISCAL`, `TRABALHISTA`, `JURIDICA`, `AMBIENTAL`, `INTEGRIDADE`).

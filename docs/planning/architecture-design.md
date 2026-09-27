@@ -1,12 +1,12 @@
-# Arquitetura de Software e Engenharia de Solucao
+# Arquitetura de Software e Engenharia de Solução
 
-Este documento estabelece as diretrizes arquiteturais, a topologia de servicos, a matriz de selecao tecnologica e o modelo de resultado adotado na plataforma Conform.IA BNDES.
+Este documento estabelece as diretrizes arquiteturais, a topologia de serviços, a matriz de seleção tecnológica e o modelo de resultado adotado na plataforma Conform.IA BNDES.
 
 ---
 
-## 1. Topologia de Servicos e Fluxo de Dados
+## 1. Topologia de Serviços e Fluxo de Dados
 
-A solucao adota uma arquitetura conteinerizada desacoplada, separando o ciclo HTTP da API do processamento computacionalmente intensivo de IDP e IA:
+A solução adota uma arquitetura conteinerizada desacoplada, separando o ciclo HTTP da API do processamento computacionalmente intensivo de IDP e IA:
 
 ```mermaid
 flowchart TD
@@ -49,17 +49,17 @@ flowchart TD
 
 ## 2. Matriz de Tecnologias e Justificativa de Engenharia
 
-| Componente | Tecnologia Selecionada | Justificativa Tecnica e Compensacoes |
-| :--- | :--- | :--- |
-| **Frontend SPA** | React 18 + Vite + Tailwind CSS | Compilacao estatica servida via Nginx (container < 25MB), zero necessidade de servidor Node.js em producao, sem problemas de hidratacao com visualizadores de PDF e HMR instantaneo. |
-| **Backend API** | Python 3.11/3.13 + FastAPI + Uvicorn | Ecossistema maduro para engenharia de dados e IA, suporte assincrono de alto rendimento e contratos tipados com Pydantic v2. |
-| **Gerenciador de Pacotes**| Astral `uv` | Resolucao de dependencias em milissegundos, workspace monorepo nativo e lockfile deterministico (`uv.lock`) para reprodutibilidade estrita. |
-| **Banco Relacional** | PostgreSQL 16 Alpine | Persistencia transacional ACID, suporte a consultas relacionais e integridade referencial compulsoria para trilhas de auditoria. |
-| **Broker de Mensagens** | Redis 7 Alpine | Fila em memoria de baixissima latencia para despacho assincrono entre API e workers de extracao. |
-| **Processamento Assincrono**| Celery 5 | Isolamento de operacoes bloqueantes (OCR, extracao e chamadas a modelos de IA) do ciclo de vida das requisicoes HTTP da API. |
-| **Armazenamento de Objetos**| MinIO S3 Compatible | Compatibilidade estrita com a API AWS S3, facilitando execucao local e migracao transparente para nuvens soberanas brasileiras. |
-| **Extracao Vetorial e OCR** | pdfplumber + Tesseract OCR 5 + Poppler | Solucao auditavel, sem envio de documentos confidenciais a nuvens de terceiros e com calibracao para o idioma portugues (`por`). |
-| **Orquestracao Local** | Docker Compose v2 | Orquestracao declarativa unificada em `infra/docker-compose.yml`, eliminando divergencias entre ambientes. |
+| Componente                   | Tecnologia Selecionada                 | Justificativa Técnica e Compensações                                                                                                                                                 |
+| :--------------------------- | :------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend SPA**             | React 18 + Vite + Tailwind CSS         | Compilação estática servida via Nginx (contêiner < 25 MB), sem necessidade de servidor Node.js em produção, sem problemas de hidratação com visualizadores de PDF e HMR instantâneo. |
+| **Backend API**              | Python 3.11/3.13 + FastAPI + Uvicorn   | Ecossistema maduro para engenharia de dados e IA, suporte assíncrono de alto rendimento e contratos tipados com Pydantic v2.                                                         |
+| **Gerenciador de Pacotes**   | Astral `uv`                            | Resolução de dependências em milissegundos, workspace monorepo nativo e lockfile determinístico (`uv.lock`) para reprodutibilidade estrita.                                          |
+| **Banco Relacional**         | PostgreSQL 16 Alpine                   | Persistencia transacional ACID, suporte a consultas relacionais e integridade referencial compulsoria para trilhas de auditoria.                                                     |
+| **Broker de Mensagens**      | Redis 7 Alpine                         | Fila em memoria de baixissima latencia para despacho assincrono entre API e workers de extracao.                                                                                     |
+| **Processamento Assincrono** | Celery 5                               | Isolamento de operacoes bloqueantes (OCR, extracao e chamadas a modelos de IA) do ciclo de vida das requisicoes HTTP da API.                                                         |
+| **Armazenamento de Objetos** | MinIO S3 Compatible                    | Compatibilidade estrita com a API AWS S3, facilitando execucao local e migracao transparente para nuvens soberanas brasileiras.                                                      |
+| **Extracao Vetorial e OCR**  | pdfplumber + Tesseract OCR 5 + Poppler | Solucao auditavel, sem envio de documentos confidenciais a nuvens de terceiros e com calibracao para o idioma portugues (`por`).                                                     |
+| **Orquestracao Local**       | Docker Compose v2                      | Orquestracao declarativa unificada em `infra/docker-compose.yml`, eliminando divergencias entre ambientes.                                                                           |
 
 ---
 

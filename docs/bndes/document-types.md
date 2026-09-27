@@ -1,19 +1,19 @@
-# Tipologias de Documentos e Especificacoes de Ingestao
+# Tipologias de Documentos e Especificações de Ingestão
 
-Este documento estabelece as especificacoes tecnicas das tipologias documentais processadas pelo pipeline de IDP do Conform.IA BNDES, detalhando orgaos emissores, campos obrigatorios, expressoes regulares e condicoes de contorno.
+Este documento estabelece as especificações técnicas das tipologias documentais processadas pelo pipeline de IDP do Conform.IA BNDES, detalhando órgãos emissores, campos obrigatórios, expressões regulares e condições de contorno.
 
 ---
 
-## 1. Certidao Negativa de Debitos Federais (CND Federal)
+## 1. Certidão Negativa de Débitos Federais (CND Federal)
 
-- **Orgao Emissor**: Secretaria Especial da Receita Federal do Brasil (RFB) e Procuradoria-Geral da Fazenda Nacional (PGFN).
-- **Finalidade**: Comprovar a quitacao de tributos federais e contribuicoes previdenciarias inscritas em Divida Ativa da Uniao.
-- **Campos Obrigatorios**:
+- **Órgão Emissor**: Secretaria Especial da Receita Federal do Brasil (RFB) e Procuradoria-Geral da Fazenda Nacional (PGFN).
+- **Finalidade**: Comprovar a quitação de tributos federais e contribuições previdenciárias inscritas em Dívida Ativa da União.
+- **Campos Obrigatórios**:
   - CNPJ da empresa proponente (formato: `XX.XXX.XXX/XXXX-XX`).
-  - Razao Social da pessoa juridica.
-  - Codigo de controle da certidao.
-  - Data de emissao e data limite de validade.
-  - Frase de efeito legal: *"certidao negativa de debitos relativos aos tributos federais e a divida ativa da uniao"* ou *"certidao positiva com efeitos de negativa"*.
+  - Razão Social da pessoa jurídica.
+  - Código de controle da certidão.
+  - Data de emissão e data limite de validade.
+  - Frase de efeito legal: _"certidao negativa de debitos relativos aos tributos federais e a divida ativa da uniao"_ ou _"certidao positiva com efeitos de negativa"_.
 - **Expressoes Regulares**:
   - CNPJ: `\b[0-9]{2}\.[0-9]{3}\.[0-9]{3}\/[0-9]{4}\-[0-9]{2}\b`
   - Codigo de Controle: `[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}`
@@ -22,33 +22,33 @@ Este documento estabelece as especificacoes tecnicas das tipologias documentais 
 
 ## 2. Certificado de Regularidade do FGTS (CRF)
 
-- **Orgao Emissor**: Caixa Economica Federal (CEF).
-- **Finalidade**: Atestar o cumprimento das obrigacoes trabalhistas com o Fundo de Garantia do Tempo de Servico.
-- **Campos Obrigatorios**:
+- **Órgão Emissor**: Caixa Econômica Federal (CEF).
+- **Finalidade**: Atestar o cumprimento das obrigações trabalhistas com o Fundo de Garantia do Tempo de Serviço.
+- **Campos Obrigatórios**:
   - Razao Social e Endereco do empregador.
   - Inscricao CNPJ ou CEI.
   - Numero do Certificado (CRF).
   - Periodo de validade (de DD/MM/AAAA a DD/MM/AAAA).
-  - Atestado de situacao regular: *"encontra-se em situacao regular perante o Fundo de Garantia do Tempo de Servico"*.
+  - Atestado de situacao regular: _"encontra-se em situacao regular perante o Fundo de Garantia do Tempo de Servico"_.
 
 ---
 
-## 3. Certidao Negativa de Debitos Trabalhistas (CNDT)
+## 3. Certidão Negativa de Débitos Trabalhistas (CNDT)
 
-- **Orgao Emissor**: Justica do Trabalho / Tribunal Superior do Trabalho (TST).
-- **Finalidade**: Demonstrar que o proponente nao figura como inadimplente no Banco Nacional de Devedores Trabalhistas (BNDT).
-- **Campos Obrigatorios**:
+- **Órgão Emissor**: Justiça do Trabalho / Tribunal Superior do Trabalho (TST).
+- **Finalidade**: Demonstrar que o proponente não figura como inadimplente no Banco Nacional de Devedores Trabalhistas (BNDT).
+- **Campos Obrigatórios**:
   - Nome / Razao Social.
   - CNPJ.
   - Numero da certidao e ano de expedicao.
-  - Declaracao formal de que *"NAO CONSTAM"* debitos trabalhistas inadimplidos.
+  - Declaracao formal de que _"NAO CONSTAM"_ debitos trabalhistas inadimplidos.
 
 ---
 
-## 4. Certidao dos Distribuidores Civeis (Falencia e Recuperacao)
+## 4. Certidão dos Distribuidores Cíveis (Falência e Recuperação)
 
-- **Orgao Emissor**: Tribunais de Justica Estaduais (Varas de Falencia e Recuperacoes Judiciais da Comarca da sede da empresa).
-- **Finalidade**: Certificar a inexistencia de pedidos de falencia decretada ou plano de recuperacao judicial nao homologado.
+- **Órgão Emissor**: Tribunais de Justiça Estaduais (Varas de Falência e Recuperações Judiciais da comarca da sede da empresa).
+- **Finalidade**: Certificar a inexistência de pedidos de falência decretada ou plano de recuperação judicial não homologado.
 - **Tratamento Hibrido (Maker-Checker)**:
   - Textos de certidoes judiciais variam conforme a comarca estadual.
   - O pipeline IDP extrai o texto integral; o agente Maker avalia a presenca de acoes distribuidas; o agente Checker confirma se nao ha mencao a decretacao falimentar.
@@ -57,13 +57,13 @@ Este documento estabelece as especificacoes tecnicas das tipologias documentais 
 
 ## 5. Licenciamento Ambiental e Atos Autorizativos
 
-- **Orgao Emissor**: IBAMA ou orgaos estaduais competentes (ex: INEA/RJ, CETESB/SP, FEPAM/RS).
-- **Tipos de Licenca Aceitas**:
-  - Licenca Previa (LP)
-  - Licenca de Instalacao (LI)
-  - Licenca de Operacao (LO)
-  - Certidao de Inexigibilidade ou Dispensa de Licenciamento
-- **Campos Obrigatorios**:
-  - Identificacao do empreendimento e coordenadas geograficas.
-  - Tipologia da atividade e numero do processo administrativo.
-  - Condicionantes e prazo de vigencia da licenca.
+- **Órgão Emissor**: IBAMA ou órgãos estaduais competentes (ex.: INEA/RJ, CETESB/SP, FEPAM/RS).
+- **Tipos de Licença Aceitos**:
+  - Licença Prévia (LP)
+  - Licença de Instalação (LI)
+  - Licença de Operação (LO)
+  - Certidão de Inexigibilidade ou Dispensa de Licenciamento
+- **Campos Obrigatórios**:
+  - Identificação do empreendimento e coordenadas geográficas.
+  - Tipologia da atividade e número do processo administrativo.
+  - Condicionantes e prazo de vigência da licença.

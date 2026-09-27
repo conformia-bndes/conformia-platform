@@ -1,45 +1,67 @@
-# ADR-003: Adocao de React + Vite SPA em Substituicao ao Next.js para o Cockpit Operacional
+# ADR-003: Adoção de React + Vite SPA em Substituição ao Next.js para o Cockpit Operacional
 
-| Parametro | Detalhe |
-| :--- | :--- |
-| **Status** | Aprovado |
-| **Data** | 2026-09-27 |
-| **Autor** | Equipe de Engenharia Conform.IA BNDES |
-| **Decisores** | Staff Software Engineers & Arquitetura de Solucoes |
+## Metadados
+
+| Parâmetro             | Detalhe                                            |
+| :-------------------- | :------------------------------------------------- |
+| **Status**            | Aprovado                                           |
+| **Data**              | 2026-09-27                                         |
+| **Autores**           | Equipe de Engenharia Conform.IA BNDES              |
+| **Revisores**         | Staff Software Engineers e Arquitetura de Soluções |
+| **Épico / Requisito** | Consulta Pública BNDES nº 01/2025                  |
 
 ---
 
-## 1. Contexto e Problema
+## 1. Contexto e Declaração do Problema
 
-Durante a definicao da camada de apresentacao da plataforma Conform.IA BNDES, cogitou-se a utilizacao do framework **Next.js** (React Server Components / SSR) para o desenvolvimento do frontend.
+Durante a definição da camada de apresentação da plataforma Conform.IA BNDES, considerou-se a utilização do framework **Next.js** (React Server Components / SSR) para o desenvolvimento do frontend.
 
-A equipe realizou uma avaliacao arquitetural comparando **Next.js** com a abordagem de **Single Page Application (SPA) baseada em React 18 + Vite + Tailwind CSS**, considerando as caracteristicas operacionais do desafio do BNDES:
-1. Trata-se de uma aplicacao corporativa interna (intranet/cockpit de analistas de credito), protegida integralmente por autenticacao e controle de acesso (RBAC).
-2. O sistema exige a renderizacao interativa de documentos PDF em tela dividida (*split-view*) com marcacoes dinamicas de coordenadas (*bounding boxes*).
+A equipe realizou uma avaliação arquitetural comparando **Next.js** com a abordagem de **Single Page Application (SPA) baseada em React 18 + Vite + Tailwind CSS**, considerando as características operacionais do desafio do BNDES:
+
+1. Trata-se de uma aplicação corporativa interna (intranet/cockpit de analistas de crédito), protegida integralmente por autenticação e controle de acesso (RBAC).
+2. O sistema exige a renderização interativa de documentos PDF em tela dividida (_split-view_), com marcações dinâmicas de coordenadas (_bounding boxes_).
 3. Todo o processamento de regras, IA, OCR e banco de dados reside no backend Python/FastAPI.
 
-## 2. Decisao
+## 2. Opções Consideradas
 
-Decidiu-se **manter e consolidar o frontend como uma Single Page Application (SPA) estatica utilizando React 18, Vite, TypeScript e Tailwind CSS**, rejeitando a adocao do Next.js para este caso de uso.
+### Opção 1: Next.js com SSR
 
-### Justificativas Tecnicas da Decisao:
+- Utilizar Next.js, React Server Components e renderização no servidor para o cockpit.
+- _Vantagens_: ecossistema integrado, SSR e recursos avançados de roteamento.
+- _Desvantagens_: adiciona um servidor Node.js intermediário e aumenta a complexidade de integração com visualizadores PDF dependentes do navegador.
 
-1. **Inexistencia de Requisito de SEO**:
-   O Next.js tem seu valor comprovado em portais publicos, e-commerces e aplicacoes que dependem de indexacao por robos de busca (SEO). O Conform.IA BNDES e um cockpit fechado e autenticado; o Server-Side Rendering (SSR) nao agrega nenhum valor de negocio ao produto.
-2. **Eliminacao de Servidor Intermediario Desnecessario (BFF Fantasma)**:
-   A adocao do Next.js obrigaria a manutencao de um servidor Node.js em producao apenas para intermediar HTML e chamadas de API para o FastAPI. Com React + Vite, o build produz artefatos estaticos puros servidos por um proxy reverso **Nginx** (container leve de menos de 25MB, consumo minimo de CPU/RAM e cache HTTP de borda).
-3. **Evitacao de Conflitos de Hidratacao com Visualizadores de PDF e Canvas**:
-   Bibliotecas de inspecao de PDFs no browser (`pdfjs-dist`, `react-pdf`) dependem exclusivamente de objetos do navegador (`window`, `document`, `HTMLCanvasElement`). No ambiente SSR do Next.js, essas ferramentas geram recorrentes erros de hidratacao e obrigam o uso de diretivas `'use client'` e imports dinamicos sem SSR em quase todas as telas operacionais.
-4. **Desempenho e Produtividade**:
-   O Vite oferece Hot Module Replacement (HMR) em milissegundos e pipeline de testes nativo com Vitest, maximizando a velocidade de iteracao da equipe.
+### Opção 2: React + Vite SPA (Opção Escolhida)
 
-## 3. Consequencias e Compensacoes
+- Utilizar React 18, Vite, TypeScript e Tailwind CSS em uma SPA estática.
+- _Vantagens_: distribuição simples por Nginx, desenvolvimento rápido e compatibilidade direta com APIs do navegador.
+- _Desvantagens_: o carregamento inicial depende do bundle JavaScript e o estado de rede precisa ser gerenciado no cliente.
 
-### Positivas:
-- Infraestrutura mais simples e economica (menos um container de runtime pesado na stack Docker).
-- Zero atrito no desenvolvimento de recursos visuais complexos de PDF e marcacoes de evidencia.
-- Pipeline de CI/CD para o frontend extremamente rapido (build estatico em menos de 20 segundos).
+## 3. Decisão Adotada
 
-### Negativas / Mitigacoes:
-- O carregamento inicial depende do download do bundle JavaScript (mitigado por code-splitting via `React.lazy`, Vite e compressao gzip/brotli no Nginx).
-- Gerenciamento de estado assincrono e cache de dados de rede devem ser conduzidos no cliente (mitigado pela adocao do `@tanstack/react-query`).
+Decide-se **manter e consolidar o frontend como uma Single Page Application (SPA) estática utilizando React 18, Vite, TypeScript e Tailwind CSS**, rejeitando a adoção do Next.js para este caso de uso.
+
+### Justificativas Técnicas da Decisão
+
+1. **Inexistência de requisito de SEO**: o cockpit é fechado e autenticado; SSR não agrega valor de negócio ao produto.
+2. **Eliminação de servidor intermediário desnecessário**: React + Vite produz artefatos estáticos servidos por um proxy reverso **Nginx**, sem um servidor Node.js adicional em produção.
+3. **Evitação de conflitos de hidratação**: bibliotecas como `pdfjs-dist` e `react-pdf` dependem de objetos do navegador (`window`, `document`, `HTMLCanvasElement`) e são mais simples de operar diretamente no cliente.
+4. **Desempenho e produtividade**: o Vite oferece Hot Module Replacement (HMR) em milissegundos e pipeline de testes nativo com Vitest.
+
+## 4. Consequências e Compensações (Trade-offs)
+
+### Impactos Positivos
+
+- Infraestrutura mais simples e econômica, com um contêiner de runtime a menos na stack Docker.
+- Menor atrito no desenvolvimento de recursos visuais complexos de PDF e marcações de evidência.
+- Pipeline de CI/CD do frontend rápido, com build estático em menos de 20 segundos.
+
+### Impactos Negativos e Riscos
+
+- O carregamento inicial depende do download do bundle JavaScript; mitigação: code splitting via `React.lazy`, Vite e compressão gzip/Brotli no Nginx.
+- O gerenciamento de estado assíncrono e o cache de dados de rede ocorrem no cliente; mitigação: adoção do `@tanstack/react-query`.
+
+## 5. Diretrizes de Implementação e Auditoria
+
+1. O frontend deve permanecer distribuível como artefatos estáticos servidos pelo Nginx.
+2. Recursos que dependem de `window`, `document` ou `HTMLCanvasElement` devem ser testados em ambiente de navegador.
+3. O CI deve validar o build do frontend, os testes Vitest e o tamanho dos artefatos antes da publicação.

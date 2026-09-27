@@ -1,6 +1,6 @@
-# Visao Geral da Arquitetura
+# Visão Geral da Arquitetura
 
-O Conform.IA BNDES adota uma arquitetura modular baseada em micro-servicos integrados em monorepo, projetada para desacoplamento de responsabilidades, alta disponibilidade e rastreabilidade total.
+O Conform.IA BNDES adota uma arquitetura modular baseada em microsserviços integrados em monorepo, projetada para desacoplamento de responsabilidades, alta disponibilidade e rastreabilidade total.
 
 ---
 
@@ -8,7 +8,7 @@ O Conform.IA BNDES adota uma arquitetura modular baseada em micro-servicos integ
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Camada de Apresentacao"]
+    subgraph Frontend["Camada de Apresentação"]
         SPA["React 18 SPA (Vite / TypeScript / Tailwind)"]
         UI_Upload["Modulo de Ingestao IDP"]
         UI_Checklist["Painel de Checklist BNDES"]
@@ -24,7 +24,7 @@ flowchart TD
         Route_Comp["/api/v1/compliance"]
     end
 
-    subgraph Worker_Tier["Processamento Assincrono e IA"]
+    subgraph Worker_Tier["Processamento Assíncrono e IA"]
         CeleryWorker["Celery 5 Worker"]
         IDPExtractor["Extrator Hibrido (pdfplumber / Tesseract)"]
         RulesEngine["Motor de Regras (rules/schemas)"]
@@ -50,21 +50,25 @@ flowchart TD
 
 ---
 
-## Componentes da Solucao
+## Componentes da Solução
 
-### 1. Camada de Apresentacao (Frontend)
+### 1. Camada de Apresentação (Frontend)
+
 - **Tecnologias**: React 18, TypeScript, Tailwind CSS, Lucide Icons, Axios.
-- **Responsabilidade**: Fornecer interface reativa para analistas de credito e operadores do BNDES, permitindo o carregamento de PDFs, visualizacao imediata de pendencias e consulta de historico de auditoria.
+- **Responsabilidade**: Fornecer interface reativa para analistas de crédito e operadores do BNDES, permitindo o carregamento de PDFs, visualização imediata de pendências e consulta do histórico de auditoria.
 
 ### 2. Camada de API (Backend Core)
+
 - **Tecnologias**: Python 3.11, FastAPI, SQLAlchemy 2.0, Pydantic v2, Pydantic-Settings.
 - **Responsabilidade**: Exposicao de endpoints RESTful seguros, validacao estrita de contratos de entrada, gestao de conexoes e persistencia de estado.
 
-### 3. Camada de Processamento Assincrono (Worker)
+### 3. Camada de Processamento Assíncrono (Worker)
+
 - **Tecnologias**: Celery, Redis, pdfplumber, pytesseract, Poppler-utils.
 - **Responsabilidade**: Processamento de arquivos pesados, OCR em paginas digitalizadas e execucao de regras de conformidade sem bloqueio das requisicoes HTTP da API.
 
-### 4. Camada de Persistencia
+### 4. Camada de Persistência
+
 - **PostgreSQL 16**: Armazena entidades estruturadas (`Document`, `ComplianceCheck`, `AuditLog`).
 - **Redis 7**: Fila de mensagens para tarefas do Celery e cache de regras frequentes.
 - **MinIO**: Object storage compativel com a API S3 para persistencia duravel dos arquivos PDF originais.
@@ -73,8 +77,8 @@ flowchart TD
 
 ## Fluxo de Processamento de Documentos
 
-1. **Ingestao**: O usuario envia um PDF atraves da interface ou chamada de API (`POST /api/v1/documents/upload`).
-2. **Armazenamento**: O arquivo e salvo no volume seguro e um registro inicial e criado no banco com status `PROCESSING`.
-3. **Extracao IDP**: O extrator processa as paginas nativas. Se a densidade textual for inferior ao limiar minimo, o OCR via Tesseract e acionado.
-4. **Avaliacao de Conformidade**: O motor de regras compara o texto extraido contra o catalogo normativo (BNDES 01/2025). Regras semanticas sao validadas pelo ciclo Maker-Checker.
-5. **Auditoria**: O resultado e consolidado, salvo no banco e registrado na tabela de auditoria (`audit_logs`).
+1. **Ingestão**: O usuário envia um PDF através da interface ou de uma chamada de API (`POST /api/v1/documents/upload`).
+2. **Armazenamento**: O arquivo é salvo no volume seguro, e um registro inicial é criado no banco com status `PROCESSING`.
+3. **Extração IDP**: O extrator processa as páginas nativas. Se a densidade textual for inferior ao limiar mínimo, o OCR via Tesseract é acionado.
+4. **Avaliação de Conformidade**: O motor de regras compara o texto extraído com o catálogo normativo (BNDES 01/2025). Regras semânticas são validadas pelo ciclo Maker-Checker.
+5. **Auditoria**: O resultado é consolidado, salvo no banco e registrado na tabela de auditoria (`audit_logs`).

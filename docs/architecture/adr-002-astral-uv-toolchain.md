@@ -1,35 +1,62 @@
-# ADR-002: Adocao do Astral uv como Gerenciador de Pacotes e Workspace
+# ADR-002: Adoção do Astral uv como Gerenciador de Pacotes e Workspace
 
-| Parametro | Detalhe |
-| :--- | :--- |
-| **Status** | Aprovado |
-| **Data** | 2026-09-27 |
-| **Autor** | Equipe de Engenharia Conform.IA BNDES |
-| **Decisores** | Staff Software Engineers |
+## Metadados
+
+| Parâmetro             | Detalhe                               |
+| :-------------------- | :------------------------------------ |
+| **Status**            | Aprovado                              |
+| **Data**              | 2026-09-27                            |
+| **Autores**           | Equipe de Engenharia Conform.IA BNDES |
+| **Revisores**         | Staff Software Engineers              |
+| **Épico / Requisito** | Consulta Pública BNDES nº 01/2025     |
 
 ---
 
-## 1. Contexto e Problema
+## 1. Contexto e Declaração do Problema
 
-O ecossistema Python tradicionalmente dependia de multiplas ferramentas fragmentadas para gestao de dependencias e ambientes virtuais (`pip`, `virtualenv`, `pip-tools`, `poetry`). No contexto deste monorepo, a instalacao de dependencias pesadas no Docker e nos ambientes locais de desenvolvedores enfrentava tempos de build elevados (dezenas de segundos por container) e risco de inconsistencias entre desenvolvedores pela ausencia de um lockfile unificado de workspace.
+O ecossistema Python tradicionalmente dependia de múltiplas ferramentas fragmentadas para gestão de dependências e ambientes virtuais (`pip`, `virtualenv`, `pip-tools`, `poetry`). Neste monorepo, a instalação de dependências pesadas no Docker e nos ambientes locais enfrentava tempos de build elevados (dezenas de segundos por contêiner) e risco de inconsistências entre desenvolvedores pela ausência de um lockfile unificado de workspace.
 
-## 2. Decisao
+## 2. Opções Consideradas
 
-Adotou-se o **Astral `uv`** como ferramenta oficial e unificada para o gerenciamento de pacotes, resolucao de dependencias e workspaces Python no projeto Conform.IA BNDES.
+### Opção 1: Ferramentas Python Fragmentadas
 
-As diretrizes tecnicas implementadas abrangem:
-1. Configuracao de workspace nativo no root `pyproject.toml` (`[tool.uv.workspace] members = ["backend"]`).
-2. Geracao e manutencao compulsoria do lockfile deterministico `uv.lock`.
-3. Integracao multi-stage no Dockerfile via imagem oficial `COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/`.
-4. Utilizacao da action oficial `astral-sh/setup-uv@v5` com cache no GitHub Actions CI.
-5. Suporte transparente no `Makefile` com deteccao automatica do utilitario `uv`.
+- Manter a combinação de `pip`, `virtualenv`, `pip-tools` ou `poetry` conforme a necessidade de cada ambiente.
+- _Vantagens_: familiaridade da equipe e ampla disponibilidade no ecossistema Python.
+- _Desvantagens_: resolução mais lenta, múltiplos arquivos de configuração e ausência de uma experiência unificada de workspace.
 
-## 3. Consequencias e Compensacoes
+### Opção 2: Astral uv (Opção Escolhida)
 
-### Positivas:
-- **Velocidade Extrema**: Resolucao e instalacao de dependencias reduzida de ~45s para < 1s localmente e 160ms em containers Docker.
-- **Determinismo Absoluto**: O `uv.lock` garante que exatamente os mesmos hashes SHA-256 de pacotes sejam instalados em desenvolvimento, CI e producao.
-- **Simplificacao Operacional**: Eliminou a necessidade de gerenciar multiplas ferramentas ou scripts complexos de ativacao de virtualenv.
+- Adotar o `uv` como ferramenta única para resolução, instalação, execução e gerenciamento do workspace.
+- _Vantagens_: velocidade, lockfile determinístico e integração nativa com workspaces.
+- _Desvantagens_: exige que novos colaboradores conheçam e instalem o binário do `uv`.
 
-### Negativas / Mitigacoes:
-- Exige que novos colaboradores tenham o binario do `uv` instalado em suas maquinas de desenvolvimento (documentado no `README.md` e mitigado pelo fallback automatico para `pip` no `Makefile`).
+## 3. Decisão Adotada
+
+Adota-se o **Astral `uv`** como ferramenta oficial e unificada para o gerenciamento de pacotes, resolução de dependências e workspaces Python no projeto Conform.IA BNDES.
+
+As diretrizes técnicas implementadas abrangem:
+
+1. Configuração de workspace nativo no `pyproject.toml` raiz (`[tool.uv.workspace] members = ["backend"]`).
+2. Geração e manutenção obrigatórias do lockfile determinístico `uv.lock`.
+3. Integração multi-stage no Dockerfile por meio da imagem oficial `COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/`.
+4. Utilização da action oficial `astral-sh/setup-uv@v5`, com cache no GitHub Actions CI.
+5. Suporte transparente no `Makefile`, com detecção automática do utilitário `uv`.
+
+## 4. Consequências e Compensações (Trade-offs)
+
+### Impactos Positivos
+
+- **Velocidade**: Resolução e instalação de dependências reduzidas de aproximadamente 45 s para menos de 1 s localmente e 160 ms em contêineres Docker.
+- **Determinismo**: O `uv.lock` garante que os mesmos hashes SHA-256 de pacotes sejam instalados em desenvolvimento, CI e produção.
+- **Simplificação Operacional**: Reduz a necessidade de gerenciar múltiplas ferramentas ou scripts complexos de ativação de ambientes virtuais.
+
+### Impactos Negativos e Riscos
+
+- Exige que novos colaboradores tenham o binário do `uv` instalado em suas máquinas de desenvolvimento.
+- Mitigação: o requisito é documentado no `README.md`, e o `Makefile` mantém fallback automático para `pip`.
+
+## 5. Diretrizes de Implementação e Auditoria
+
+1. Alterações nas dependências devem atualizar o `pyproject.toml` e o `uv.lock` no mesmo PR.
+2. O CI deve usar a versão do `uv` definida pelo workflow e validar a instalação a partir do lockfile.
+3. A documentação de desenvolvimento deve manter instruções equivalentes para `uv` e para o fallback com `pip` quando aplicável.

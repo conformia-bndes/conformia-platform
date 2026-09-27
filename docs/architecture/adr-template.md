@@ -1,42 +1,49 @@
-# ADR-XXX: [Titulo da Decisao Arquitetural]
+# ADR-XXX: [Título da Decisão Arquitetural]
 
 ## Metadados
-- **Status**: [Proposto | Aprovado | Rejeitado | Obsoleto | Substituido por ADR-YYY]
+
+- **Status**: [Proposto | Aprovado | Rejeitado | Obsoleto | Substituído por ADR-YYY]
 - **Data**: YYYY-MM-DD
 - **Autores**: [Nome / Equipe]
 - **Revisores**: [Equipes envolvidas]
-- **Epico / Requisito**: [Consulta Publica BNDES 01/2025 ou Issue #]
+- **Épico / Requisito**: [Consulta Pública BNDES 01/2025 ou Issue #]
 
 ---
 
-## 1. Contexto e Declaracao do Problema
-[Descreva o cenario operacional, os requisitos de negocio ou limitacoes tecnicas que motivaram a necessidade desta decisao. Inclua forcas intervenientes, tais como desempenho, seguranca, prazos e custos.]
+## 1. Contexto e Declaração do Problema
+
+[Descreva o cenário operacional, os requisitos de negócio ou as limitações técnicas que motivaram esta decisão. Inclua forças intervenientes, como desempenho, segurança, prazos e custos.]
 
 ---
 
-## 2. Opcoes Consideradas
-- **Opcao 1**: [Descricao e avaliacao sumaria]
-- **Opcao 2**: [Descricao e avaliacao sumaria]
-- **Opcao 3**: [Descricao e avaliacao sumaria]
+## 2. Opções Consideradas
+
+- **Opção 1**: [Descrição e avaliação sumária]
+- **Opção 2**: [Descrição e avaliação sumária]
+- **Opção 3**: [Descrição e avaliação sumária]
 
 ---
 
-## 3. Decisao Adotada
-[Declare claramente a alternativa escolhida e a justificativa tecnica primordial que fundamentou a selecao sobre as demais alternativas.]
+## 3. Decisão Adotada
+
+[Declare claramente a alternativa escolhida e a justificativa técnica principal que fundamentou sua seleção em relação às demais alternativas.]
 
 ---
 
-## 4. Consequencias e Compensacoes (Trade-offs)
+## 4. Consequências e Compensações (Trade-offs)
 
 ### Impactos Positivos
-- [Beneficio tecnico ou operacional 1]
-- [Beneficio tecnico ou operacional 2]
+
+- [Benefício técnico ou operacional 1]
+- [Benefício técnico ou operacional 2]
 
 ### Impactos Negativos e Riscos
-- [Desvantagem, custo operacional ou restricao introduzida]
-- [Estrategia de mitigacao do risco]
+
+- [Desvantagem, custo operacional ou restrição introduzida]
+- [Estratégia de mitigação do risco]
 
 ---
 
-## 5. Diretrizes de Implementacao e Auditoria
-[Passos necessarios para aplicar a decisao, testes requeridos e formas de auditoria de conformidade.]
+## 5. Diretrizes de Implementação e Auditoria
+
+[Descreva os passos necessários para aplicar a decisão, os testes requeridos e as formas de auditoria de conformidade.]

@@ -1,14 +1,14 @@
-# Harness Engineering e Operacao de Agentes
+# Harness Engineering e Operação de Agentes
 
-Este documento formaliza os principios de **Harness Engineering** aplicados no desenvolvimento e na operacao da plataforma Conform.IA BNDES, alinhando as diretrizes institucionais do projeto ao padrao agent-first estabelecido em `.agents/AGENTS.md`.
+Este documento formaliza os princípios de **Harness Engineering** aplicados no desenvolvimento e na operação da plataforma Conform.IA BNDES, alinhando as diretrizes institucionais do projeto ao padrão agent-first estabelecido em `.agents/AGENTS.md`.
 
 ---
 
 ## 1. O Conceito de Harness Engineering
 
-Harness Engineering e a disciplina de engenharia que envolve modelos e agentes de IA com **condicoes estritas de contorno, contexto rigorosamente delimitado, ferramentas de minimo privilegio, estado persistente e mecanismos de verificacao automatica**.
+Harness Engineering é a disciplina de engenharia que envolve modelos e agentes de IA com **condições estritas de contorno, contexto rigorosamente delimitado, ferramentas de mínimo privilégio, estado persistente e mecanismos de verificação automática**.
 
-A confiabilidade de um sistema de decisao critica nao depende do texto isolado de um prompt, mas sim da solidez do *harness* que governa sua execucao.
+A confiabilidade de um sistema de decisão crítica não depende do texto isolado de um prompt, mas sim da solidez do _harness_ que governa sua execução.
 
 ---
 
@@ -17,7 +17,7 @@ A confiabilidade de um sistema de decisao critica nao depende do texto isolado d
 ```mermaid
 flowchart TD
     subgraph HarnessDev["1. Harness do Desenvolvimento (Engenharia de Software)"]
-        AgenteDev["Agente Autonomo de IA"]
+        AgenteDev["Agente Autônomo de IA"]
         ContextoGit["Contexto de Monorepo (.agents, docs)"]
         FerramentasLocais["Ferramentas Estritas (pytest, uv, git)"]
         QualityGate["Quality Gate (Black, Flake8, Evals)"]
@@ -29,16 +29,18 @@ flowchart TD
         ExtratorIDP["Pipeline IDP (Texto + OCR)"]
         Maker["Propositor Maker (LLM)"]
         Checker["Auditor Checker (Determinístico)"]
-        HITL["Revisao Humana (Analista BNDES)"]
+        HITL["Revisão Humana (Analista BNDES)"]
         PDF --> ExtratorIDP --> Maker --> Checker --> HITL
     end
 ```
 
 ### 2.1 Harness do Desenvolvimento (Agent-First Engineering)
-Controla como agentes autonomos auxiliam na construcao do software. O agente nao possui permissao para executar comandos destrutivos (`--force`, `drop table`, `rm -rf`), opera sob convenções estritas (Conventional Commits, ausencia de emojis) e deve validar cada incremento com testes reais antes de qualquer conclusao.
+
+Controla como agentes autônomos auxiliam na construção do software. O agente não possui permissão para executar comandos destrutivos (`--force`, `drop table`, `rm -rf`), opera sob convenções estritas (Conventional Commits, ausência de emojis) e deve validar cada incremento com testes reais antes de qualquer conclusão.
 
 ### 2.2 Harness do Produto (In-App Document Orchestration)
-Controla a execucao interna da IA durante a analise documental. O modelo recebe apenas trechos delimitados de texto, esquemas Pydantic rigidos e instrucoes declarativas.
+
+Controla a execução interna da IA durante a análise documental. O modelo recebe apenas trechos delimitados de texto, esquemas Pydantic rígidos e instruções declarativas.
 
 ---
 
