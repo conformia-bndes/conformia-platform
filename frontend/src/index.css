@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-bndes-blue: #002B49;
+  --color-bndes-blue-light: #004A80;
+  --color-bndes-blue-dark: #001A2C;
+  --color-bndes-green: #008542;
+  --color-bndes-green-light: #00A854;
+  --color-bndes-green-dark: #005E2E;
+  --color-bndes-gold: #C49A45;
+}
 
 @layer base {
   body {
