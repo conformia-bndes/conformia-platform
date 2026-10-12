@@ -118,6 +118,34 @@ jobs:
       - name: Build Production Assets
         run: npm run build
 
+  smoke:
+    name: Compose Smoke Test (upload -> fila -> worker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Generate ephemeral .env (random secrets, nothing versioned)
+        run: bash scripts/setup-env.sh
+
+      - name: Start full stack and wait until healthy
+        run: docker compose --env-file .env -f infra/docker-compose.yml up --build -d --wait --wait-timeout 300
+
+      - name: Run smoke test
+        run: docker compose --env-file .env -f infra/docker-compose.yml exec -T backend python scripts/smoke_test.py
+
+      - name: Dump container state and logs on failure
+        if: failure()
+        run: |
+          docker compose --env-file .env -f infra/docker-compose.yml ps -a
+          docker compose --env-file .env -f infra/docker-compose.yml logs --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose --env-file .env -f infra/docker-compose.yml down -v --remove-orphans
+
   security:
     name: Security & Secret Scan
     runs-on: ubuntu-latest

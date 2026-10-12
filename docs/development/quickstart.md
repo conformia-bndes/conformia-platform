@@ -11,7 +11,7 @@ Certifique-se de possuir instalado em sua estacao de trabalho:
 - **Docker Engine** >= 24.0 e **Docker Compose Plugin** >= 2.20
 - **Make** (utilitario de automacao de comandos)
 - **Astral `uv`** >= 0.5.0 (gerenciador de dependências e workspace Python ultrarrápido) ou Python 3.11+
-- **Node.js** >= 20.0 e **npm** >= 10.0 (para desenvolvimento na camada frontend)
+- **Node.js** >= 22.0 e **npm** >= 10.0 (para desenvolvimento na camada frontend)
 
 ---
 
@@ -19,42 +19,33 @@ Certifique-se de possuir instalado em sua estacao de trabalho:
 
 ### Passo 1: Preparacao do Ambiente
 
-Execute o comando de preparação para criar o arquivo `.env` e sincronizar as dependências:
+Gere o arquivo `.env` com segredos aleatorios (nenhuma credencial e versionada; o `.env` esta no `.gitignore`):
 
-=== "Com Make"
-`bash
-    make setup
-    `
-
-=== "Com Astral uv e npm"
-`bash
-    cp .env.example .env
-    uv sync --all-packages --all-extras
-    cd frontend && npm install
-    `
+```bash
+make env
+```
 
 ### Passo 2: Subir a Infraestrutura Conteinerizada
 
-Inicialize a stack completa de servicos (PostgreSQL, Redis, MinIO, Backend API, Worker e Frontend SPA):
+Inicialize a stack completa (PostgreSQL, Redis, MinIO, Backend API, Worker e Frontend SPA) e aguarde
+todos os servicos ficarem saudaveis:
 
 ```bash
 make up
 ```
 
-### Passo 3: Verificação dos Pontos de Acesso
+### Passo 3: Teste de Fumaca
 
-Após a inicialização, os serviços estarão disponíveis nas seguintes portas locais:
+Valida o caminho completo upload -> fila Redis -> worker Celery -> estado da tarefa:
 
-| Servico                        | URL / Ponto de Acesso                                                      | Credenciais Padrao                                                  |
-| :----------------------------- | :------------------------------------------------------------------------- | :------------------------------------------------------------------ |
-| **Frontend SPA**               | [http://localhost:5173](http://localhost:5173)                             | Acesso direto                                                       |
-| **Backend API (Swagger Docs)** | [http://localhost:8000/docs](http://localhost:8000/docs)                   | OpenAPI interativo                                                  |
-| **Healthcheck da API**         | [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health) | Retorno JSON com status dos servicos                                |
-| **MinIO Console**              | [http://localhost:9001](http://localhost:9001)                             | User: `conformia_minio_admin`<br>Pass: `conformia_minio_secret`     |
-| **PostgreSQL 16**              | `localhost:5432`                                                           | DB: `conformia_db`<br>User: `postgres` / Pass: `conformia_password` |
-| **Redis 7**                    | `localhost:6379`                                                           | Broker Celery                                                       |
+```bash
+make smoke   # deve terminar com "OK - ambiente sobe e processa pela fila."
+```
 
----
+### Passo 4: Pontos de Acesso
+
+| Servico                        | URL / Ponto de Acesso                                                      | Credenciais                                    |
+| :---
 
 ## 3. Comandos Essenciais do Dia a Dia
 
@@ -74,6 +65,12 @@ make format
 # Visualizar logs consolidados em tempo real
 make logs
 
+# Validar o ambiente (upload -> fila -> worker)
+make smoke
+
 # Encerrar todos os contêineres da stack
 make down
+
+# Apagar tambem os volumes (reset total; necessario ao regenerar o .env)
+make clean
 ```
