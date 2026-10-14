@@ -53,8 +53,7 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
             storage_service.download_file(object_name, file_path)
 
         extractor = DocumentExtractor()
-        extracted_data = extractor.extract(file_path)
-
+        extracted_data = extractor.extract(file_path, document_id=document_id)
         doc.extracted_text = extracted_data.get("full_text")
         doc_metadata = extracted_data.get("metadata") or {}
 

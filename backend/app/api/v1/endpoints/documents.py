@@ -237,7 +237,7 @@ def upload_document(
     if not async_process:
         try:
             extractor = DocumentExtractor()
-            extracted = extractor.extract(destination_path)
+            extracted = extractor.extract(destination_path, document_id=doc.id)
             doc.extracted_text = extracted.get("full_text")
             doc_metadata = extracted.get("metadata") or {}
 
