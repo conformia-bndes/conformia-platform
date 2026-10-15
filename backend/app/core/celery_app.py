@@ -53,10 +53,19 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
             storage_service.download_file(object_name, file_path)
 
         extractor = DocumentExtractor()
-        extracted_data = extractor.extract(file_path)
-
+        extracted_data = extractor.extract(file_path, document_id=document_id)
         doc.extracted_text = extracted_data.get("full_text")
-        doc.extracted_metadata = extracted_data.get("metadata")
+        doc_metadata = extracted_data.get("metadata") or {}
+
+        from app.idp.parser import extract_fields_and_evidence
+
+        extraction_result = extract_fields_and_evidence(
+            text=doc.extracted_text or "",
+            pages=extracted_data.get("pages"),
+        )
+        doc_metadata["pages"] = extracted_data.get("pages", [])
+        doc_metadata["extraction"] = extraction_result.model_dump()
+        doc.extracted_metadata = doc_metadata
 
         engine = RulesEngine()
         compliance_results = engine.evaluate(extracted_data)
@@ -109,7 +118,14 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
             doc = db.query(Document).filter(Document.id == document_id).first()
             if doc:
                 doc.status = "EXTRACTION_FAILED"
-                doc.extracted_metadata = {"error": str(exc)}
+                doc.extracted_metadata = {
+                    "error": str(exc),
+                    "error_detail": {
+                        "code": "EXTRACTION_FAILED",
+                        "message": str(exc),
+                        "details": {"stage": "celery_worker_idp"},
+                    },
+                }
                 db.commit()
         except Exception:
             pass
