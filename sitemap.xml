@@ -2,90 +2,90 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/architecture/adr-001-monorepo-modular/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/architecture/adr-002-astral-uv-toolchain/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/architecture/adr-003-spa-vs-nextjs/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/architecture/adr-index/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/architecture/adr-template/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/architecture/overview/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/bndes/compliance-matrix/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/bndes/document-types/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/development/api-reference/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/development/quality-gates/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/development/quickstart/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/engineering/harness-evals/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/engineering/idp-pipeline/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/engineering/rules-engine/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/architecture-design/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/governance-security/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/harness-engineering/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/project-plan/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/requirements/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
     <url>
          <loc>https://conformia-bndes.github.io/conformia-platform/planning/sprints-roadmap/</loc>
-         <lastmod>2026-09-27</lastmod>
+         <lastmod>2026-10-15</lastmod>
     </url>
 </urlset>
