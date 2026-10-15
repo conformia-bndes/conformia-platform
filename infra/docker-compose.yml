@@ -1,6 +1,45 @@
 # ==============================================================================
 # Conform.IA BNDES Platform - Docker Compose
+#
+# Uso (a partir da raiz do repositorio):
+#   make env     # gera .env com segredos aleatorios (uma vez)
+#   make up      # sobe a stack e espera ficar saudavel
+#   make smoke   # teste de fumaça: upload -> fila -> worker -> estado
+#
+# Nenhum segredo vive neste arquivo: tudo vem do .env (ignorado pelo git).
+# Os comandos abaixo passam --env-file .env explicitamente, porque o compose
+# resolve o .env relativo a pasta do arquivo (infra/), e nao a raiz do repo.
 # ==============================================================================
+
+x-backend: &backend
+  build:
+    context: ..
+    dockerfile: infra/Dockerfile.backend
+    target: runtime
+  restart: unless-stopped
+  env_file: ../.env
+  # Dentro da rede Docker os servicos se enxergam pelo nome; estes valores
+  # sobrescrevem qualquer URL pensada para execucao no host.
+  environment:
+    DATABASE_URL: postgresql://${POSTGRES_USER:-conformia_user}:${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env (make env)}@postgres:5432/${POSTGRES_DB:-conformia_db}
+    REDIS_URL: redis://redis:6379/0
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/0
+    MINIO_ENDPOINT: minio:9000
+  volumes:
+    - ../backend:/app
+    - ../rules:/rules:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    # O MinIO nao tem healthcheck proprio (a imagem nao garante curl/mc); a prontidao
+    # dele e verificada pelo /api/v1/health do backend, que testa o bucket de verdade.
+    minio:
+      condition: service_started
+  networks:
+    - conformia-net
 
 services:
   # ============================================================================
@@ -12,7 +51,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-conformia_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-conformia_secret_pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env (make env)}
       POSTGRES_DB: ${POSTGRES_DB:-conformia_db}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -50,30 +89,24 @@ services:
       - conformia-net
 
   # ============================================================================
-  # Armazenamento de Objetos (S3 Compativel) - MinIO
+  # Armazenamento de Objetos (S3 compativel) - MinIO
+  # O repositorio oficial minio/minio foi arquivado e as imagens sairam do Docker
+  # Hub; pgsty/minio e o fork mantido, compativel em API, variaveis e comandos.
+  # O bucket e criado pela propria aplicacao (StorageService) no primeiro uso.
   # ============================================================================
   minio:
-    image: elestio/minio:latest
+    image: ${MINIO_IMAGE:-pgsty/minio:latest}
     container_name: conformia-minio
     restart: unless-stopped
-    entrypoint:
-      - /bin/sh
-      - -c
-      - "mkdir -p /data/${MINIO_BUCKET_NAME:-documents} && exec minio server /data --console-address :9001"
+    command: ["server", "/data", "--console-address", ":9001"]
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-conformia_minio_admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-conformia_minio_secret}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Defina MINIO_ROOT_USER no .env (make env)}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Defina MINIO_ROOT_PASSWORD no .env (make env)}
     volumes:
       - minio_data:/data
     ports:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     networks:
       - conformia-net
 
@@ -81,76 +114,36 @@ services:
   # Backend API - FastAPI
   # ============================================================================
   backend:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile.backend
-      target: runtime
+    <<: *backend
     container_name: conformia-backend
-    restart: unless-stopped
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-    volumes:
-      - ../backend:/app
-      - ../rules:/rules:ro
     ports:
       - "${BACKEND_PORT:-8000}:8000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-conformia_user}:${POSTGRES_PASSWORD:-conformia_secret_pass}@postgres:5432/${POSTGRES_DB:-conformia_db}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-conformia_minio_admin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-conformia_minio_secret}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-documents}
-      - MINIO_USE_SSL=False
-      - ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
-      - ENVIRONMENT=development
-      - SECRET_KEY=${SECRET_KEY:-conformia_super_secret_dev_key_change_in_prod}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    networks:
-      - conformia-net
+    healthcheck:
+      # Saudavel somente se Postgres, Redis e MinIO responderem (status == "healthy").
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,sys,urllib.request as u; d=json.load(u.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=8)); sys.exit(0 if d['status']=='healthy' else 1)"
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
 
   # ============================================================================
-  # Worker Assíncrono - Celery (IDP, OCR & Compliance Evaluation)
+  # Worker Assincrono - Celery (IDP, OCR & Compliance Evaluation)
   # ============================================================================
   worker:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile.backend
-      target: runtime
+    <<: *backend
     container_name: conformia-worker
-    restart: unless-stopped
     command: ["celery", "-A", "app.core.celery_app.celery", "worker", "--loglevel=info", "-E"]
-    volumes:
-      - ../backend:/app
-      - ../rules:/rules:ro
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-conformia_user}:${POSTGRES_PASSWORD:-conformia_secret_pass}@postgres:5432/${POSTGRES_DB:-conformia_db}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-conformia_minio_admin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-conformia_minio_secret}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-documents}
-      - MINIO_USE_SSL=False
-      - ENVIRONMENT=development
-      - SECRET_KEY=${SECRET_KEY:-conformia_super_secret_dev_key_change_in_prod}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    networks:
-      - conformia-net
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.core.celery_app.celery inspect ping -d celery@$$HOSTNAME"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
 
   # ============================================================================
   # Frontend SPA - React 18 + Vite + Tailwind CSS
@@ -169,9 +162,16 @@ services:
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - conformia-net
 

@@ -21,7 +21,7 @@ def verify_api_key(
     Em ambiente de desenvolvimento e testes, permite acesso padrao.
     """
     token = api_key or (credentials.credentials if credentials else None)
-    expected_key = getattr(settings, "API_KEY", "conformia_dev_api_key_2026")
+    expected_key = settings.API_KEY
 
     # Em desenvolvimento ou teste, permite acesso padrao
     if settings.ENVIRONMENT in ("development", "test"):

@@ -14,7 +14,12 @@ if hasattr(sys.stderr, "reconfigure"):
 # Adiciona o backend ao path para importação dos módulos
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-from app.services.rules_engine import RulesEngine
+# O benchmark nao usa banco, fila nem storage; valores descartaveis apenas satisfazem a
+# validacao de Settings no import (segredos nao possuem default no codigo).
+for _name in ("SECRET_KEY", "API_KEY", "POSTGRES_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"):
+    os.environ.setdefault(_name, "eval-only")
+
+from app.services.rules_engine import RulesEngine  # noqa: E402
 
 
 # Casos de teste de referência com Ground Truth

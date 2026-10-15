@@ -23,10 +23,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return (
-        settings.DATABASE_URL
-        or "postgresql://conformia_user:conformia_secret_pass@localhost:5432/conformia_db"
-    )
+    return settings.DATABASE_URL
 
 
 def run_migrations_offline() -> None:

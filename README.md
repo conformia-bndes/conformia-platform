@@ -90,8 +90,8 @@ flowchart TD
 | **backend**  | FastAPI / Python 3.11      | `8000`          | API RESTful, ingestao e motor de conformidade        |
 | **worker**   | Celery 5 / Python 3.11     | -               | Execucao assincrona de OCR, extracao e regras de IA  |
 | **postgres** | PostgreSQL 16 Alpine       | `5432`          | Banco relacional para laudos, documentos e auditoria |
-| **redis**    | Redis 7 Alpine             | `6379`          | Broker de mensagens Celery e cache                   |
-| **minio**    | MinIO (S3 Compatible)      | `9000` / `9001` | Armazenamento de arquivos PDF ingeridos              |
+| **redis**    | Redis 7 Alpine             | `6380` (host)   | Broker de mensagens Celery e cache                   |
+| **minio**    | MinIO (fork `pgsty/minio`) | `9000` / `9001` | Armazenamento de arquivos PDF ingeridos              |
 
 ---
 
@@ -160,42 +160,98 @@ conformia-platform/
 
 ### Pre-requisitos
 
-- Docker Engine >= 24.0 e Docker Compose Plugin >= 2.20
-- Make (utilitario de comandos)
-- Astral `uv` >= 0.5.0 (gerenciador de pacotes e workspace Python ultrarrapido) ou Python 3.11+
-- Node.js 20+ e npm >= 10 (para desenvolvimento frontend local)
+- Docker Engine >= 24.0 e Docker Compose Plugin >= 2.20 (para `up --wait`)
+- Make e Bash (no Windows, use WSL2 ou Git Bash)
+- Para desenvolvimento local fora do Docker (opcional): Astral `uv` >= 0.5.0 ou Python 3.11+, e Node.js 22+ com npm >= 10
 
-### 1. Configuracao de Ambiente e Dependencias
-
-```bash
-make setup
-# O comando cria o arquivo .env e sincroniza dependencias via uv sync (ou pip/npm)
-```
-
-Caso utilize `uv` diretamente na linha de comando:
+### Subir o ambiente em 3 comandos
 
 ```bash
-# Sincronizar dependencias de desenvolvimento do workspace
-uv sync --all-packages --all-extras
+git clone https://github.com/conformia-bndes/conformia-platform.git
+cd conformia-platform
 
-# Executar testes ou benchmarks no ambiente isolado
-uv run pytest backend/tests/ -v
-uv run python evals/eval_pipeline.py
+make up      # gera o .env (se nao existir), constroi as imagens e espera tudo ficar saudavel
+make smoke   # teste de fumaca: upload -> fila -> worker -> estado da tarefa
 ```
 
-### 2. Inicializacao dos Servicos
+`make up` executa `make env` antes: ele copia `.env.example` para `.env` trocando cada `CHANGE_ME`
+por um valor aleatorio. **Nenhuma credencial e versionada**; o `.env` esta no `.gitignore`.
+As senhas ficam no seu `.env` (por exemplo, o login do console MinIO e `MINIO_ROOT_USER` /
+`MINIO_ROOT_PASSWORD`).
+
+Sem Make, os comandos equivalentes sao:
 
 ```bash
-make up
-# Executa docker compose -f infra/docker-compose.yml up --build -d
+bash scripts/setup-env.sh
+docker compose --env-file .env -f infra/docker-compose.yml up --build -d --wait
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend python scripts/smoke_test.py
 ```
 
-### 3. Rotas e Endpoints de Acesso Local
+> O `--env-file .env` e obrigatorio: o Compose resolve o `.env` relativo a pasta `infra/`,
+> nao a raiz do repositorio.
+
+### Teste de fumaca (reproduzivel)
+
+`make smoke` roda `backend/scripts/smoke_test.py` dentro do container `backend` (somente
+biblioteca padrao do Python, sem fixtures: o PDF e gerado pelo proprio script) e valida:
+
+1. `GET /api/v1/health` retorna `healthy` (PostgreSQL, Redis e MinIO respondendo);
+2. `POST /api/v1/documents/upload` retorna `201` com um `task_id` (tarefa despachada a fila);
+3. `GET /api/v1/documents/tasks/{task_id}` evolui para `SUCCESS` (so ocorre se o **worker**
+   consumiu a fila);
+4. `GET /api/v1/documents/{id}` retorna `status: COMPLETED`.
+
+Saida esperada (resumida):
+
+```text
+[smoke] 1/4 health OK: {'database': 'healthy', 'redis': 'healthy', 'minio': 'healthy'}
+[smoke] 2/4 upload OK: document_id=... task_id=...
+[smoke]      estado da tarefa: STARTED
+[smoke]      estado da tarefa: SUCCESS
+[smoke] 4/4 documento COMPLETED (paginas: 1)
+[smoke] OK - ambiente sobe e processa pela fila.
+```
+
+O codigo de saida e `0` em caso de sucesso e `1` em qualquer falha (inclusive worker parado
+ou Redis fora do ar). Para repetir manualmente com `curl`:
+
+```bash
+curl -s -F "file=@documento.pdf" http://localhost:8000/api/v1/documents/upload   # -> id e task_id
+curl -s http://localhost:8000/api/v1/documents/tasks/<task_id>                   # -> state
+curl -s http://localhost:8000/api/v1/documents/<id>                              # -> status
+```
+
+Estados da tarefa: `PENDING` (na fila), `STARTED`, `RETRY`, `SUCCESS`, `FAILURE`. O Celery nao
+distingue um `task_id` inexistente de uma tarefa ainda na fila (ambos `PENDING`).
+
+### Rotas e Endpoints de Acesso Local
 
 - **Frontend SPA**: [http://localhost:5173](http://localhost:5173)
 - **Documentacao Swagger (OpenAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Healthcheck da API**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
-- **MinIO Console**: [http://localhost:9001](http://localhost:9001) _(Usuario: `conformia_minio_admin` / Senha: `conformia_minio_secret`)_
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001) _(credenciais em `.env`)_
+
+### Problemas comuns
+
+| Sintoma                                                      | Causa e solucao                                                                                         |
+| :----------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `Segredos nao configurados: ... CHANGE_ME`                   | `.env` copiado a mao. Rode `bash scripts/setup-env.sh --force`.                                         |
+| `password authentication failed` no Postgres / MinIO         | Volumes antigos com outras senhas. Rode `make clean` e depois `make up` (apaga os dados locais).        |
+| `make up` expira esperando `backend` saudavel                | `docker compose --env-file .env -f infra/docker-compose.yml logs backend`; `/api/v1/health` mostra qual servico esta `degraded`. |
+| `port is already allocated`                                  | Ajuste `*_PORT` no `.env` (ex.: `POSTGRES_PORT=5433`).                                                  |
+| Upload retorna `503`                                         | Redis ou MinIO indisponivel; confira `make ps` e `/api/v1/health`.                                      |
+
+> **Sobre a imagem do MinIO:** o repositorio oficial `minio/minio` foi arquivado e as imagens
+> deixaram de ser publicadas no Docker Hub. O compose usa o fork mantido `pgsty/minio`
+> (variavel `MINIO_IMAGE`). Fixe uma tag/digest na variavel apos validar no seu ambiente.
+
+### Dependencias locais (opcional)
+
+```bash
+make setup   # gera .env + uv sync + npm install
+uv run pytest backend/tests/ -v
+uv run python evals/eval_pipeline.py
+```
 
 ---
 
