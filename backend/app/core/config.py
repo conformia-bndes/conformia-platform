@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 from typing import List, Union
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str = "conformia_default_secret_key_change_in_production_12345"
-    API_KEY: str = "conformia_dev_api_key_2026"
+    # Segredos: obrigatorios e sem valor default no codigo (definidos via .env / ambiente)
+    SECRET_KEY: str
+    API_KEY: str
 
     # CORS
     ALLOWED_ORIGINS: Union[List[str], str] = [
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str = "postgres"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "conformia_user"
-    POSTGRES_PASSWORD: str = "conformia_secret_pass"
+    POSTGRES_PASSWORD: str
     POSTGRES_DB: str = "conformia_db"
     DATABASE_URL: Union[str, None] = None
 
@@ -60,7 +61,7 @@ class Settings(BaseSettings):
         # Extrai valores para montar a URL caso DATABASE_URL não seja passada explicitamente
         values = info.data
         user = values.get("POSTGRES_USER", "conformia_user")
-        password = values.get("POSTGRES_PASSWORD", "conformia_secret_pass")
+        password = values.get("POSTGRES_PASSWORD", "")
         server = values.get("POSTGRES_SERVER", "postgres")
         port = values.get("POSTGRES_PORT", 5432)
         db = values.get("POSTGRES_DB", "conformia_db")
@@ -87,8 +88,8 @@ class Settings(BaseSettings):
 
     # Armazenamento de Objetos - MinIO
     MINIO_ENDPOINT: str = "minio:9000"
-    MINIO_ROOT_USER: str = "conformia_minio_admin"
-    MINIO_ROOT_PASSWORD: str = "conformia_minio_secret"
+    MINIO_ROOT_USER: str
+    MINIO_ROOT_PASSWORD: str
     MINIO_BUCKET_NAME: str = "documents"
     MINIO_USE_SSL: bool = False
 
@@ -101,6 +102,24 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: Union[str, None] = None
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_TEMPERATURE: float = 0.0
+
+    @model_validator(mode="after")
+    def reject_placeholder_secrets(self) -> "Settings":
+        """Falha cedo se algum segredo ainda for o placeholder do .env.example."""
+        secrets = {
+            "SECRET_KEY": self.SECRET_KEY,
+            "API_KEY": self.API_KEY,
+            "POSTGRES_PASSWORD": self.POSTGRES_PASSWORD,
+            "MINIO_ROOT_USER": self.MINIO_ROOT_USER,
+            "MINIO_ROOT_PASSWORD": self.MINIO_ROOT_PASSWORD,
+        }
+        pending = [name for name, value in secrets.items() if not value or "CHANGE_ME" in value]
+        if pending:
+            raise ValueError(
+                f"Segredos nao configurados: {', '.join(pending)}. "
+                "Gere o arquivo .env com 'make env' (ou substitua os CHANGE_ME manualmente)."
+            )
+        return self
 
 
 @lru_cache()

@@ -1,6 +1,6 @@
 # ==============================================================================
 # Conform.IA BNDES Platform - Frontend Dockerfile
-# Multi-stage build Node 20 / Vite / React / TypeScript / Nginx
+# Multi-stage build Node 22 / Vite / React / TypeScript / Nginx
 # ==============================================================================
 
 # Stage 1: Development

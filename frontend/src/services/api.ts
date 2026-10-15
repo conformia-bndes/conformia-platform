@@ -32,6 +32,49 @@ export interface DocumentItem {
   total_pages: number;
 }
 
+export interface PageEvidence {
+  text: string;
+  page: number;
+  confidence?: number;
+  bounding_box?: number[] | null;
+}
+
+export interface ExtractedField {
+  name: string;
+  value: unknown;
+  raw_value?: string | null;
+  confidence: number;
+  evidence?: PageEvidence | null;
+}
+
+export interface ExtractionResult {
+  document_type?: string | null;
+  fields: Record<string, ExtractedField>;
+  evidences: PageEvidence[];
+  total_pages: number;
+  tables: unknown[];
+  full_text_preview?: string | null;
+}
+
+export interface ErrorDetail {
+  code: string;
+  message: string;
+  details?: Record<string, unknown> | null;
+  timestamp: string;
+}
+
+export interface ProcessingStatusResponse {
+  document_id: string;
+  filename: string;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'EXTRACTION_FAILED';
+  progress: number;
+  message: string;
+  extraction?: ExtractionResult | null;
+  error?: ErrorDetail | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ComplianceRule {
   id: string;
   code: string;
@@ -97,6 +140,11 @@ export const apiService = {
 
   async getDocument(id: string) {
     const res = await apiClient.get(`/api/v1/documents/${id}`);
+    return res.data;
+  },
+
+  async getProcessingStatus(id: string): Promise<ProcessingStatusResponse> {
+    const res = await apiClient.get<ProcessingStatusResponse>(`/api/v1/documents/${id}/processing`);
     return res.data;
   },
 

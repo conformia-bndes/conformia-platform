@@ -36,8 +36,14 @@ def get_health(db: Session = Depends(get_db)):
         logger.warning(f"Redis health check failed: {e}")
         redis_status = "degraded"
 
+    from app.core.storage import storage_service
+
+    minio_status = "healthy" if storage_service.ping() else "degraded"
+
     overall_status = (
-        "healthy" if db_status == "healthy" and redis_status == "healthy" else "degraded"
+        "healthy"
+        if db_status == "healthy" and redis_status == "healthy" and minio_status == "healthy"
+        else "degraded"
     )
 
     return {
@@ -46,5 +52,5 @@ def get_health(db: Session = Depends(get_db)):
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "timestamp": datetime.utcnow().isoformat(),
-        "services": {"database": db_status, "redis": redis_status, "minio": "ready"},
+        "services": {"database": db_status, "redis": redis_status, "minio": minio_status},
     }
