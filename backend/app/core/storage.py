@@ -19,6 +19,7 @@ class StorageService:
         self.bucket_name = settings.MINIO_BUCKET_NAME
         self.secure = settings.MINIO_USE_SSL
         self._client: Optional[Minio] = None
+        self._bucket_ready = False
 
     @property
     def client(self) -> Minio:
@@ -29,19 +30,34 @@ class StorageService:
                 secret_key=self.secret_key,
                 secure=self.secure,
             )
+        if not self._bucket_ready:
             self._ensure_bucket()
         return self._client
 
     def _ensure_bucket(self) -> None:
-        """Verifica se o bucket existe; cria se necessario."""
+        """Verifica se o bucket existe; cria se necessario.
+
+        So marca o bucket como pronto apos sucesso, para tentar de novo caso o MinIO
+        ainda estivesse subindo na primeira chamada.
+        """
         try:
             if not self._client.bucket_exists(self.bucket_name):
                 self._client.make_bucket(self.bucket_name)
                 logger.info(f"Bucket MinIO '{self.bucket_name}' criado com sucesso.")
+            self._bucket_ready = True
         except Exception as exc:
             logger.warning(
                 f"Nao foi possivel verificar/criar bucket '{self.bucket_name}': {str(exc)}"
             )
+
+    def ping(self) -> bool:
+        """Retorna True se o MinIO responde e o bucket esta disponivel."""
+        try:
+            self.client.bucket_exists(self.bucket_name)
+            return self._bucket_ready
+        except Exception as exc:
+            logger.warning(f"MinIO indisponivel: {str(exc)}")
+            return False
 
     def upload_file(
         self, file_data: bytes, object_name: str, content_type: str = "application/pdf"

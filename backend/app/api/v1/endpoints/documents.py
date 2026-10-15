@@ -13,6 +13,13 @@ from app.core.celery_app import process_document_task
 from app.core.storage import storage_service
 from app.db.models.document import Document
 from app.db.session import get_db
+from celery.result import AsyncResult
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.db.models.document import Document
+from app.core.storage import storage_service
+from app.core.celery_app import celery, process_document_task
 from app.idp.extractor import DocumentExtractor
 from app.idp.parser import (
     build_processing_status_response,
@@ -146,13 +153,20 @@ PROCESSING_EXAMPLES: Dict[str, Dict[str, Any]] = {
 def upload_document(
     file: UploadFile = File(...),
     async_process: bool = Query(
-        False, description="Executar extracao de forma assincrona via Celery"
+        True,
+        description=(
+            "Despacha o processamento ao worker Celery (padrao) e retorna 'task_id'. "
+            "Use false apenas para depuracao: executa a extracao dentro da requisicao."
+        ),
     ),
     db: Session = Depends(get_db),
 ) -> DocumentUploadResponse:
     """
     Recebe um arquivo PDF, valida assinatura binaria (%PDF-), persiste no MinIO
     e inicia o processamento IDP sincrono ou assincrono via Celery.
+    e despacha o processamento IDP ao worker via Celery (ou executa inline com
+    async_process=false). O estado pode ser consultado em GET /documents/{id} ou
+    GET /documents/tasks/{task_id}.
     """
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
@@ -205,6 +219,14 @@ def upload_document(
             content_type=file.content_type or "application/pdf",
         )
     except Exception as storage_err:
+        if async_process:
+            # O worker roda em outro container e so enxerga o arquivo via MinIO.
+            os.remove(destination_path)
+            logger.error(f"Falha no upload para o MinIO: {str(storage_err)}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Armazenamento de objetos (MinIO) indisponivel. Tente novamente.",
+            )
         logger.warning(
             f"Falha no upload para o MinIO: {str(storage_err)}. "
             f"Mantendo copia local em {destination_path}"
@@ -227,14 +249,22 @@ def upload_document(
     db.commit()
     db.refresh(doc)
 
+    task_id = None
     if async_process:
         try:
-            process_document_task.delay(doc.id, destination_path, safe_filename)
+            task_id = process_document_task.delay(doc.id, destination_path, safe_filename).id
         except Exception as task_err:
-            logger.warning(f"Celery nao disponivel: {str(task_err)}. Executando sincronamente.")
-            async_process = False
-
-    if not async_process:
+            # Sem fallback silencioso: um broker fora do ar deve aparecer como erro,
+            # e nao como "sucesso" processado fora da fila.
+            logger.error(f"Falha ao despachar tarefa ao Celery: {str(task_err)}")
+            doc.status = "EXTRACTION_FAILED"
+            doc.extracted_metadata = {"error": "Fila de processamento indisponivel."}
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Fila de processamento (Redis/Celery) indisponivel.",
+            )
+    else:
         try:
             extractor = DocumentExtractor()
             extracted = extractor.extract(destination_path, document_id=doc.id)
@@ -285,6 +315,50 @@ def upload_document(
 def list_documents(
     skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
 ) -> DocumentListResponse:
+    return {
+        "id": doc.id,
+        "task_id": task_id,
+        "filename": doc.original_filename,
+        "status": doc.status,
+        "file_size": doc.file_size,
+        "total_pages": (doc.extracted_metadata.get("total_pages") if doc.extracted_metadata else 0),
+        "created_at": doc.created_at.isoformat(),
+    }
+
+
+@router.get("/tasks/{task_id}", summary="Consultar Estado de uma Tarefa de Processamento")
+def get_task_status(task_id: str):
+    """
+    Retorna o estado Celery da tarefa: PENDING, STARTED, RETRY, SUCCESS ou FAILURE.
+
+    Atencao: o Celery nao diferencia um id inexistente de uma tarefa ainda na fila
+    (ambos aparecem como PENDING). Use o task_id devolvido pelo upload.
+    """
+    try:
+        result = AsyncResult(task_id, app=celery)
+        state = result.state
+        payload = {"task_id": task_id, "state": state}
+        if state == "SUCCESS" and isinstance(result.result, dict):
+            summary = result.result.get("compliance_summary") or {}
+            payload["result"] = {
+                "document_id": result.result.get("document_id"),
+                "status": result.result.get("status"),
+                "overall_status": summary.get("overall_status"),
+                "compliance_score": summary.get("compliance_score"),
+            }
+        elif state in ("FAILURE", "RETRY"):
+            payload["error"] = str(result.result)
+        return payload
+    except Exception as exc:
+        logger.error(f"Falha ao consultar backend de resultados: {str(exc)}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Backend de resultados (Redis) indisponivel.",
+        )
+
+
+@router.get("", summary="Listar Documentos Ingeridos")
+def list_documents(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     """Retorna lista paginada de documentos processados."""
     docs = db.query(Document).order_by(Document.created_at.desc()).offset(skip).limit(limit).all()
     total = db.query(Document).count()
