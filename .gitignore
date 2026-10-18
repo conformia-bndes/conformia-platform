@@ -85,3 +85,6 @@ desktop.ini
 minio_data/
 postgres_data/
 redis_data/
+
+# PDFs do dataset sintetico (gerados por evals/sintetico/gerar_dataset.py)
+evals/sintetico/pdfs/
