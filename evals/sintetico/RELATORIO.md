@@ -129,6 +129,7 @@ Quando a data de validade nao e encontrada, o motor aprova a certidao. A verific
 ausente (`rules_engine.py`, linha 260) so roda se a regra tiver `strict_validity`, e nenhuma regra
 de `rules/schemas/bndes_sample_checklist.json` define esse campo. Contraria o `.agents/AGENTS.md`:
 "Nunca Assumir Validade por Ausencia de Dados".
+A cobertura de testes do backend (`make test`) confirma que essa linha (262) nao e executada por nenhum teste existente.
 
 ### 6.2 Data de validade nao reconhecida em certidao vencida (critico) - 2 casos
 
