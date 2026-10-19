@@ -1,0 +1,364 @@
+[
+  {
+    "id": "CND-VALIDA-NAT",
+    "arquivo": "CND-VALIDA-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "valido",
+    "status_esperado": "COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Válida até: 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CND-VALIDA-DIG",
+    "arquivo": "CND-VALIDA-DIG.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "digitalizado",
+    "situacao": "valido",
+    "origem": "CND-VALIDA-NAT",
+    "status_esperado": "COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Válida até: 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CND-VENCIDA-NAT",
+    "arquivo": "CND-VENCIDA-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "vencido",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "01/01/2001", "pagina": 1, "evidencia": "Válida até: 01/01/2001"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CND-VENCIDA-DIG",
+    "arquivo": "CND-VENCIDA-DIG.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "digitalizado",
+    "situacao": "vencido",
+    "origem": "CND-VENCIDA-NAT",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "01/01/2001", "pagina": 1, "evidencia": "Válida até: 01/01/2001"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CND-PENDENTE-NAT",
+    "arquivo": "CND-PENDENTE-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "pendente",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO POSITIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Válida até: 31/12/2099"},
+      "pendencia": {"valor": true, "pagina": 1, "evidencia": "CONSTA PENDÊNCIA"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CND-PENDENTE-DIG",
+    "arquivo": "CND-PENDENTE-DIG.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "digitalizado",
+    "situacao": "pendente",
+    "origem": "CND-PENDENTE-NAT",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO POSITIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Válida até: 31/12/2099"},
+      "pendencia": {"valor": true, "pagina": 1, "evidencia": "CONSTA PENDÊNCIA"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CND-ILEGIVEL-NAT",
+    "arquivo": "CND-ILEGIVEL-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "ilegivel",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": null, "pagina": 1, "evidencia": "CERTIDÃO NEGATTVA DE DÉBITOS", "motivo": "erro_digitacao"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Válida até: 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": "Titulo com erro de digitacao: \"CERTIDÃO NEGATTVA\"."
+  },
+  {
+    "id": "CND-ILEGIVEL-DIG-DATA",
+    "arquivo": "CND-ILEGIVEL-DIG-DATA.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "digitalizado",
+    "situacao": "ilegivel",
+    "origem": "CND-VALIDA-NAT",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": null, "pagina": 1, "evidencia": null, "motivo": "ilegivel"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": "Linha da validade desfocada."
+  },
+  {
+    "id": "CND-ILEGIVEL-DIG-TITULO",
+    "arquivo": "CND-ILEGIVEL-DIG-TITULO.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "digitalizado",
+    "situacao": "ilegivel",
+    "origem": "CND-VALIDA-NAT",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": null, "pagina": 1, "evidencia": null, "motivo": "ilegivel"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Válida até: 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": "Igual ao CND-VALIDA-NAT, com carimbo por cima do titulo."
+  },
+  {
+    "id": "CND-SEM-VALIDADE-NAT",
+    "arquivo": "CND-SEM-VALIDADE-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "sem_validade",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": null, "pagina": 1, "evidencia": null, "motivo": "ausente"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": "AGENTS.md: nunca assumir validade por ausencia de dados."
+  },
+  {
+    "id": "CND-VENCIDA-FMTDATA-NAT",
+    "arquivo": "CND-VENCIDA-FMTDATA-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "vencido",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "01/01/2001", "pagina": 1, "evidencia": "Validade da certidão: 01/01/2001"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": "Linha da data vira \"Validade da certidão: 01/01/2001\"."
+  },
+  {
+    "id": "CND-VENCIDA-OCRDATA-NAT",
+    "arquivo": "CND-VENCIDA-OCRDATA-NAT.pdf",
+    "tipo": "CND",
+    "regra": "RULE-BNDES-001",
+    "formato": "nativo",
+    "situacao": "vencido",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CND_FEDERAL", "pagina": 1, "evidencia": "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "CNPJ: 12.345.678/0001-90"},
+      "validade": {"valor": "01/01/2001", "pagina": 1, "evidencia": "Válida até: 0l/01/2001"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "Não constam pendências"}
+    },
+    "observacao": "Simula erro de OCR: letra l no lugar do digito 1. Valor real: 01/01/2001."
+  },
+  {
+    "id": "CRF-VALIDA-NAT",
+    "arquivo": "CRF-VALIDA-NAT.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "nativo",
+    "situacao": "valido",
+    "status_esperado": "COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Validade: 01/01/2001 a 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CRF-VALIDA-DIG",
+    "arquivo": "CRF-VALIDA-DIG.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "digitalizado",
+    "situacao": "valido",
+    "origem": "CRF-VALIDA-NAT",
+    "status_esperado": "COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Validade: 01/01/2001 a 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CRF-VENCIDA-NAT",
+    "arquivo": "CRF-VENCIDA-NAT.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "nativo",
+    "situacao": "vencido",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "01/01/2001", "pagina": 1, "evidencia": "Validade: 01/01/2000 a 01/01/2001"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CRF-VENCIDA-DIG",
+    "arquivo": "CRF-VENCIDA-DIG.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "digitalizado",
+    "situacao": "vencido",
+    "origem": "CRF-VENCIDA-NAT",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "01/01/2001", "pagina": 1, "evidencia": "Validade: 01/01/2000 a 01/01/2001"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": "Igual ao CRF-VENCIDA-NAT, virado imagem com ruido leve."
+  },
+  {
+    "id": "CRF-PENDENTE-NAT",
+    "arquivo": "CRF-PENDENTE-NAT.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "nativo",
+    "situacao": "pendente",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Validade: 01/01/2001 a 31/12/2099"},
+      "pendencia": {"valor": true, "pagina": 1, "evidencia": "SITUAÇÃO IRREGULAR"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CRF-PENDENTE-DIG",
+    "arquivo": "CRF-PENDENTE-DIG.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "digitalizado",
+    "situacao": "pendente",
+    "origem": "CRF-PENDENTE-NAT",
+    "status_esperado": "NON_COMPLIANT",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Validade: 01/01/2001 a 31/12/2099"},
+      "pendencia": {"valor": true, "pagina": 1, "evidencia": "SITUAÇÃO IRREGULAR"}
+    },
+    "observacao": ""
+  },
+  {
+    "id": "CRF-ILEGIVEL-NAT",
+    "arquivo": "CRF-ILEGIVEL-NAT.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "nativo",
+    "situacao": "ilegivel",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": null, "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDDE DO FGTS", "motivo": "erro_digitacao"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Validade: 01/01/2001 a 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": "Titulo com erro de digitacao: \"CERTIFICADO DE REGULARIDDE DO FGTS\"."
+  },
+  {
+    "id": "CRF-ILEGIVEL-DIG-DATA",
+    "arquivo": "CRF-ILEGIVEL-DIG-DATA.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "digitalizado",
+    "situacao": "ilegivel",
+    "origem": "CRF-VALIDA-NAT",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": null, "pagina": 1, "evidencia": null, "motivo": "ilegivel"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": "Linha da validade desfocada."
+  },
+  {
+    "id": "CRF-ILEGIVEL-DIG-TITULO",
+    "arquivo": "CRF-ILEGIVEL-DIG-TITULO.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "digitalizado",
+    "situacao": "ilegivel",
+    "origem": "CRF-VALIDA-NAT",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": null, "pagina": 1, "evidencia": null, "motivo": "ilegivel"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": "31/12/2099", "pagina": 1, "evidencia": "Validade: 01/01/2001 a 31/12/2099"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": "Igual ao CRF-VALIDA-NAT, com carimbo por cima do titulo."
+  },
+  {
+    "id": "CRF-SEM-VALIDADE-NAT",
+    "arquivo": "CRF-SEM-VALIDADE-NAT.pdf",
+    "tipo": "CRF",
+    "regra": "RULE-BNDES-002",
+    "formato": "nativo",
+    "situacao": "sem_validade",
+    "status_esperado": "MANUAL_REVIEW_REQUIRED",
+    "campos": {
+      "tipo_documento": {"valor": "CRF_FGTS", "pagina": 1, "evidencia": "CERTIFICADO DE REGULARIDADE DO FGTS"},
+      "cnpj": {"valor": "12.345.678/0001-90", "pagina": 1, "evidencia": "Inscrição: 12.345.678/0001-90"},
+      "validade": {"valor": null, "pagina": 1, "evidencia": null, "motivo": "ausente"},
+      "pendencia": {"valor": false, "pagina": 1, "evidencia": "SITUAÇÃO REGULAR"}
+    },
+    "observacao": "AGENTS.md: nunca assumir validade por ausencia de dados."
+  }
+]
