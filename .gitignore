@@ -88,7 +88,4 @@ redis_data/
 
 # PDFs do dataset sintetico (gerados por evals/sintetico/gerar_dataset.py)
 evals/sintetico/pdfs/
-
-# PDFs do dataset sintetico (gerados por evals/sintetico/gerar_dataset.py)
-evals/sintetico/pdfs/
 evals/sintetico/resultados/
