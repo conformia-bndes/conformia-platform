@@ -2,8 +2,9 @@ version: 2
 # Atualizacoes entram por dev (branch de integracao) e chegam a main na promocao.
 # Patches e minors sao agrupados para reduzir o volume de PRs; majors chegam isolados.
 updates:
-  - package-ecosystem: "pip"
-    directory: "/backend"
+  # uv.lock e a fonte unica de versoes (desenvolvimento, CI e imagem Docker).
+  - package-ecosystem: "uv"
+    directory: "/"
     target-branch: "dev"
     schedule:
       interval: "weekly"
@@ -51,4 +52,9 @@ updates:
     labels:
       - "dependencies"
       - "area: devops"
+    ignore:
+      # Versoes maiores do Node sao trocadas manualmente para a proxima LTS (versoes impares
+      # nao tem suporte de longo prazo, como a 25 proposta no PR #69).
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 3
