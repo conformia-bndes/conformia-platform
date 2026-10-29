@@ -1,9 +1,23 @@
 """Application configuration module using pydantic-settings."""
 
+import json
 from functools import lru_cache
-from typing import List, Union
-from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Annotated, List, Literal, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+UserRole = Literal["ANALISTA", "AUDITOR", "ADMIN"]
+
+
+class ApiUser(BaseModel):
+    """
+    Usuario identificado por chave de API pessoal. Somente o hash SHA-256 da chave e
+    configurado; a chave em si fica com o usuario (gerada por scripts/create_api_user.py).
+    """
+
+    user_id: str = Field(pattern=r"^[a-z0-9._-]{3,64}$")
+    role: UserRole
+    key_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class Settings(BaseSettings):
@@ -20,6 +34,24 @@ class Settings(BaseSettings):
     # Segredos: obrigatorios e sem valor default no codigo (definidos via .env / ambiente)
     SECRET_KEY: str
     API_KEY: str
+    # Usuarios com chave pessoal (JSON). Necessarios para revisao humana e segregacao.
+    API_USERS: Annotated[List[ApiUser], NoDecode] = []
+
+    @field_validator("API_USERS", mode="before")
+    @classmethod
+    def parse_api_users(cls, v: Union[str, List]) -> List:
+        if isinstance(v, str):
+            return json.loads(v) if v.strip() else []
+        return v
+
+    @field_validator("API_USERS")
+    @classmethod
+    def reject_duplicate_api_users(cls, users: List[ApiUser]) -> List[ApiUser]:
+        if len({u.user_id for u in users}) != len(users):
+            raise ValueError("API_USERS contem user_id duplicado.")
+        if len({u.key_sha256 for u in users}) != len(users):
+            raise ValueError("API_USERS contem a mesma chave para mais de um usuario.")
+        return users
 
     # CORS
     ALLOWED_ORIGINS: Union[List[str], str] = [
@@ -34,8 +66,6 @@ class Settings(BaseSettings):
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
             if v.startswith("[") and v.endswith("]"):
-                import json
-
                 try:
                     return json.loads(v)
                 except Exception:
