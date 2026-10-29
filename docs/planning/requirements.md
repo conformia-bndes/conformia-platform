@@ -26,10 +26,10 @@ flowchart TD
     D --> E["5. Estruturacao de Entidades (Pydantic)"]
     E --> F["6. Carga do Checklist Normativo"]
     F --> G["7. Motor Determinístico de Regras"]
-    G --> H["8. Verificacao Maker-Checker (LLM)"]
-    H --> I["9. Painel com Evidencias e Coordenadas"]
-    I --> J{"10. Pendencia ou Divergencia?"}
-    J -->|Sim| K["11. Revisao Humana / Excecao Motivada"]
+    G --> H["8. Verificação Maker-Checker (LLM)"]
+    H --> I["9. Painel com Evidências e Coordenadas"]
+    I --> J{"10. Pendencia ou Divergência?"}
+    J -->|Sim| K["11. Revisão Humana / Exceção Motivada"]
     J -->|Não| L["11. Aprovação Automatizada"]
     K --> M["12. Gravação em Trilha de Auditoria e Emissão de Laudo"]
     L --> M
@@ -37,7 +37,7 @@ flowchart TD
 
 ---
 
-## 3. Catalogo de Requisitos Funcionais (RF01 a RF15)
+## 3. Catálogo de Requisitos Funcionais (RF01 a RF15)
 
 | ID       | Requisito Funcional                | Prioridade  | Critério de Aceite Formal                                                                                    |
 | :------- | :--------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------- |
@@ -47,7 +47,7 @@ flowchart TD
 | **RF04** | **Estruturação de Entidades**      | Alta        | Reconhecimento de CNPJ, razões sociais, datas de emissão, datas de validade e códigos de controle.           |
 | **RF05** | **Checklist Declarativo**          | Alta        | Carregamento dinâmico de checklists versionados em JSON Schema sem necessidade de rebuild da aplicação.      |
 | **RF06** | **Motor de Regras Determinístico** | Alta        | Validação booleana e temporal de certidões (CND, CRF, CNDT, Falência) com tolerância zero a pendências.      |
-| **RF07** | **Maker-Checker Assistido por IA** | Alta        | Avaliação semântica de cláusulas juridicas com citação literal compulsoria de evidência documental.          |
+| **RF07** | **Maker-Checker Assistido por IA** | Alta        | Avaliação semântica de cláusulas jurídicas com citação literal compulsória de evidência documental.          |
 | **RF08** | **Exibição de Evidências**         | Alta        | Interface destacando o trecho exato e página do documento original que fundamentou a classificação.          |
 | **RF09** | **Revisão Humana e Exceções**      | Alta        | Fluxo operacional para analista aprovar, rejeitar ou deferir exceção justificada com parecer técnico formal. |
 | **RF10** | **Trilha de Auditoria Imutável**   | Alta        | Gravação transacional de todos os eventos com timestamp UTC, ID do executor, hash do arquivo e laudo.        |

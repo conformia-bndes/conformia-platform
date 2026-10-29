@@ -1,6 +1,12 @@
-# Cronograma de Sprints e Backlog de Epicos
+# Cronograma de Sprints e Backlog de Épicos
 
-Este documento detalha o planejamento operacional das 8 sprints de desenvolvimento da plataforma Conform.IA BNDES até a data final de encerramento em **07/12/2026**, incluindo o catalogo de epicos e a Definition of Done (DoD) formal.
+!!! warning "Documento histórico"
+    Planejamento elaborado no início do projeto, mantido como registro. O escopo, as datas e o
+    estado atual estão no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md), no
+    [Backlog](IMPLEMENTATION_BACKLOG.md) e no [Relatório de Validação](VALIDATION_REPORT.md).
+    A data de entrega adotada é **05/12/2026**.
+
+Este documento detalha o planejamento operacional das 8 sprints de desenvolvimento da plataforma Conform.IA BNDES até a data final de encerramento em **07/12/2026**, incluindo o catálogo de épicos e a Definition of Done (DoD) formal.
 
 ---
 
@@ -13,19 +19,19 @@ Este documento detalha o planejamento operacional das 8 sprints de desenvolvimen
 | **Sprint 3** | 07/10 – 17/10 | **Extração Estruturada**        | Normalização de entidades (CNPJ, datas de validade), tabelas e citações de evidências em esquemas JSON Schema e Pydantic.       | <span class="badge badge-review">Planejada</span> JSON estruturado com índices de confiança e coordenadas. |
 | **Sprint 4** | 18/10 – 31/10 | **Checklist e Regras**          | Motor de regras determinísticas, validação temporal de certidões, detecção de falência e aplicação do checklist normativo.      | <span class="badge badge-review">Planejada</span> Checklist executável e geração de laudo preliminar.      |
 | **Sprint 5** | 01/11 – 14/11 | **IA e Explicabilidade**        | Integração com LLMs sob padrão Maker-Checker, análise de cláusulas e geração de justificativas técnicas contextuais.            | <span class="badge badge-review">Planejada</span> Pipeline híbrido regras + IA sem alucinações.            |
-| **Sprint 6** | 15/11 – 24/11 | **Interface e Revisão**         | Painel operacional React, visualizador split-view documento/evidencias, fluxo de contestação, exceções e relatório PDF.         | <span class="badge badge-review">Planejada</span> Fluxo ponta a ponta utilizável pelo analista BNDES.      |
+| **Sprint 6** | 15/11 – 24/11 | **Interface e Revisão**         | Painel operacional React, visualizador split-view documento/evidências, fluxo de contestação, exceções e relatório PDF.         | <span class="badge badge-review">Planejada</span> Fluxo ponta a ponta utilizável pelo analista BNDES.      |
 | **Sprint 7** | 25/11 – 01/12 | **Segurança e Observabilidade** | Autenticação RBAC, políticas de segurança estritas, traces OpenTelemetry, testes de carga e sanitização LGPD.                   | <span class="badge badge-review">Planejada</span> Release Candidate homologada para demonstração.          |
-| **Sprint 8** | 02/12 – 07/12 | **Validação e Entrega**         | Execução de benchmarks finais, revisão integral da documentação, video demonstrativo e entrega oficial do MVP.                  | <span class="badge badge-review">Planejada</span> MVP final entregue, demonstrado e auditável.             |
+| **Sprint 8** | 02/12 – 07/12 | **Validação e Entrega**         | Execução de benchmarks finais, revisão integral da documentação, vídeo demonstrativo e entrega oficial do MVP.                  | <span class="badge badge-review">Planejada</span> MVP final entregue, demonstrado e auditável.             |
 
 ---
 
-## 2. Catalogo de Epicos (E1 a E10)
+## 2. Catálogo de Épicos (E1 a E10)
 
 <div class="grid cards" markdown>
 
 - ### E1 — Gestão Documental
 
-  Ingestão, validação de magic bytes (`%PDF-`), armazenamento durável no MinIO S3, catalogo de metadados e ciclo de vida de arquivos.
+  Ingestão, validação de magic bytes (`%PDF-`), armazenamento durável no MinIO S3, catálogo de metadados e ciclo de vida de arquivos.
 
 - ### E2 — Pipeline IDP Híbrido
 

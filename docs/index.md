@@ -11,7 +11,7 @@ hide:
   <h1 class="apple-title">Conform.IA BNDES</h1>
   <p class="apple-headline">Processamento Inteligente de Documentos e Auditoria Imutável</p>
   <p class="apple-subheadline">
-    Plataforma de alta precisão pericial para verificação automatizada de conformidade cadastral, fiscal, trabalhista e regulatória em operações de crédito e investimentos no BNDES.
+    Verificação automatizada de certidões cadastrais, fiscais, trabalhistas e regulatórias para operações de crédito do BNDES, com evidência rastreável e revisão humana quando há dúvida.
   </p>
   <div class="apple-cta-group">
     <a href="development/quickstart/" class="apple-btn-primary">Começar pelo Início Rápido</a>
@@ -22,25 +22,25 @@ hide:
 <div class="apple-stat-strip">
   <div class="apple-stat-item">
     <div class="apple-stat-number">0</div>
-    <div class="apple-stat-label">Falsos Positivos no Benchmark de Regras</div>
+    <div class="apple-stat-label">Falsos positivos no benchmark de regras (bloqueante no CI)</div>
   </div>
   <div class="apple-stat-item">
-    <div class="apple-stat-number">Fail-closed</div>
-    <div class="apple-stat-label">Falha de IA ou Dado Ausente Vira Revisão Manual</div>
+    <div class="apple-stat-number apple-stat-number--text">Fail-closed</div>
+    <div class="apple-stat-label">Falha de IA ou dado ausente vira revisão manual</div>
   </div>
   <div class="apple-stat-item">
     <div class="apple-stat-number">05/12/2026</div>
-    <div class="apple-stat-label">Entrega do MVP (Milestones M1 a M6)</div>
+    <div class="apple-stat-label">Entrega do MVP (milestones M1 a M6)</div>
   </div>
   <div class="apple-stat-item">
     <div class="apple-stat-number">15 RFs</div>
-    <div class="apple-stat-label">Requisitos Funcionais Mapeados</div>
+    <div class="apple-stat-label">Requisitos funcionais mapeados</div>
   </div>
 </div>
 
 <div class="apple-section-header">
   <h2 class="apple-section-title">Pilares Fundamentais da Solução</h2>
-  <p class="apple-section-desc">Arquitetura concebida para atender aos requisitos de conformidade com precisão pericial e rastreabilidade total.</p>
+  <p class="apple-section-desc">Regras determinísticas decidem, a IA só atua sob verificação e toda decisão deixa rastro.</p>
 </div>
 
 <div class="apple-grid-3">
@@ -49,7 +49,7 @@ hide:
       <span class="apple-card-tag">Pipeline IDP</span>
       <h3 class="apple-card-title">Extração Híbrida e OCR</h3>
       <p class="apple-card-desc">
-        Extração vetorial nativa de texto com fallback automático para OCR Tesseract 5 em certidões digitalizadas, com pre-processamento adaptativo e calibração para o idioma português.
+        Texto nativo do PDF com pdfplumber e OCR Tesseract em português nas páginas digitalizadas, com página e trecho de cada evidência.
       </p>
     </div>
     <a href="engineering/idp-pipeline/" class="apple-card-link">Explorar Pipeline IDP &rarr;</a>
@@ -58,29 +58,29 @@ hide:
   <div class="apple-card">
     <div>
       <span class="apple-card-tag">Harness de IA</span>
-      <h3 class="apple-card-title">Maker-Checker Algoritmico</h3>
+      <h3 class="apple-card-title">Maker-Checker com Citação Verificada</h3>
       <p class="apple-card-desc">
-        O modelo propositor formula hipóteses com citação literal compulsoria. O auditor algoritmico valida a correspondência textual antes de admitir qualquer laudo, eliminando alucinações.
+        Um modelo propõe a avaliação com citação literal, outro audita, e a citação precisa existir no documento. Qualquer falha encaminha para revisão humana.
       </p>
     </div>
-    <a href="planning/harness-engineering/" class="apple-card-link">Entender Maker-Checker &rarr;</a>
+    <a href="engineering/maker-checker/" class="apple-card-link">Entender Maker-Checker &rarr;</a>
   </div>
 
   <div class="apple-card">
     <div>
-      <span class="apple-card-tag">Governança</span>
-      <h3 class="apple-card-title">Auditoria Imutável e LGPD</h3>
+      <span class="apple-card-tag">Auditoria</span>
+      <h3 class="apple-card-title">Trilha de Auditoria</h3>
       <p class="apple-card-desc">
-        Registro transacional append-only de cada análise com hash SHA-256 do documento original, carimbo temporal UTC e parecer pericial estruturado para o TCU e a CGU.
+        Cada avaliação é registrada junto com o laudo, com o SHA-256 do documento, e a decisão humana fica em uma trilha somente de inserção, com segregação de funções.
       </p>
     </div>
-    <a href="planning/governance-security/" class="apple-card-link">Ver Diretrizes de Governança &rarr;</a>
+    <a href="planning/governance-security/" class="apple-card-link">Ver Segurança e Auditoria &rarr;</a>
   </div>
 </div>
 
 <div class="apple-section-header">
   <h2 class="apple-section-title">Navegação do Portal de Engenharia</h2>
-  <p class="apple-section-desc">Acesso estruturado as dimensões estratégica, arquitetural, normativa e operacional da plataforma.</p>
+  <p class="apple-section-desc">Escolha por onde começar conforme o seu papel no projeto.</p>
 </div>
 
 <div class="apple-nav-grid">
@@ -88,7 +88,7 @@ hide:
     <div>
       <span class="apple-nav-category">Estratégia</span>
       <h4 class="apple-nav-title">Planejamento e Requisitos</h4>
-      <p class="apple-nav-text">Entendimento do edital, requisitos RF01 a RF15, matriz de dores operacionais e roadmap de sprints.</p>
+      <p class="apple-nav-text">Entendimento do edital, requisitos RF01 a RF15 e rastreabilidade com os testes.</p>
     </div>
     <span class="apple-nav-arrow">&rarr;</span>
   </a>
@@ -97,7 +97,7 @@ hide:
     <div>
       <span class="apple-nav-category">Engenharia</span>
       <h4 class="apple-nav-title">Arquitetura e Decisões (ADRs)</h4>
-      <p class="apple-nav-text">Topologia de serviços conteinerizados, diagramas C4 e registros de decisão técnica (ADR-001 a ADR-003).</p>
+      <p class="apple-nav-text">Serviços, fluxo de processamento, modelo de dados e decisões técnicas (ADR-001 a ADR-003).</p>
     </div>
     <span class="apple-nav-arrow">&rarr;</span>
   </a>
@@ -106,7 +106,7 @@ hide:
     <div>
       <span class="apple-nav-category">Normativos</span>
       <h4 class="apple-nav-title">Desafio e Certidões BNDES</h4>
-      <p class="apple-nav-text">Mapeamento dos requisitos da Consulta Publica no 01/2025 e especificação técnica das tipologias de certidões.</p>
+      <p class="apple-nav-text">Mapeamento dos requisitos da Consulta Pública nº 01/2025 e das tipologias de certidões.</p>
     </div>
     <span class="apple-nav-arrow">&rarr;</span>
   </a>
@@ -115,7 +115,7 @@ hide:
     <div>
       <span class="apple-nav-category">Operação</span>
       <h4 class="apple-nav-title">Desenvolvimento e APIs</h4>
-      <p class="apple-nav-text">Guia de inicio rápido com Docker e Astral uv, contratos OpenAPI (Swagger) e quality gates.</p>
+      <p class="apple-nav-text">Início rápido com Docker e uv, referência da API REST e quality gates.</p>
     </div>
     <span class="apple-nav-arrow">&rarr;</span>
   </a>
@@ -123,7 +123,7 @@ hide:
 
 <div class="apple-section-header">
   <h2 class="apple-section-title">Serviços e Portas em Ambiente Local</h2>
-  <p class="apple-section-desc">Catalogo de serviços e endpoints para analistas e equipes de engenharia.</p>
+  <p class="apple-section-desc">Endereços disponíveis após <code>make up</code>.</p>
 </div>
 
 <div class="apple-table-wrap">
@@ -139,27 +139,27 @@ hide:
       <tr>
         <td><strong>Frontend SPA</strong></td>
         <td><a href="http://localhost:5173" target="_blank" rel="noopener noreferrer">http://localhost:5173</a></td>
-        <td>Cockpit operacional do analista de crédito do BNDES.</td>
+        <td>Painel do analista: upload, laudo e revisão humana.</td>
       </tr>
       <tr>
         <td><strong>Backend API (Swagger)</strong></td>
         <td><a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer">http://localhost:8000/docs</a></td>
-        <td>Catalogo interativo OpenAPI das rotas da API.</td>
+        <td>Catálogo interativo OpenAPI das rotas da API.</td>
       </tr>
       <tr>
         <td><strong>Healthcheck da API</strong></td>
         <td><a href="http://localhost:8000/api/v1/health" target="_blank" rel="noopener noreferrer">http://localhost:8000/api/v1/health</a></td>
-        <td>Diagnóstico em tempo real do PostgreSQL, Redis e MinIO.</td>
+        <td>Estado do PostgreSQL, do Redis e do MinIO.</td>
       </tr>
       <tr>
         <td><strong>MinIO Console</strong></td>
         <td><a href="http://localhost:9001" target="_blank" rel="noopener noreferrer">http://localhost:9001</a></td>
-        <td>Interface web do S3 Object Storage para armazenamento de PDFs.</td>
+        <td>Console do armazenamento de objetos (PDFs originais).</td>
       </tr>
       <tr>
         <td><strong>Documentação MkDocs</strong></td>
-        <td><a href="http://127.0.0.1:8000" target="_blank" rel="noopener noreferrer">http://127.0.0.1:8000</a></td>
-        <td>Servidor local com recarregamento a quente via <code>make docs</code>.</td>
+        <td><a href="http://127.0.0.1:8001" target="_blank" rel="noopener noreferrer">http://127.0.0.1:8001</a></td>
+        <td>Esta documentação, servida localmente por <code>make docs</code>.</td>
       </tr>
     </tbody>
   </table>

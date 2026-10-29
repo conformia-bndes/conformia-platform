@@ -13,7 +13,7 @@ PYTEST := $(if $(UV),uv run pytest,pytest)
 BLACK := $(if $(UV),uv run black,black)
 FLAKE8 := $(if $(UV),uv run flake8,flake8)
 ALEMBIC := $(if $(UV),uv run alembic,alembic)
-MKDOCS := $(if $(UV),uv run --with-requirements docs/requirements.txt mkdocs,mkdocs)
+MKDOCS := $(if $(UV),uv run --frozen mkdocs,mkdocs)
 
 .PHONY: help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
 
@@ -115,7 +115,7 @@ format:
 	$(BLACK) backend/
 
 docs:
-	$(MKDOCS) serve
+	$(MKDOCS) serve -a 127.0.0.1:8001
 
 docs-build:
 	$(MKDOCS) build --strict

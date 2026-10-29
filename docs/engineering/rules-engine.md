@@ -1,63 +1,105 @@
-# Motor de Regras e Conformidade Declarativa
+# Motor de Regras
 
-O Motor de Regras do Conform.IA BNDES (`app.services.rules_engine.RulesEngine`) e o nucleo responsável por interpretar os requisitos normativos do BNDES e avaliar o texto extraido dos documentos.
+O motor de regras (`backend/app/services/rules_engine.py`, classe `RulesEngine`) avalia o texto
+extraído de um documento contra o checklist declarativo do BNDES e produz o laudo de
+conformidade. As regras ficam fora do código, em JSON versionado.
 
 ---
 
-## 1. Tipologia de Regras de Conformidade
+## 1. Checklist declarativo
 
-O sistema suporta três modalidades de avaliação:
+| Arquivo | Conteúdo |
+| :-- | :-- |
+| `rules/schemas/rule_schema.json` | JSON Schema que valida a estrutura de cada regra |
+| `rules/schemas/bndes_sample_checklist.json` | Checklist de referência do MVP (6 regras) |
+
+| ID | Código (tipologia) | Categoria | Tipo | Severidade | Validade obrigatória |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| RULE-BNDES-001 | `CND_FEDERAL` | FISCAL | DETERMINISTIC | CRITICAL | Sim |
+| RULE-BNDES-002 | `CRF_FGTS` | TRABALHISTA | DETERMINISTIC | CRITICAL | Sim |
+| RULE-BNDES-003 | `CNDT_TRABALHISTA` | TRABALHISTA | DETERMINISTIC | CRITICAL | Sim |
+| RULE-BNDES-004 | `FALENCIA_RECUPERACAO` | JURIDICA | HYBRID | CRITICAL | Não |
+| RULE-BNDES-005 | `LICENCA_AMBIENTAL` | AMBIENTAL | HYBRID | HIGH | Não |
+| RULE-BNDES-006 | `INTEGRIDADE_CEIS_CNEP` | INTEGRIDADE | DETERMINISTIC | CRITICAL | Não |
+
+Campos de cada regra:
+
+| Campo | Uso |
+| :-- | :-- |
+| `id`, `code`, `title` | Identificação. O `code` é a tipologia do documento a que a regra se aplica |
+| `category`, `severity`, `legal_basis` | Classificação e fundamento normativo exibidos no laudo |
+| `type` | `DETERMINISTIC` ou `HYBRID` |
+| `required_keywords` | Termos que precisam estar todos presentes |
+| `anti_keywords` | Termos impeditivos: a presença de qualquer um reprova a regra |
+| `regex_patterns` | Padrões registrados como evidência quando encontrados; não reprovam a regra |
+| `requires_validity` | Exige data de validade legível. Ausente, vale `true` para FISCAL e TRABALHISTA |
+| `failure_message` | Mensagem do laudo quando os termos obrigatórios não são encontrados |
+
+---
+
+## 2. Seleção das regras por tipologia
+
+O parser IDP identifica a tipologia do documento (por exemplo `CND_FEDERAL`). O motor avalia
+**somente as regras cujo `code` corresponde à tipologia**; as demais entram no laudo como
+`NOT_APPLICABLE`. Sem esse filtro, uma CND válida seria reprovada por não ser um CRF do FGTS.
+
+Quando a tipologia não é identificada, o serviço chama `RulesEngine.not_evaluable()`: nenhuma
+regra é aplicada, todas ficam `NOT_APPLICABLE` e o laudo geral é `MANUAL_REVIEW_REQUIRED`. A
+ausência de avaliação nunca equivale a conformidade.
+
+---
+
+## 3. Avaliação de uma regra
+
+O texto é normalizado (sem acentos, em maiúsculas) e as etapas são aplicadas em ordem; a
+primeira que decide encerra a avaliação.
 
 ```mermaid
-flowchart LR
-    Texto[Texto Extraido pelo IDP] --> Engine[RulesEngine]
-    Engine --> Det[Regra Deterministica\nEx: CND, CRF FGTS]
-    Engine --> Sem[Regra Semantica\nEx: Interpretacao Contratual]
-    Engine --> Hyb[Regra Hibrida\nEx: Falencia, Licenca Ambiental]
-
-    Det -->|Validacao Regex e Anti-Keywords| LaudoDet[Status Deterministico Imediato]
-    Sem -->|LLM Prompt Delimitado| LaudoSem[Harness Maker-Checker]
-    Hyb -->|Triagem Deterministica Positiva| LaudoSem
+flowchart TD
+    A["Termo impeditivo presente?"] -->|sim| NC1["NON_COMPLIANT"]
+    A -->|não| B["Todos os termos obrigatórios presentes?"]
+    B -->|não| NC2["NON_COMPLIANT<br/>(failure_message)"]
+    B -->|sim| C["Data de validade legível?"]
+    C -->|"sim, vencida"| NC3["NON_COMPLIANT<br/>(certidão expirada)"]
+    C -->|"não, e a regra exige validade"| MR["MANUAL_REVIEW_REQUIRED"]
+    C -->|"sim, vigente; ou não exigida"| D{"Tipo da regra"}
+    D -->|DETERMINISTIC| OK["COMPLIANT"]
+    D -->|HYBRID| MC["Maker-Checker"]
+    MC --> R["Status proposto pelo Maker,<br/>ou MANUAL_REVIEW_REQUIRED"]
 ```
 
-### 1.1 Regras Determinísticas (`DETERMINISTIC`)
+**Validade temporal.** A data é procurada em expressões como "válida até", "validade",
+"vigência" ou "até", seguidas de `dd/mm/aaaa`. A certidão vale até o fim do dia indicado.
 
-- Executadas via busca booleana exata, correspondência de expressões regulares e validação de termos impeditivos (_anti-keywords_).
-- **Exemplo**: Certidão Negativa de Débitos Federais. Se os termos `"CERTIDAO NEGATIVA"`, `"TRIBUTOS FEDERAIS"` e `"DIVIDA ATIVA DA UNIAO"` estiverem presentes, e nenhum termo como `"CONSTA PENDENCIA"` for detectado, o resultado e `COMPLIANT`.
-
-### 1.2 Regras Híbridas (`HYBRID`)
-
-- Aplicadas a documentos onde o vocabulário pode variar por comarca ou órgão regional (ex: certidões de falência).
-- O motor realiza uma triagem determinística inicial. Se os termos fundamentais forem localizados, o texto relevante é submetido ao orquestrador **Maker-Checker** para auditoria semântica e confirmação de ausência de passivos.
+**Regras híbridas.** Depois da triagem determinística, a regra segue para o
+[Maker-Checker](maker-checker.md). Se o LLM estiver indisponível, responder fora do formato ou
+citar um trecho que não existe no documento, o resultado é `MANUAL_REVIEW_REQUIRED`.
 
 ---
 
-## 2. Estrutura do Esquema Declarativo (JSON Schema)
+## 4. Estados e consolidação do laudo
 
-As regras são externalizadas do código-fonte da aplicação e versionadas em `rules/schemas/rule_schema.json`. O checklist de referência reside em `rules/schemas/bndes_sample_checklist.json`.
+| Status | Significado |
+| :-- | :-- |
+| `COMPLIANT` | Todos os critérios da regra foram atendidos |
+| `NON_COMPLIANT` | Termo impeditivo, termo obrigatório ausente ou certidão vencida |
+| `MANUAL_REVIEW_REQUIRED` | Validade ilegível, tipologia não identificada ou avaliação semântica não confirmada |
+| `NOT_APPLICABLE` | A regra não se aplica à tipologia do documento |
 
-Propriedades fundamentais de cada regra:
+A função `summarize_statuses` consolida o laudo **ignorando as regras `NOT_APPLICABLE`**:
 
-- `id`: Identificador único (ex: `RULE-BNDES-001`).
-- `code`: Mnemonico operacional (ex: `CND_FEDERAL`).
-- `category`: Classificação tematica (`FISCAL`, `TRABALHISTA`, `JURIDICA`, `AMBIENTAL`, `INTEGRIDADE`).
-- `severity`: Nível de bloqueio no crédito (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
-- `required_keywords`: Termos textuais obrigatórios.
-- `anti_keywords`: Termos cuja presença reprova a certidão sumariamente.
-- `regex_patterns`: Padrões formais (CNPJ, formato de datas, códigos alfanumericos).
-- `failure_message`: Mensagem institucional exibida no laudo.
+1. Qualquer `NON_COMPLIANT` → laudo `NON_COMPLIANT`.
+2. Senão, qualquer `MANUAL_REVIEW_REQUIRED` (ou score abaixo de 1) → `MANUAL_REVIEW_REQUIRED`.
+3. Senão → `COMPLIANT`.
+
+O score é a fração de regras aplicáveis em `COMPLIANT`. Sem nenhuma regra aplicável, o score é
+0 e o laudo vai para revisão manual.
 
 ---
 
-## 3. Estados de Conformidade e Pontuação
+## 5. Como adicionar ou alterar uma regra
 
-Cada verificação resulta em um dos seguintes estados formais:
-
-- `COMPLIANT`: O documento atende plenamente aos requisitos legais.
-- `NON_COMPLIANT`: Identificada irregularidade insuperável, pendência fiscal ou ausência de requisito mandatório.
-- `MANUAL_REVIEW_REQUIRED`: Incerteza semântica, divergência no Maker-Checker ou informação com baixa legibilidade.
-- `NOT_APPLICABLE`: Requisito dispensado conforme a modalidade do proponente.
-
-O **Score de Conformidade** e calculado pela razão entre regras cumpridas e o total de regras ativas aplicáveis:
-
-$$\text{Compliance Score} = \frac{\sum \text{Regras Aprovadas}}{\text{Total de Regras Aplicaveis}}$$
+1. Editar `rules/schemas/bndes_sample_checklist.json` respeitando `rule_schema.json`.
+2. Incluir casos no benchmark (`evals/datasets/`) que provem a aprovação e a reprovação da regra.
+3. Rodar `make eval`: o CI bloqueia qualquer falso positivo ou acurácia abaixo de 90%.
+4. Abrir o PR com o resultado do benchmark. Ver [Avaliação contínua](harness-evals.md).

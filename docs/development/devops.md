@@ -13,15 +13,15 @@ em cada etapa e como voltar atrás quando algo falha.
 
 | Branch | Papel | Proteção |
 | :-- | :-- | :-- |
-| `main` | Versão estável e demonstrável; origem das releases | Ruleset `main-protection`: PR obrigatório com 1 aprovação, sem push forçado nem exclusão. Bypass apenas do time `maintainers` |
-| `dev` | Integração contínua do time | Sem proteção hoje (recomendado: ruleset com CI obrigatório) |
+| `main` | Versão estável e demonstrável; origem das releases | Ruleset `main-protection`: PR obrigatório com 1 aprovação e check **CI OK** verde, sem push forçado nem exclusão. Bypass apenas do time `maintainers` |
+| `dev` | Integração contínua do time | Ruleset `dev-protection`: PR obrigatório e check **CI OK** verde, sem push forçado nem exclusão. Bypass apenas do time `maintainers` |
 | `feat/*`, `fix/*`, `chore/*`, `docs/*` | Trabalho de uma issue | Abertas a partir de `dev` |
 
 **Regras práticas**
 
 1. Toda mudança começa em uma issue do [Project do MVP](https://github.com/orgs/conformia-bndes/projects/2).
-2. O título do PR segue **Conventional Commits** (`feat:`, `fix:`, `docs:`...). O workflow de
-   governança valida o título; o release-please usa os tipos para gerar o CHANGELOG.
+2. O título do PR segue **Conventional Commits** (`feat:`, `fix:`, `docs:`, `sec:`...). O workflow
+   `pr-title.yml` valida o título; o release-please usa os tipos para gerar o CHANGELOG.
 3. PRs empilhados são permitidos: a base é o PR anterior e muda para `dev` após o merge dele.
 4. Dependabot abre PRs em `dev`, com atualizações minor e patch agrupadas.
 
@@ -29,15 +29,41 @@ em cada etapa e como voltar atrás quando algo falha.
 
 ## 2. Pipelines (GitHub Actions)
 
+O `ci.yml` é organizado em estágios. Os jobs de cada estágio rodam em paralelo e só os afetados
+pela mudança são executados (filtro por caminho no job `changes`). O job **CI OK** agrega o
+resultado e é o único check obrigatório nos rulesets: um job pulado por não ter sido afetado não
+bloqueia o merge, um job com falha bloqueia.
+
+```mermaid
+flowchart LR
+    changes["Detectar mudanças"] --> backend["Backend<br/>pytest + evals"]
+    changes --> frontend["Frontend<br/>ESLint, Vitest, build"]
+    changes --> docs["Documentação<br/>build estrito"]
+    lint["Lint<br/>pre-commit"] --> ok
+    actionlint["Lint dos workflows"] --> ok
+    security["Segurança<br/>gitleaks, pip-audit, npm audit"] --> ok
+    backend --> smoke["Smoke em<br/>Docker Compose"]
+    frontend --> smoke
+    backend --> ok["CI OK"]
+    frontend --> ok
+    docs --> ok
+    smoke --> ok
+```
+
 | Workflow | Gatilho | O que garante |
 | :-- | :-- | :-- |
-| `ci.yml` | push e PR em `main` e `dev` | Backend: black, flake8, pytest com cobertura, evals (relatório como artefato). Frontend: ESLint, Vitest, build. Smoke em Docker Compose. Gitleaks e pip-audit |
-| `governance.yml` | push e PR em `main` e `dev` | Título do PR, actionlint nos workflows e todos os hooks do pre-commit |
+| `ci.yml` | push e PR em `main` e `dev` | Lint (todos os hooks do pre-commit), actionlint, segurança (gitleaks, pip-audit sobre o `uv.lock`, npm audit), backend (pytest com cobertura e evals com relatório como artefato), frontend (ESLint, Vitest, build), documentação (build estrito) e smoke em Docker Compose com imagens em cache |
+| `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
 | `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG |
 | `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
-| `docs.yml` | push em `main` | Publicação desta documentação no GitHub Pages |
+| `docs.yml` | push em `main` | Publicação desta documentação no GitHub Pages (artefato, sem branch `gh-pages`) |
+
+**Cadeia de suprimentos.** Todas as actions são fixadas por SHA de commit (com a versão em
+comentário), as imagens Docker por digest e o binário do gitleaks por checksum. Cada workflow
+declara permissões mínimas (`contents: read` por padrão). O Dependabot atualiza SHAs, digests e
+o `uv.lock` em PRs agrupados para `dev`.
 
 !!! warning "Permissão necessária para o release-please"
     O release-please abre PRs com o `GITHUB_TOKEN`. Em **Settings → Actions → General**, a opção

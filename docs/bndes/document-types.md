@@ -51,7 +51,7 @@ Este documento estabelece as especificações técnicas das tipologias documenta
 - **Finalidade**: Certificar a inexistência de pedidos de falência decretada ou plano de recuperação judicial não homologado.
 - **Tratamento Híbrido (Maker-Checker)**:
   - Textos de certidões judiciais variam conforme a comarca estadual.
-  - O pipeline IDP extrai o texto integral; o agente Maker avalia a presença de ações distribuidas; o agente Checker confirma se não ha menção a decretação falimentar.
+  - O pipeline IDP extrai o texto integral; o agente Maker avalia a presença de ações distribuidas; o agente Checker confirma se não há menção a decretação falimentar.
 
 ---
 

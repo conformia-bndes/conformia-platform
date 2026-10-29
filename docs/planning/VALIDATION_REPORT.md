@@ -2,7 +2,7 @@
 
 Ambiente: Windows 11, Git Bash, `uv 0.11.18`, Python do venv 3.13.13 (CI usa 3.11), Node 24.20.0,
 npm 11.19.0. Docker 29.8.2 instalado, **daemon parado**. Tesseract **não instalado**.
-Base: branch `developer`, commit `d76f41c`, working tree limpa no inicio.
+Base: branch `developer`, commit `d76f41c`, working tree limpa no início.
 
 Os comandos foram executados na raiz do repositório com `PYTHONIOENCODING=utf-8`.
 
@@ -53,7 +53,7 @@ D3 clean CND overall: NON_COMPLIANT {'RULE-BNDES-001': 'COMPLIANT', 'RULE-BNDES-
 | Testes backend | `uv run --frozen pytest backend/tests/ -q --cov=backend/app` | **71 passed, 1 skipped** (OCR), código 0. Cobertura 86% (`celery_app.py` 13% -> 70%, `compliance_service.py` 100%, `llm_client.py` 95%). Duração ~5 min por timeouts de rede preexistentes (T11) |
 | Formatação | `uv run --frozen black --check backend/` | OK (48 arquivos) |
 | Lint | `uv run --frozen flake8 backend/ --count` | 0 |
-| Evals | `uv run --frozen python evals/eval_pipeline.py` | **PASS**: 14 verificações, 13 corretas, **0 falsos positivos**, 92,86% (mínimo 90%). Divergência unica: `DATASET-EDGECASE-001` esperado MANUAL_REVIEW_REQUIRED, obtido NON_COMPLIANT (decisão D2) |
+| Evals | `uv run --frozen python evals/eval_pipeline.py` | **PASS**: 14 verificações, 13 corretas, **0 falsos positivos**, 92,86% (mínimo 90%). Divergência única: `DATASET-EDGECASE-001` esperado MANUAL_REVIEW_REQUIRED, obtido NON_COMPLIANT (decisão D2) |
 | Frontend lint | `npm run lint` | OK |
 | Frontend testes | `npm test` | 8 passed (2 arquivos) |
 | Frontend build | `npm run build` (inclui `tsc`) | OK (295 kB JS) |
@@ -71,7 +71,7 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 ### Testes alterados (e por que não e enfraquecimento)
 
 - `test_rules_engine_deterministic_compliant` e `test_rules_engine_category_filtering`: as
-  entradas ganharam `Valida ate: 31/12/2099`. A asserção continua `COMPLIANT`; antes ela so
+  entradas ganharam `Valida ate: 31/12/2099`. A asserção continua `COMPLIANT`; antes ela só
   passava porque o motor aprovava certidões sem validade. O caso sem validade virou teste
   próprio exigindo `MANUAL_REVIEW_REQUIRED`.
 - Evals CASE-001 e CASE-003: mesma correção de ground truth; casos sem validade viraram
@@ -94,7 +94,7 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 | Script de chave | `python backend/scripts/create_api_user.py ana.silva ANALISTA` | Gera chave e entrada JSON; argumentos inválidos retornam 2 |
 
 Não validado: migration 002 em PostgreSQL; concorrência real (o lock `with_for_update` e a
-restrição unica foram verificados apenas por leitura de código e teste sequencial).
+restrição única foram verificados apenas por leitura de código e teste sequencial).
 
 ---
 

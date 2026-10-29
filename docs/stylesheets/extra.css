@@ -125,11 +125,14 @@ body,
   color: var(--apple-text-secondary) !important;
 }
 
-/* Botao de Repositorio GitHub no Cabecalho (Pill Badge Apple) */
-.md-header__source {
-  display: flex;
-  align-items: center;
-  margin: 0 0.65rem 0 0.4rem;
+/* Botao de Repositorio GitHub no Cabecalho. Abaixo de 60em o Material oculta o link (ele
+   continua no menu lateral); forcar a exibicao causava rolagem horizontal no celular. */
+@media screen and (min-width: 60em) {
+  .md-header__source {
+    display: flex;
+    align-items: center;
+    margin: 0 0.65rem 0 0.4rem;
+  }
 }
 
 .md-header__source .md-source {
@@ -429,6 +432,18 @@ body,
 @media (max-width: 640px) {
   .apple-stat-number {
     font-size: 2.25rem;
+  }
+}
+
+/* Destaques em texto (em vez de numero) usam corpo menor para caber em uma linha */
+.apple-stat-number--text {
+  font-size: 2rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .apple-stat-number--text {
+    font-size: 1.75rem;
   }
 }
 
