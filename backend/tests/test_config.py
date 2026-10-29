@@ -56,6 +56,11 @@ def test_settings_requires_secrets_without_defaults(monkeypatch):
         Settings(_env_file=None)
 
 
+VALID_HASH = "pbkdf2_sha256$200000$" + "a" * 32 + "$" + "b" * 64
+OTHER_HASH = "pbkdf2_sha256$200000$" + "c" * 32 + "$" + "d" * 64
+WEAK_HASH = "pbkdf2_sha256$099999$" + "a" * 32 + "$" + "b" * 64
+
+
 def _settings_with_users(monkeypatch, raw):
     from app.core.config import Settings
 
@@ -64,9 +69,8 @@ def _settings_with_users(monkeypatch, raw):
 
 
 def test_api_users_parses_json_and_empty_values(monkeypatch):
-    digest = "a" * 64
     settings = _settings_with_users(
-        monkeypatch, f'[{{"user_id": "ana.silva", "role": "ANALISTA", "key_sha256": "{digest}"}}]'
+        monkeypatch, f'[{{"user_id": "ana.silva", "role": "ANALISTA", "key_hash": "{VALID_HASH}"}}]'
     )
     assert settings.API_USERS[0].user_id == "ana.silva"
     assert _settings_with_users(monkeypatch, "").API_USERS == []
@@ -76,12 +80,15 @@ def test_api_users_parses_json_and_empty_values(monkeypatch):
 @pytest.mark.parametrize(
     "raw",
     [
-        '[{"user_id": "ana", "role": "ANALISTA", "key_sha256": "nao-e-hash"}]',
-        '[{"user_id": "ana", "role": "GERENTE", "key_sha256": "' + "a" * 64 + '"}]',
-        '[{"user_id": "ana", "role": "ANALISTA", "key_sha256": "' + "a" * 64 + '"},'
-        ' {"user_id": "bia", "role": "ANALISTA", "key_sha256": "' + "a" * 64 + '"}]',
-        '[{"user_id": "ana", "role": "ANALISTA", "key_sha256": "' + "a" * 64 + '"},'
-        ' {"user_id": "ana", "role": "AUDITOR", "key_sha256": "' + "b" * 64 + '"}]',
+        # hash SHA-256 simples (formato anterior) nao e aceito
+        '[{"user_id": "ana", "role": "ANALISTA", "key_hash": "' + "a" * 64 + '"}]',
+        # iteracoes abaixo do minimo
+        '[{"user_id": "ana", "role": "ANALISTA", "key_hash": "' + WEAK_HASH + '"}]',
+        '[{"user_id": "ana", "role": "GERENTE", "key_hash": "' + VALID_HASH + '"}]',
+        '[{"user_id": "ana", "role": "ANALISTA", "key_hash": "' + VALID_HASH + '"},'
+        ' {"user_id": "bia", "role": "ANALISTA", "key_hash": "' + VALID_HASH + '"}]',
+        '[{"user_id": "ana", "role": "ANALISTA", "key_hash": "' + VALID_HASH + '"},'
+        ' {"user_id": "ana", "role": "AUDITOR", "key_hash": "' + OTHER_HASH + '"}]',
     ],
 )
 def test_api_users_rejects_invalid_configuration(monkeypatch, raw):

@@ -247,8 +247,13 @@ na trilha de auditoria com o identificador do analista.
 **Autenticação:** as operações de escrita exigem a chave pessoal de um usuário com perfil
 `ANALISTA` em `X-API-Key` (ou `Authorization: Bearer`), em qualquer ambiente. A chave de
 serviço (`API_KEY`) e o acesso anônimo de desenvolvimento não podem decidir. Perfis `AUDITOR`
-e `ADMIN` apenas consultam. Usuários são configurados em `API_USERS` (somente o hash SHA-256
-da chave); gere entradas com `python backend/scripts/create_api_user.py <user_id> <perfil>`.
+e `ADMIN` apenas consultam.
+
+A chave pessoal tem o formato `<user_id>:<segredo>`. O servidor guarda em `API_USERS` apenas o
+hash PBKDF2-HMAC-SHA256 do segredo, com sal próprio (campo `key_hash`); gere a chave e a entrada
+com `python backend/scripts/create_api_user.py <user_id> <perfil>`: a chave é gravada em
+`<user_id>.key` (permissão só do dono, sem sobrescrever) e não aparece no terminal. O prefixo
+`user_id` limita a verificação a um único hash por requisição.
 
 | Método e rota | Função | Respostas de erro |
 | :-- | :-- | :-- |
@@ -264,10 +269,10 @@ da proposta confirmada mais recente.
 ```bash
 # Analista A propõe
 curl -s -X POST http://localhost:8000/api/v1/compliance/reviews/<document_id> \
-  -H "X-API-Key: <chave-analista-a>" -H "Content-Type: application/json" \
+  -H "X-API-Key: <analista-a>:<segredo>" -H "Content-Type: application/json" \
   -d '{"decision": "APPROVE", "justification": "Validade e CNPJ conferidos contra o original."}'
 # Analista B confirma
 curl -s -X POST http://localhost:8000/api/v1/compliance/reviews/<document_id>/<proposal_id>/confirm \
-  -H "X-API-Key: <chave-analista-b>" -H "Content-Type: application/json" \
+  -H "X-API-Key: <analista-b>:<segredo>" -H "Content-Type: application/json" \
   -d '{"comment": "Conferido de forma independente."}'
 ```

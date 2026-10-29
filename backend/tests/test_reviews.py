@@ -8,7 +8,13 @@ from app.db.models.compliance import AuditLog
 from app.db.models.document import Document
 from app.db.models.review import ReviewEvent
 
-KEYS = {"ana": "chave-ana-teste", "bruno": "chave-bruno-teste", "carla": "chave-carla-teste"}
+KEYS = {
+    "ana": "ana:chave-ana-teste",
+    "bruno": "bruno:chave-bruno-teste",
+    "carla": "carla:chave-carla-teste",
+}
+# Hashes calculados uma vez por modulo: cada PBKDF2 custa dezenas de milissegundos.
+HASHES = {user: hash_api_key(key.split(":", 1)[1]) for user, key in KEYS.items()}
 JUSTIFICATION = "Laudo conferido contra a certidao original; validade e CNPJ confirmados."
 COMMENT = "Conferido de forma independente; de acordo com a proposta."
 
@@ -23,9 +29,9 @@ EXPIRED_CND = VALID_CND.replace("31/12/2099", "01/01/2020")
 @pytest.fixture(autouse=True)
 def api_users(monkeypatch):
     users = [
-        ApiUser(user_id="ana", role="ANALISTA", key_sha256=hash_api_key(KEYS["ana"])),
-        ApiUser(user_id="bruno", role="ANALISTA", key_sha256=hash_api_key(KEYS["bruno"])),
-        ApiUser(user_id="carla", role="AUDITOR", key_sha256=hash_api_key(KEYS["carla"])),
+        ApiUser(user_id="ana", role="ANALISTA", key_hash=HASHES["ana"]),
+        ApiUser(user_id="bruno", role="ANALISTA", key_hash=HASHES["bruno"]),
+        ApiUser(user_id="carla", role="AUDITOR", key_hash=HASHES["carla"]),
     ]
     monkeypatch.setattr(settings, "API_USERS", users)
 
