@@ -2,9 +2,9 @@ name: CI - Conform.IA BNDES Platform
 
 on:
   push:
-    branches: [main, developer]
+    branches: [main, dev]
   pull_request:
-    branches: [main, developer]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
