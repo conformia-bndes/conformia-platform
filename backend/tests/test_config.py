@@ -54,3 +54,36 @@ def test_settings_requires_secrets_without_defaults(monkeypatch):
         monkeypatch.delenv(name, raising=False)
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+def _settings_with_users(monkeypatch, raw):
+    from app.core.config import Settings
+
+    monkeypatch.setenv("API_USERS", raw)
+    return Settings()
+
+
+def test_api_users_parses_json_and_empty_values(monkeypatch):
+    digest = "a" * 64
+    settings = _settings_with_users(
+        monkeypatch, f'[{{"user_id": "ana.silva", "role": "ANALISTA", "key_sha256": "{digest}"}}]'
+    )
+    assert settings.API_USERS[0].user_id == "ana.silva"
+    assert _settings_with_users(monkeypatch, "").API_USERS == []
+    assert _settings_with_users(monkeypatch, "[]").API_USERS == []
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        '[{"user_id": "ana", "role": "ANALISTA", "key_sha256": "nao-e-hash"}]',
+        '[{"user_id": "ana", "role": "GERENTE", "key_sha256": "' + "a" * 64 + '"}]',
+        '[{"user_id": "ana", "role": "ANALISTA", "key_sha256": "' + "a" * 64 + '"},'
+        ' {"user_id": "bia", "role": "ANALISTA", "key_sha256": "' + "a" * 64 + '"}]',
+        '[{"user_id": "ana", "role": "ANALISTA", "key_sha256": "' + "a" * 64 + '"},'
+        ' {"user_id": "ana", "role": "AUDITOR", "key_sha256": "' + "b" * 64 + '"}]',
+    ],
+)
+def test_api_users_rejects_invalid_configuration(monkeypatch, raw):
+    with pytest.raises(ValueError):
+        _settings_with_users(monkeypatch, raw)
