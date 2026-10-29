@@ -11,18 +11,18 @@ _Documento de Direcionamento Estratégico e Técnico_
 
 - ### Desafio de Referência
 
-  Consulta Pública BNDES nº 01/2025 — Checklist de Conformidade Cadastral, Fiscal, Trabalhista e Regulatória.
+    Consulta Pública BNDES nº 01/2025 — Checklist de Conformidade Cadastral, Fiscal, Trabalhista e Regulatória.
 
 - ### Data de Conclusão
 
-  **05/12/2026** — Milestones M1 a M6, detalhados no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md).
+    **05/12/2026** — Milestones M1 a M6, detalhados no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md).
 
 - ### Modalidade Proposta
 
-  Aplicação conteinerizada em Docker, sem dependência de nuvem estrangeira para o processamento dos documentos (exceto o LLM opcional das regras híbridas).
+    Aplicação conteinerizada em Docker, sem dependência de nuvem estrangeira para o processamento dos documentos (exceto o LLM opcional das regras híbridas).
 
 - ### Público-Alvo
-  Analistas de crédito, revisores técnicos, operadores de compliance e auditores institucionais do BNDES.
+    Analistas de crédito, revisores técnicos, operadores de compliance e auditores institucionais do BNDES.
 
 </div>
 
@@ -51,23 +51,23 @@ Para aprofundar, siga para os capítulos:
 
 - ### [Requisitos e Escopo](requirements.md)
 
-  Requisitos funcionais RF01 a RF15, requisitos não funcionais e jornada do analista.
+    Requisitos funcionais RF01 a RF15, requisitos não funcionais e jornada do analista.
 
 - ### [Arquitetura](../architecture/overview.md)
 
-  Serviços, fluxo de processamento, separação entre regras e IA e modelo de dados.
+    Serviços, fluxo de processamento, separação entre regras e IA e modelo de dados.
 
 - ### [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md)
 
-  Escopo do MVP, caminho crítico, cronograma até 05/12/2026 e critérios de Go/No-Go.
+    Escopo do MVP, caminho crítico, cronograma até 05/12/2026 e critérios de Go/No-Go.
 
 - ### [Segurança, LGPD e Auditoria](governance-security.md)
 
-  Controles implementados, trilha de auditoria, riscos e pendências para produção.
+    Controles implementados, trilha de auditoria, riscos e pendências para produção.
 
 - ### [Maker-Checker e Guardrails](../engineering/maker-checker.md)
 
-  Como a IA participa da decisão sem poder aprovar sozinha.
+    Como a IA participa da decisão sem poder aprovar sozinha.
 
 </div>
 
