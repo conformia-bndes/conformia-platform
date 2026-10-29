@@ -1,6 +1,7 @@
 """Document ingestion, status query and retrieval endpoints with MinIO and Celery."""
 
 from datetime import datetime, timezone
+import hashlib
 import logging
 import os
 from typing import Any, Dict
@@ -12,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.core.celery_app import celery, process_document_task
 from app.core.storage import storage_service
+from app.db.models.compliance import AuditLog
 from app.db.models.document import Document
 from app.db.session import get_db
 from app.idp.extractor import DocumentExtractor
@@ -239,6 +241,21 @@ def upload_document(
         status=initial_status,
     )
     db.add(doc)
+    # RF10: o hash fixa a identidade do arquivo que fundamentara o laudo.
+    file_sha256 = hashlib.sha256(content).hexdigest()
+    db.add(
+        AuditLog(
+            entity_type="DOCUMENT",
+            entity_id=doc_id,
+            action="DOCUMENT_UPLOADED",
+            performed_by="API_UPLOAD",
+            details={
+                "sha256": file_sha256,
+                "file_size": file_size,
+                "content_type": doc.content_type,
+            },
+        )
+    )
     db.commit()
     db.refresh(doc)
 
@@ -294,6 +311,7 @@ def upload_document(
         original_filename=doc.original_filename,
         status=ProcessingStatus(doc.status),
         file_size=doc.file_size,
+        sha256=file_sha256,
         total_pages=(
             (doc.extracted_metadata.get("total_pages") or 0) if doc.extracted_metadata else 0
         ),

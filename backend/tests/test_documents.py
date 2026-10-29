@@ -173,3 +173,23 @@ def test_get_document_not_found(client):
     """Retorna 404 para documento inexistente."""
     response = client.get("/api/v1/documents/non-existent-uuid")
     assert response.status_code == 404
+
+
+def test_upload_records_sha256_in_audit_trail(client, db_session, monkeypatch):
+    """RF10: o hash do arquivo recebido fica na trilha de auditoria."""
+    import hashlib
+
+    from app.db.models.compliance import AuditLog
+
+    _patch_storage_ok(monkeypatch)
+    response = client.post(
+        "/api/v1/documents/upload?async_process=false",
+        files={"file": ("certidao.pdf", io.BytesIO(VALID_PDF), "application/pdf")},
+    )
+    data = response.json()
+    expected = hashlib.sha256(VALID_PDF).hexdigest()
+
+    assert data["sha256"] == expected
+    audit = db_session.query(AuditLog).filter_by(entity_id=data["id"]).one()
+    assert audit.action == "DOCUMENT_UPLOADED"
+    assert audit.details["sha256"] == expected

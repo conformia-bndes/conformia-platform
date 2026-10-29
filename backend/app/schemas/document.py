@@ -30,6 +30,9 @@ class DocumentUploadResponse(BaseModel):
     original_filename: Optional[str] = Field(default=None, description="Nome original do arquivo")
     status: ProcessingStatus = Field(..., description="Estado atual do processamento")
     file_size: int = Field(..., ge=0, description="Tamanho em bytes")
+    sha256: Optional[str] = Field(
+        default=None, description="Hash SHA-256 do arquivo recebido (registrado na auditoria)"
+    )
     total_pages: Optional[int] = Field(default=0, description="Total de paginas detectadas")
     created_at: datetime = Field(..., description="Timestamp de criacao do registro")
 
