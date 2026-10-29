@@ -4,7 +4,7 @@ Este documento centraliza todos os Registros de Decisão Arquitetural (Architect
 
 ---
 
-## Processo de Submissao de ADRs
+## Processo de Submissão de ADRs
 
 Para propor uma nova decisão arquitetural:
 
@@ -15,9 +15,9 @@ Para propor uma nova decisão arquitetural:
 
 ---
 
-## Tabela de Decisoes Arquiteturais
+## Tabela de Decisões Arquiteturais
 
-| Identificador                             | Titulo                                                                           | Status   | Data       | Autores                     |
+| Identificador                             | Título                                                                           | Status   | Data       | Autores                     |
 | :---------------------------------------- | :------------------------------------------------------------------------------- | :------- | :--------- | :-------------------------- |
 | [ADR-001](adr-001-monorepo-modular.md)    | Adoção de Monorepo Modular e Harness Engineering                                 | Aprovado | 2026-09-26 | Conform.IA Engineering Team |
 | [ADR-002](adr-002-astral-uv-toolchain.md) | Adoção do Astral uv como Gerenciador de Pacotes e Workspace                      | Aprovado | 2026-09-27 | Conform.IA Engineering Team |

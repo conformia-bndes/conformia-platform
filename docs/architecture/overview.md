@@ -60,18 +60,18 @@ flowchart TD
 ### 2. Camada de API (Backend Core)
 
 - **Tecnologias**: Python 3.11, FastAPI, SQLAlchemy 2.0, Pydantic v2, Pydantic-Settings.
-- **Responsabilidade**: Exposicao de endpoints RESTful seguros, validacao estrita de contratos de entrada, gestao de conexoes e persistencia de estado.
+- **Responsabilidade**: Exposição de endpoints RESTful seguros, validação estrita de contratos de entrada, gestão de conexões e persistência de estado.
 
 ### 3. Camada de Processamento Assíncrono (Worker)
 
 - **Tecnologias**: Celery, Redis, pdfplumber, pytesseract, Poppler-utils.
-- **Responsabilidade**: Processamento de arquivos pesados, OCR em paginas digitalizadas e execucao de regras de conformidade sem bloqueio das requisicoes HTTP da API.
+- **Responsabilidade**: Processamento de arquivos pesados, OCR em páginas digitalizadas e execução de regras de conformidade sem bloqueio das requisições HTTP da API.
 
 ### 4. Camada de Persistência
 
 - **PostgreSQL 16**: Armazena entidades estruturadas (`Document`, `ComplianceCheck`, `AuditLog`).
 - **Redis 7**: Fila de mensagens para tarefas do Celery e cache de regras frequentes.
-- **MinIO**: Object storage compativel com a API S3 para persistencia duravel dos arquivos PDF originais.
+- **MinIO**: Object storage compatível com a API S3 para persistência durável dos arquivos PDF originais.
 
 ---
 
