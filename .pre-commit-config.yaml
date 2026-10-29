@@ -1,0 +1,46 @@
+# Hooks locais executados antes de cada commit. Instalacao (uma vez por clone):
+#   uvx pre-commit install --install-hooks
+# Execucao manual em todo o repositorio:
+#   uvx pre-commit run --all-files
+#
+# black e flake8 rodam via "uv run --frozen" para usar exatamente as versoes do uv.lock,
+# as mesmas do CI. O job "pre-commit" do workflow de governanca executa este arquivo.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: [--unsafe]  # mkdocs.yml usa a tag !!python/name do pymdownx
+      - id: check-json
+        exclude: ^frontend/tsconfig.*\.json$  # tsconfig aceita comentarios (JSONC)
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: ^(evals/datasets/pdfs/|frontend/public/)
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: ^evals/datasets/pdfs/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: black
+        name: black (versao do uv.lock)
+        entry: uv run --frozen black
+        language: system
+        types: [python]
+        files: ^backend/
+      - id: flake8
+        name: flake8 (versao do uv.lock)
+        entry: uv run --frozen flake8
+        language: system
+        types: [python]
+        files: ^backend/
+        # O pre-commit passa os arquivos explicitamente e ignora o exclude do .flake8.
+        exclude: ^backend/alembic/
