@@ -54,7 +54,7 @@ uv-sync:
 
 uv-lock:
 	uv lock
-	uv export --no-dev --no-emit-project --format requirements-txt -o backend/requirements.lock
+	uv export --frozen --no-dev --no-emit-project --package conformia-backend --format requirements-txt -o backend/requirements.lock
 
 up: env
 	$(DOCKER_COMPOSE) up --build -d --wait --wait-timeout 300
