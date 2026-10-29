@@ -18,6 +18,7 @@ import {
   ComplianceReport,
   AuditLogItem
 } from './services/api';
+import { describeApiError, presentStatus, TONE_CLASSES } from './services/presentation';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'upload' | 'checklist' | 'audit'>('upload');
@@ -40,6 +41,9 @@ export default function App() {
   const [activeReport, setActiveReport] = useState<ComplianceReport | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
+  // Falhas sao exibidas como erro; a interface nunca substitui a resposta da API por dados simulados.
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   // Checagem de Saúde do Backend
   const checkHealthStatus = async () => {
     try {
@@ -60,26 +64,8 @@ export default function App() {
       setLoadingDocs(true);
       const res = await apiService.listDocuments();
       setDocuments(res.items || []);
-    } catch {
-      // Mock de visualização para primeiro carregamento caso o backend esteja iniciando
-      setDocuments([
-        {
-          id: 'doc-demo-cnd',
-          original_filename: 'cnd_receita_federal_2026.pdf',
-          status: 'COMPLETED',
-          file_size: 245760,
-          created_at: new Date().toISOString(),
-          total_pages: 1
-        },
-        {
-          id: 'doc-demo-fgts',
-          original_filename: 'crf_fgts_regularidade.pdf',
-          status: 'COMPLETED',
-          file_size: 182300,
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          total_pages: 2
-        }
-      ]);
+    } catch (error) {
+      setErrorMessage(describeApiError(error, 'Não foi possível carregar os documentos.'));
     } finally {
       setLoadingDocs(false);
     }
@@ -109,26 +95,9 @@ export default function App() {
       .then((res) => {
         if (isMounted) setDocuments(res.items || []);
       })
-      .catch(() => {
+      .catch((error) => {
         if (isMounted) {
-          setDocuments([
-            {
-              id: 'doc-demo-cnd',
-              original_filename: 'cnd_receita_federal_2026.pdf',
-              status: 'COMPLETED',
-              file_size: 245760,
-              created_at: new Date().toISOString(),
-              total_pages: 1
-            },
-            {
-              id: 'doc-demo-fgts',
-              original_filename: 'crf_fgts_regularidade.pdf',
-              status: 'COMPLETED',
-              file_size: 182300,
-              created_at: new Date(Date.now() - 3600000).toISOString(),
-              total_pages: 2
-            }
-          ]);
+          setErrorMessage(describeApiError(error, 'Não foi possível carregar os documentos.'));
         }
       })
       .finally(() => {
@@ -145,33 +114,9 @@ export default function App() {
       setLoadingRules(true);
       const res = await apiService.getRules();
       setRules(res.rules || []);
-    } catch {
-      setRules([
-        {
-          id: 'RULE-BNDES-001',
-          code: 'CND_FEDERAL',
-          title: 'Certidão Negativa de Débitos Federais e Dívida Ativa',
-          category: 'FISCAL',
-          type: 'DETERMINISTIC',
-          failure_message: 'Comprovação de regularidade fiscal perante a União ausente.'
-        },
-        {
-          id: 'RULE-BNDES-002',
-          code: 'CRF_FGTS',
-          title: 'Certificado de Regularidade do FGTS (CRF)',
-          category: 'TRABALHISTA',
-          type: 'DETERMINISTIC',
-          failure_message: 'Comprovante de regularidade junto ao FGTS inválido ou expirado.'
-        },
-        {
-          id: 'RULE-BNDES-003',
-          code: 'FALENCIA_CONCORDATA',
-          title: 'Certidão Negativa de Falência e Recuperação Judicial',
-          category: 'JURIDICA',
-          type: 'HYBRID (Maker-Checker)',
-          failure_message: 'Apontamento de processo falimentar ou recuperação judicial ativo.'
-        }
-      ]);
+    } catch (error) {
+      setRules([]);
+      setErrorMessage(describeApiError(error, 'Não foi possível carregar o checklist de regras.'));
     } finally {
       setLoadingRules(false);
     }
@@ -182,18 +127,9 @@ export default function App() {
       setLoadingAudit(true);
       const res = await apiService.getAuditTrail();
       setAuditLogs(res.items || []);
-    } catch {
-      setAuditLogs([
-        {
-          id: 'log-seed-1',
-          entity_type: 'DOCUMENT',
-          entity_id: 'doc-demo-cnd',
-          action: 'COMPLIANCE_VERIFIED',
-          performed_by: 'HARNESS_RULES_ENGINE',
-          details: { status: 'COMPLIANT', score: 1.0 },
-          timestamp: new Date().toISOString()
-        }
-      ]);
+    } catch (error) {
+      setAuditLogs([]);
+      setErrorMessage(describeApiError(error, 'Não foi possível carregar a trilha de auditoria.'));
     } finally {
       setLoadingAudit(false);
     }
@@ -217,26 +153,18 @@ export default function App() {
 
     try {
       setUploading(true);
-      setUploadMessage('Enviando e processando documento via OCR/IDP...');
+      setErrorMessage(null);
+      setUploadMessage('Enviando documento para a fila de processamento OCR/IDP...');
       await apiService.uploadDocument(file);
-      setUploadMessage('Documento ingerido com sucesso!');
+      setUploadMessage('Documento recebido e enviado para processamento. Atualize a lista para acompanhar o status.');
       await loadDocuments();
       setTimeout(() => setUploadMessage(null), 4000);
-    } catch {
-      setUploadMessage('Aviso: executando em modo local. O arquivo foi registrado na visualização.');
-      setDocuments(prev => [
-        {
-          id: `doc-${Date.now()}`,
-          original_filename: file.name,
-          status: 'COMPLETED',
-          file_size: file.size,
-          created_at: new Date().toISOString(),
-          total_pages: 1
-        },
-        ...prev
-      ]);
-      setTimeout(() => setUploadMessage(null), 4000);
+    } catch (error) {
+      setUploadMessage(null);
+      setErrorMessage(describeApiError(error, 'Falha no envio do documento.'));
     } finally {
+      // Permite reenviar o mesmo arquivo apos uma falha.
+      event.target.value = '';
       setUploading(false);
     }
   };
@@ -244,47 +172,13 @@ export default function App() {
   const handleVerifyCompliance = async (docId: string, filename: string) => {
     try {
       setVerifyingId(docId);
+      setErrorMessage(null);
       const report = await apiService.verifyCompliance(docId);
       setActiveReport(report);
-    } catch {
-      // Simulação fiel para demonstração imediata caso API offline
-      setActiveReport({
-        document_id: docId,
-        document_filename: filename,
-        overall_status: 'COMPLIANT',
-        compliance_score: 1.0,
-        total_rules: 3,
-        compliant_rules: 3,
-        checks: [
-          {
-            rule_id: 'RULE-BNDES-001',
-            rule_title: 'Certidão Negativa de Débitos Federais',
-            category: 'FISCAL',
-            status: 'COMPLIANT',
-            confidence_score: 1.0,
-            checker_type: 'DETERMINISTIC',
-            findings: 'Evidência confirmada: Termos de regularidade fiscal e quitação identificados.'
-          },
-          {
-            rule_id: 'RULE-BNDES-002',
-            rule_title: 'Certificado de Regularidade do FGTS',
-            category: 'TRABALHISTA',
-            status: 'COMPLIANT',
-            confidence_score: 1.0,
-            checker_type: 'DETERMINISTIC',
-            findings: 'CRF regular com vigência ativa identificada via extração textual.'
-          },
-          {
-            rule_id: 'RULE-BNDES-003',
-            rule_title: 'Falência e Concordata',
-            category: 'JURIDICA',
-            status: 'COMPLIANT',
-            confidence_score: 0.95,
-            checker_type: 'MAKER_CHECKER',
-            findings: 'Avaliação Maker-Checker aprovada sem alucinações. Ausência de ações falimentares.'
-          }
-        ]
-      });
+    } catch (error) {
+      // Sem laudo real nao ha laudo: nunca exibir resultado de conformidade simulado.
+      setActiveReport(null);
+      setErrorMessage(describeApiError(error, `Não foi possível avaliar a conformidade de ${filename}.`));
     } finally {
       setVerifyingId(null);
     }
@@ -326,7 +220,13 @@ export default function App() {
                   )}
                 </span>
                 <span className="text-xs font-medium text-slate-300">
-                  {healthLoading ? 'Conectando...' : !healthError ? `API Online (v${health?.version || '0.1.0'})` : 'API Offline (Local Demo)'}
+                  {healthLoading
+                    ? 'Conectando...'
+                    : healthError
+                      ? 'API Offline'
+                      : health?.status === 'healthy'
+                        ? `API Online (v${health.version})`
+                        : 'API Degradada'}
                 </span>
                 <button
                   onClick={checkHealthStatus}
@@ -385,6 +285,20 @@ export default function App() {
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Notificações / Toasts */}
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mb-6 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm"
+          >
+            <div className="flex items-center space-x-2">
+              <XCircle className="w-5 h-5 text-rose-600" />
+              <span>{errorMessage}</span>
+            </div>
+            <button onClick={() => setErrorMessage(null)} className="text-rose-600 hover:text-rose-800" title="Fechar">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         {uploadMessage && (
           <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-sm">
             <div className="flex items-center space-x-2">
@@ -507,11 +421,9 @@ export default function App() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                      activeReport.overall_status === 'COMPLIANT'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-rose-100 text-rose-800'
+                      TONE_CLASSES[presentStatus(activeReport.overall_status).tone]
                     }`}>
-                      {activeReport.overall_status === 'COMPLIANT' ? '100% Conforme' : 'Pendências Detectadas'}
+                      {presentStatus(activeReport.overall_status).label}
                     </span>
                     <button
                       onClick={() => setActiveReport(null)}
@@ -532,15 +444,15 @@ export default function App() {
                     </p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <p className="text-xs text-slate-500 font-medium">Regras Avaliadas</p>
+                    <p className="text-xs text-slate-500 font-medium">Regras Conformes / Aplicáveis</p>
                     <p className="text-2xl font-bold text-slate-800 mt-1">
-                      {activeReport.compliant_rules} / {activeReport.total_rules}
+                      {activeReport.compliant_rules} / {activeReport.evaluated_rules}
                     </p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <p className="text-xs text-slate-500 font-medium">Padrão de Avaliação</p>
+                    <p className="text-xs text-slate-500 font-medium">Tipologia Identificada</p>
                     <p className="text-sm font-semibold text-slate-700 mt-2">
-                      Harness Engine (Maker-Checker)
+                      {activeReport.document_type ?? 'Não identificada (revisão manual)'}
                     </p>
                   </div>
                 </div>
@@ -562,17 +474,18 @@ export default function App() {
                           <p className="text-xs text-slate-600">{c.findings}</p>
                         </div>
                         <div className="flex items-center space-x-2">
-                          {c.status === 'COMPLIANT' ? (
-                            <span className="flex items-center text-xs font-semibold text-emerald-600 space-x-1">
+                          <span
+                            className={`flex items-center text-xs font-semibold px-2 py-1 rounded space-x-1 ${
+                              TONE_CLASSES[presentStatus(c.status).tone]
+                            }`}
+                          >
+                            {c.status === 'COMPLIANT' ? (
                               <CheckCircle2 className="w-4 h-4" />
-                              <span>Conforme</span>
-                            </span>
-                          ) : (
-                            <span className="flex items-center text-xs font-semibold text-rose-600 space-x-1">
+                            ) : (
                               <XCircle className="w-4 h-4" />
-                              <span>Não Conforme</span>
-                            </span>
-                          )}
+                            )}
+                            <span>{presentStatus(c.status).label}</span>
+                          </span>
                         </div>
                       </div>
                     ))}
