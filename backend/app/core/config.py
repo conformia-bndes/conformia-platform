@@ -1,9 +1,35 @@
 """Application configuration module using pydantic-settings."""
 
+import json
 from functools import lru_cache
-from typing import List, Union
-from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Annotated, List, Literal, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+UserRole = Literal["ANALISTA", "AUDITOR", "ADMIN"]
+
+
+class ApiUser(BaseModel):
+    """
+    Usuario identificado por chave de API pessoal. Somente o hash SHA-256 da chave e
+    configurado; a chave em si fica com o usuario (gerada por scripts/create_api_user.py).
+    """
+
+    user_id: str = Field(pattern=r"^[a-z0-9._-]{3,64}$")
+    role: UserRole
+    key_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+def _with_explicit_postgres_driver(url: str) -> str:
+    """
+    Fixa o driver psycopg2 (o instalado pelo projeto) em URLs PostgreSQL sem driver.
+    A partir do SQLAlchemy 2.1, "postgresql://" passa a usar o psycopg 3 por padrao, que
+    nao e dependencia do backend; a URL explicita independe da versao do SQLAlchemy.
+    """
+    for scheme in ("postgresql://", "postgres://"):
+        if url.startswith(scheme):
+            return "postgresql+psycopg2://" + url[len(scheme) :]
+    return url
 
 
 class Settings(BaseSettings):
@@ -13,13 +39,31 @@ class Settings(BaseSettings):
 
     # Informações do Projeto
     PROJECT_NAME: str = "Conform.IA BNDES Platform"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.1.0"  # x-release-please-version
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     # Segredos: obrigatorios e sem valor default no codigo (definidos via .env / ambiente)
     SECRET_KEY: str
     API_KEY: str
+    # Usuarios com chave pessoal (JSON). Necessarios para revisao humana e segregacao.
+    API_USERS: Annotated[List[ApiUser], NoDecode] = []
+
+    @field_validator("API_USERS", mode="before")
+    @classmethod
+    def parse_api_users(cls, v: Union[str, List]) -> List:
+        if isinstance(v, str):
+            return json.loads(v) if v.strip() else []
+        return v
+
+    @field_validator("API_USERS")
+    @classmethod
+    def reject_duplicate_api_users(cls, users: List[ApiUser]) -> List[ApiUser]:
+        if len({u.user_id for u in users}) != len(users):
+            raise ValueError("API_USERS contem user_id duplicado.")
+        if len({u.key_sha256 for u in users}) != len(users):
+            raise ValueError("API_USERS contem a mesma chave para mais de um usuario.")
+        return users
 
     # CORS
     ALLOWED_ORIGINS: Union[List[str], str] = [
@@ -34,8 +78,6 @@ class Settings(BaseSettings):
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
             if v.startswith("[") and v.endswith("]"):
-                import json
-
                 try:
                     return json.loads(v)
                 except Exception:
@@ -57,7 +99,7 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_db_connection(cls, v: Union[str, None], info) -> str:
         if isinstance(v, str) and v:
-            return v
+            return _with_explicit_postgres_driver(v)
         # Extrai valores para montar a URL caso DATABASE_URL não seja passada explicitamente
         values = info.data
         user = values.get("POSTGRES_USER", "conformia_user")
@@ -65,7 +107,9 @@ class Settings(BaseSettings):
         server = values.get("POSTGRES_SERVER", "postgres")
         port = values.get("POSTGRES_PORT", 5432)
         db = values.get("POSTGRES_DB", "conformia_db")
-        return f"postgresql://{user}:{password}@{server}:{port}/{db}"
+        return _with_explicit_postgres_driver(
+            f"postgresql://{user}:{password}@{server}:{port}/{db}"
+        )
 
     # Cache e Filas - Redis & Celery
     REDIS_URL: str = "redis://redis:6379/0"

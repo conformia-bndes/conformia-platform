@@ -2,9 +2,9 @@ name: CI - Conform.IA BNDES Platform
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -85,7 +85,17 @@ jobs:
 
       - name: Run Continuous Evals Pipeline
         run: |
-          uv run python evals/eval_pipeline.py
+          mkdir -p evals/reports
+          uv run python evals/eval_pipeline.py --json-report evals/reports/eval_report.json
+
+      - name: Publish Evals Report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-report
+          path: evals/reports/eval_report.json
+          if-no-files-found: warn
+          retention-days: 30
 
   frontend:
     name: Frontend Lint, Test & Build

@@ -25,6 +25,7 @@
         "\\b[0-9]{2}\\.[0-9]{3}\\.[0-9]{3}\\/[0-9]{4}\\-[0-9]{2}\\b",
         "(CERTIDÃO NEGATIVA DE DÉBITOS|CERTIDÃO POSITIVA COM EFEITOS DE NEGATIVA)"
       ],
+      "requires_validity": true,
       "failure_message": "Documento não comprova regularidade fiscal perante a Secretaria Especial da Receita Federal e PGFN."
     },
     {
@@ -47,6 +48,7 @@
       "regex_patterns": [
         "CRF[0-9]{8,14}"
       ],
+      "requires_validity": true,
       "failure_message": "A empresa proponente não apresentou comprovação de regularidade com o Fundo de Garantia por Tempo de Serviço."
     },
     {
@@ -67,6 +69,7 @@
         "INADIMPLÊNCIA ATIVA"
       ],
       "regex_patterns": [],
+      "requires_validity": true,
       "failure_message": "Identificada pendência ou ausência da Certidão Negativa de Débitos Trabalhistas junto ao TST."
     },
     {

@@ -1,25 +1,21 @@
 """Document ingestion, status query and retrieval endpoints with MinIO and Celery."""
 
 from datetime import datetime, timezone
+import hashlib
 import logging
 import os
 from typing import Any, Dict
 import uuid
 
+from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.core.celery_app import process_document_task
-from app.core.storage import storage_service
-from app.db.models.document import Document
-from app.db.session import get_db
-from celery.result import AsyncResult
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
-from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.db.models.document import Document
-from app.core.storage import storage_service
 from app.core.celery_app import celery, process_document_task
+from app.core.storage import storage_service
+from app.db.models.compliance import AuditLog
+from app.db.models.document import Document
+from app.db.session import get_db
 from app.idp.extractor import DocumentExtractor
 from app.idp.parser import (
     build_processing_status_response,
@@ -163,7 +159,6 @@ def upload_document(
 ) -> DocumentUploadResponse:
     """
     Recebe um arquivo PDF, valida assinatura binaria (%PDF-), persiste no MinIO
-    e inicia o processamento IDP sincrono ou assincrono via Celery.
     e despacha o processamento IDP ao worker via Celery (ou executa inline com
     async_process=false). O estado pode ser consultado em GET /documents/{id} ou
     GET /documents/tasks/{task_id}.
@@ -246,6 +241,21 @@ def upload_document(
         status=initial_status,
     )
     db.add(doc)
+    # RF10: o hash fixa a identidade do arquivo que fundamentara o laudo.
+    file_sha256 = hashlib.sha256(content).hexdigest()
+    db.add(
+        AuditLog(
+            entity_type="DOCUMENT",
+            entity_id=doc_id,
+            action="DOCUMENT_UPLOADED",
+            performed_by="API_UPLOAD",
+            details={
+                "sha256": file_sha256,
+                "file_size": file_size,
+                "content_type": doc.content_type,
+            },
+        )
+    )
     db.commit()
     db.refresh(doc)
 
@@ -296,34 +306,17 @@ def upload_document(
 
     return DocumentUploadResponse(
         id=doc.id,
+        task_id=task_id,
         filename=doc.original_filename,
         original_filename=doc.original_filename,
         status=ProcessingStatus(doc.status),
         file_size=doc.file_size,
+        sha256=file_sha256,
         total_pages=(
             (doc.extracted_metadata.get("total_pages") or 0) if doc.extracted_metadata else 0
         ),
         created_at=doc.created_at,
     )
-
-
-@router.get(
-    "",
-    response_model=DocumentListResponse,
-    summary="Listar Documentos Ingeridos",
-)
-def list_documents(
-    skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
-) -> DocumentListResponse:
-    return {
-        "id": doc.id,
-        "task_id": task_id,
-        "filename": doc.original_filename,
-        "status": doc.status,
-        "file_size": doc.file_size,
-        "total_pages": (doc.extracted_metadata.get("total_pages") if doc.extracted_metadata else 0),
-        "created_at": doc.created_at.isoformat(),
-    }
 
 
 @router.get("/tasks/{task_id}", summary="Consultar Estado de uma Tarefa de Processamento")
@@ -357,8 +350,14 @@ def get_task_status(task_id: str):
         )
 
 
-@router.get("", summary="Listar Documentos Ingeridos")
-def list_documents(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+@router.get(
+    "",
+    response_model=DocumentListResponse,
+    summary="Listar Documentos Ingeridos",
+)
+def list_documents(
+    skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
+) -> DocumentListResponse:
     """Retorna lista paginada de documentos processados."""
     docs = db.query(Document).order_by(Document.created_at.desc()).offset(skip).limit(limit).all()
     total = db.query(Document).count()

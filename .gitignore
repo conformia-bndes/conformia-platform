@@ -85,3 +85,10 @@ desktop.ini
 minio_data/
 postgres_data/
 redis_data/
+
+# MLOps: rastreio local do MLflow
+mlflow.db
+mlruns/
+mlartifacts/
+# Relatorios gerados pelos evals e promptfoo
+evals/reports/

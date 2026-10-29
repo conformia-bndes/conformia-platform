@@ -54,36 +54,36 @@ flowchart TD
 | **Frontend SPA**             | React 18 + Vite + Tailwind CSS         | Compilação estática servida via Nginx (contêiner < 25 MB), sem necessidade de servidor Node.js em produção, sem problemas de hidratação com visualizadores de PDF e HMR instantâneo. |
 | **Backend API**              | Python 3.11/3.13 + FastAPI + Uvicorn   | Ecossistema maduro para engenharia de dados e IA, suporte assíncrono de alto rendimento e contratos tipados com Pydantic v2.                                                         |
 | **Gerenciador de Pacotes**   | Astral `uv`                            | Resolução de dependências em milissegundos, workspace monorepo nativo e lockfile determinístico (`uv.lock`) para reprodutibilidade estrita.                                          |
-| **Banco Relacional**         | PostgreSQL 16 Alpine                   | Persistencia transacional ACID, suporte a consultas relacionais e integridade referencial compulsoria para trilhas de auditoria.                                                     |
-| **Broker de Mensagens**      | Redis 7 Alpine                         | Fila em memoria de baixissima latencia para despacho assincrono entre API e workers de extracao.                                                                                     |
-| **Processamento Assincrono** | Celery 5                               | Isolamento de operacoes bloqueantes (OCR, extracao e chamadas a modelos de IA) do ciclo de vida das requisicoes HTTP da API.                                                         |
-| **Armazenamento de Objetos** | MinIO S3 Compatible                    | Compatibilidade estrita com a API AWS S3, facilitando execucao local e migracao transparente para nuvens soberanas brasileiras.                                                      |
-| **Extracao Vetorial e OCR**  | pdfplumber + Tesseract OCR 5 + Poppler | Solucao auditavel, sem envio de documentos confidenciais a nuvens de terceiros e com calibracao para o idioma portugues (`por`).                                                     |
-| **Orquestracao Local**       | Docker Compose v2                      | Orquestracao declarativa unificada em `infra/docker-compose.yml`, eliminando divergencias entre ambientes.                                                                           |
+| **Banco Relacional**         | PostgreSQL 16 Alpine                   | Persistência transacional ACID, suporte a consultas relacionais e integridade referencial compulsoria para trilhas de auditoria.                                                     |
+| **Broker de Mensagens**      | Redis 7 Alpine                         | Fila em memória de baixissima latência para despacho assincrono entre API e workers de extração.                                                                                     |
+| **Processamento Assincrono** | Celery 5                               | Isolamento de operações bloqueantes (OCR, extração e chamadas a modelos de IA) do ciclo de vida das requisições HTTP da API.                                                         |
+| **Armazenamento de Objetos** | MinIO S3 Compatible                    | Compatibilidade estrita com a API AWS S3, facilitando execução local e migração transparente para nuvens soberanas brasileiras.                                                      |
+| **Extração Vetorial e OCR**  | pdfplumber + Tesseract OCR 5 + Poppler | Solução auditável, sem envio de documentos confidenciais a nuvens de terceiros e com calibração para o idioma português (`por`).                                                     |
+| **Orquestração Local**       | Docker Compose v2                      | Orquestração declarativa unificada em `infra/docker-compose.yml`, eliminando divergências entre ambientes.                                                                           |
 
 ---
 
-## 3. Por que Separar Regras de Negocio de Modelos de IA?
+## 3. Por que Separar Regras de Negócio de Modelos de IA?
 
-Um dos riscos mais criticos em aplicacoes de IA no setor publico e a **alucinacao de modelos** ou o afrouxamento inadvertido de criterios normativos devido a mudancas sutis em prompts.
+Um dos riscos mais críticos em aplicações de IA no setor público e a **alucinação de modelos** ou o afrouxamento inadvertido de critérios normativos devido a mudanças sutis em prompts.
 
 Para mitigar esse risco de forma definitiva:
 
-1. **Regras Determinísticas e Matematicas** (validade temporal, calculo de datas, expressoes regulares de CNPJ, identificacao literal de certidao negativa):
-   - Sao executadas pelo **Motor de Regras** determinístico.
-   - Nao dependem de inferencia probabilistica.
+1. **Regras Determinísticas e Matematicas** (validade temporal, cálculo de datas, expressões regulares de CNPJ, identificação literal de certidão negativa):
+   - São executadas pelo **Motor de Regras** determinístico.
+   - Não dependem de inferência probabilistica.
    - Qualquer falha gera imediatamente o status `NON_COMPLIANT`.
-2. **Avaliacao Semantica Assistida por IA** (interpretacao de clausulas societarias complexas, ressalvas juridicas em certidoes narrativas):
-   - Sao executadas pelo pipeline **Maker-Checker**.
-   - O modelo **Maker** aponta a evidencia e formula uma hipotese.
+2. **Avaliação Semântica Assistida por IA** (interpretação de cláusulas societarias complexas, ressalvas juridicas em certidões narrativas):
+   - São executadas pelo pipeline **Maker-Checker**.
+   - O modelo **Maker** aponta a evidência e formula uma hipótese.
    - O modelo/algoritmo **Checker** valida se o texto citado existe textualmente no documento original antes de admitir o laudo.
-   - Se houver qualquer divergencia ou baixa confianca, o status e obrigatoriamente degradado para `MANUAL_REVIEW_REQUIRED`.
+   - Se houver qualquer divergência ou baixa confiança, o status e obrigatoriamente degradado para `MANUAL_REVIEW_REQUIRED`.
 
 ---
 
 ## 4. Modelo de Resultado de Conformidade (Schema de Laudo)
 
-Cada verificacao de criterio normativo produz um registro estruturado no seguinte padrao:
+Cada verificação de critério normativo produz um registro estruturado no seguinte padrão:
 
 ```json
 {

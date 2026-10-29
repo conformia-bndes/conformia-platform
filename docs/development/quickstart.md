@@ -1,4 +1,4 @@
-# Guia de Inicio Rapido (Quickstart)
+# Guia de Inicio Rápido (Quickstart)
 
 Este guia orienta a inicialização e a execução do ambiente local de desenvolvimento da plataforma Conform.IA BNDES.
 
@@ -6,10 +6,10 @@ Este guia orienta a inicialização e a execução do ambiente local de desenvol
 
 ## 1. Pré-requisitos do Sistema
 
-Certifique-se de possuir instalado em sua estacao de trabalho:
+Certifique-se de possuir instalado em sua estação de trabalho:
 
 - **Docker Engine** >= 24.0 e **Docker Compose Plugin** >= 2.20
-- **Make** (utilitario de automacao de comandos)
+- **Make** (utilitário de automação de comandos)
 - **Astral `uv`** >= 0.5.0 (gerenciador de dependências e workspace Python ultrarrápido) ou Python 3.11+
 - **Node.js** >= 22.0 e **npm** >= 10.0 (para desenvolvimento na camada frontend)
 
@@ -17,9 +17,9 @@ Certifique-se de possuir instalado em sua estacao de trabalho:
 
 ## 2. Inicialização Rápida em 3 Passos
 
-### Passo 1: Preparacao do Ambiente
+### Passo 1: Preparação do Ambiente
 
-Gere o arquivo `.env` com segredos aleatorios (nenhuma credencial e versionada; o `.env` esta no `.gitignore`):
+Gere o arquivo `.env` com segredos aleatórios (nenhuma credencial e versionada; o `.env` esta no `.gitignore`):
 
 ```bash
 make env
@@ -28,7 +28,7 @@ make env
 ### Passo 2: Subir a Infraestrutura Conteinerizada
 
 Inicialize a stack completa (PostgreSQL, Redis, MinIO, Backend API, Worker e Frontend SPA) e aguarde
-todos os servicos ficarem saudaveis:
+todos os serviços ficarem saudáveis:
 
 ```bash
 make up
@@ -44,7 +44,7 @@ make smoke   # deve terminar com "OK - ambiente sobe e processa pela fila."
 
 ### Passo 4: Pontos de Acesso
 
-| Servico                        | URL / Ponto de Acesso                                                      | Credenciais                                    |
+| Serviço                        | URL / Ponto de Acesso                                                      | Credenciais                                    |
 | :---
 
 ## 3. Comandos Essenciais do Dia a Dia

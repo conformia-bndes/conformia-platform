@@ -1,0 +1,26 @@
+name: Release - versionamento semantico e CHANGELOG
+
+# A cada push em main, o release-please abre (ou atualiza) um PR de release com a proxima
+# versao calculada pelos Conventional Commits e o CHANGELOG. Ao fazer merge desse PR, a tag
+# vX.Y.Z e o GitHub Release sao criados.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Preparar release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -92,7 +92,7 @@ def test_missing_file_raises(tmp_path):
 def test_upload_native_pdf_matches_processing_contract(client):
     """Fluxo completo: upload -> extrator -> parser -> GET /processing (contrato do Pedro)."""
     response = client.post(
-        "/api/v1/documents/upload",
+        "/api/v1/documents/upload?async_process=false",
         files={
             "file": (
                 "cnd_nativo.pdf",
@@ -124,7 +124,7 @@ def test_upload_scanned_pdf_with_ocr_failure_reports_error(client, monkeypatch):
         lambda self, page, page_idx: ("", "OCR falhou na pagina 1: Tesseract ausente"),
     )
     response = client.post(
-        "/api/v1/documents/upload",
+        "/api/v1/documents/upload?async_process=false",
         files={
             "file": (
                 "cnd_digitalizado.pdf",

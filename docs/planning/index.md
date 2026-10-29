@@ -1,6 +1,6 @@
 # Planejamento do Projeto — Visão Geral
 
-**Conform.IA BNDES: Plataforma de Intelligent Document Processing para Verificacao Automatizada de Conformidade**
+**Conform.IA BNDES: Plataforma de Intelligent Document Processing para Verificação Automatizada de Conformidade**
 _Documento de Direcionamento Estratégico e Técnico_
 
 ---
@@ -19,7 +19,7 @@ _Documento de Direcionamento Estratégico e Técnico_
 
 - ### Modalidade Proposta
 
-  SaaS multi-tenant, conteinerizado em Docker, projetado para hospedagem soberana em territorio nacional.
+  SaaS multi-tenant, conteinerizado em Docker, projetado para hospedagem soberana em território nacional.
 
 - ### Público-Alvo
   Analistas de crédito, revisores técnicos, operadores de compliance e auditores institucionais do BNDES.
@@ -39,41 +39,41 @@ A solução adota uma arquitetura de **Intelligent Document Processing (IDP)**, 
 1. **Eliminação de Gargalos Manuais**: Reduzir o tempo médio de conferência documental de dias para segundos por operação.
 2. **Confiabilidade Absoluta**: Garantir tolerância zero a falsos positivos em certidões inválidas ou com pendências fiscais.
 3. **Auditabilidade Integral**: Assegurar que qualquer laudo de conformidade seja rastreável perante órgãos de controle (TCU, CGU).
-4. **Governança Agent-First**: Integrar praticas de Harness Engineering para desenvolvimento seguro e verificavel assistido por IA.
+4. **Governança Agent-First**: Integrar práticas de Harness Engineering para desenvolvimento seguro e verificável assistido por IA.
 
 ---
 
 ## 2. Estrutura Modular do Planejamento
 
-Para facilitar a leitura e manutencao, o planejamento oficial esta decomposto nos seguintes capitulos tecnicos:
+Para facilitar a leitura e manutenção, o planejamento oficial esta decomposto nos seguintes capitulos técnicos:
 
 <div class="grid cards" markdown>
 
 - ### [1. Requisitos e Escopo](requirements.md)
 
-  Detalhamento dos requisitos funcionais RF01 a RF15, requisitos nao funcionais e matriz de dores operacionais.
+  Detalhamento dos requisitos funcionais RF01 a RF15, requisitos não funcionais e matriz de dores operacionais.
 
-- ### [2. Arquitetura da Solucao](architecture-design.md)
+- ### [2. Arquitetura da Solução](architecture-design.md)
 
-  Topologia em camadas, selecao tecnologica fundamentada, separacao entre regras e IA e modelo formal de laudo.
+  Topologia em camadas, seleção tecnologica fundamentada, separação entre regras e IA e modelo formal de laudo.
 
 - ### [3. Cronograma e Sprints](sprints-roadmap.md)
 
-  Planejamento das 8 sprints ate 07/12/2026, backlog priorizado de epicos (E1 a E10) e Definition of Done.
+  Planejamento das 8 sprints até 07/12/2026, backlog priorizado de epicos (E1 a E10) e Definition of Done.
 
-- ### [4. Seguranca e Governanca](governance-security.md)
+- ### [4. Segurança e Governança](governance-security.md)
 
-  Security by Design, conformidade com a LGPD, matriz de mitigacao de riscos e auditoria transacional.
+  Security by Design, conformidade com a LGPD, matriz de mitigação de riscos e auditoria transacional.
 
 - ### [5. Harness Engineering](harness-engineering.md)
-  Metodologia de contexto delimitado, padrao Maker-Checker, guardrails operacionais e ciclo de trabalho de agentes.
+  Metodologia de contexto delimitado, padrão Maker-Checker, guardrails operacionais e ciclo de trabalho de agentes.
 
 </div>
 
 ---
 
-## 3. Premissas e Delimitacao de Escopo
+## 3. Premissas e Delimitação de Escopo
 
-O edital oficial da Consulta Publica no 01/2025 nao disponibiliza amostras de documentos sigilosos de clientes do BNDES, contratos de APIs internas ou regras de negocio confidenciais.
+O edital oficial da Consulta Publica no 01/2025 não disponibiliza amostras de documentos sigilosos de clientes do BNDES, contratos de APIs internas ou regras de negócio confidenciais.
 
-Por essa razao, o MVP opera com **documentos sinteticos fidedignos e bases simuladas**, mantendo interfaces e adaptadores rigorosamente tipados para que a conexao com sistemas legados do BNDES ocorra de forma transparente na fase de implantacao institucional.
+Por essa razão, o MVP opera com **documentos sintéticos fidedignos e bases simuladas**, mantendo interfaces e adaptadores rigorosamente tipados para que a conexão com sistemas legados do BNDES ocorra de forma transparente na fase de implantação institucional.

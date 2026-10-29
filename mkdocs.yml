@@ -1,5 +1,5 @@
-site_name: "Conform.IA BNDES - Documentacao Tecnica"
-site_description: "Plataforma de Intelligent Document Processing (IDP) e Auditoria Imutavel - Consulta Publica BNDES no 01/2025"
+site_name: "Conform.IA BNDES - Documentação Técnica"
+site_description: "Plataforma de Intelligent Document Processing (IDP) e Auditoria Imutável - Consulta Pública BNDES nº 01/2025"
 site_url: "https://conformia-bndes.github.io/conformia-platform/"
 repo_url: "https://github.com/conformia-bndes/conformia-platform"
 repo_name: "conformia-bndes/conformia-platform"
@@ -32,7 +32,6 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
-    - navigation.expand
     - navigation.path
     - navigation.top
     - navigation.footer
@@ -80,31 +79,38 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
 
 nav:
-  - Inicio: index.md
-  - Planejamento:
-      - Visao Geral: planning/index.md
+  - Início: index.md
+  - Produto:
+      - Visão Geral do Planejamento: planning/index.md
       - Requisitos e Escopo: planning/requirements.md
-      - Arquitetura da Solucao: planning/architecture-design.md
+      - Matriz de Conformidade BNDES: bndes/compliance-matrix.md
+      - Tipologias de Documentos: bndes/document-types.md
+  - Gestão do Projeto:
+      - Plano de Entrega (05/12/2026): planning/DELIVERY_PLAN_2026_12_05.md
+      - Backlog de Implementação: planning/IMPLEMENTATION_BACKLOG.md
+      - Relatório de Validação: planning/VALIDATION_REPORT.md
+      - Governança e Ferramentas: development/governance.md
       - Cronograma e Sprints: planning/sprints-roadmap.md
-      - Seguranca e Governanca: planning/governance-security.md
-      - Harness Engineering: planning/harness-engineering.md
-      - Plano Consolidado (Master): planning/project-plan.md
+      - Plano Consolidado: planning/project-plan.md
   - Arquitetura:
-      - Visao Geral: architecture/overview.md
-      - Decisoes Arquiteturais (ADRs):
-          - Indice: architecture/adr-index.md
+      - Visão Geral: architecture/overview.md
+      - Arquitetura da Solução: planning/architecture-design.md
+      - Decisões Arquiteturais (ADRs):
+          - Índice: architecture/adr-index.md
           - ADR-001 Monorepo Modular: architecture/adr-001-monorepo-modular.md
           - ADR-002 Adoção do Astral uv: architecture/adr-002-astral-uv-toolchain.md
           - ADR-003 React SPA vs Next.js: architecture/adr-003-spa-vs-nextjs.md
-          - Template de ADR: architecture/adr-template.md
-  - Desafio BNDES:
-      - Analise do Edital: bndes/compliance-matrix.md
-      - Tipologias de Documentos: bndes/document-types.md
-  - Engenharia IDP e IA:
+          - Modelo de ADR: architecture/adr-template.md
+  - Engenharia:
       - Pipeline IDP e OCR: engineering/idp-pipeline.md
       - Motor de Regras: engineering/rules-engine.md
-      - Harness e Avaliacao de IA: engineering/harness-evals.md
-  - Desenvolvimento e APIs:
-      - Inicio Rapido (Quickstart): development/quickstart.md
-      - Referencia da API REST: development/api-reference.md
+      - Harness Engineering: planning/harness-engineering.md
+      - Harness e Avaliação de IA: engineering/harness-evals.md
+  - Operação:
+      - DevOps: development/devops.md
+      - MLOps: engineering/mlops.md
+      - Segurança e Governança: planning/governance-security.md
+  - Desenvolvimento:
+      - Início Rápido: development/quickstart.md
+      - Referência da API REST: development/api-reference.md
       - Quality Gates e Testes: development/quality-gates.md

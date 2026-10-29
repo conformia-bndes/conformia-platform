@@ -8,10 +8,10 @@ Este documento consolida as diretrizes de segurança da informação, proteção
 
 A plataforma opera sob os principios estritos de **Security by Design** e **Privacy by Design**:
 
-- **Minimizacao de Dados**: O sistema processa estritamente os campos necessarios a comprovacao de regularidade cadastral e documental exigida pelo BNDES.
-- **Isolamento de Credenciais**: Segredos, tokens e chaves de conexao sao gerenciados exclusivamente fora do repositorio, via variaveis de ambiente auditadas por ferramentas SAST.
-- **Criptografia de Ponta a Ponta**: Trafego protegido por TLS 1.3 em transito e dados em repouso armazenados em volumes protegidos no PostgreSQL e MinIO.
-- **Segregacao de Ambientes**: O ambiente de desenvolvimento utiliza exclusivamente documentos sinteticos, sem presenca de dados reais de clientes ou proponentes do BNDES.
+- **Minimização de Dados**: O sistema processa estritamente os campos necessários a comprovação de regularidade cadastral e documental exigida pelo BNDES.
+- **Isolamento de Credenciais**: Segredos, tokens e chaves de conexão são gerenciados exclusivamente fora do repositório, via variáveis de ambiente auditadas por ferramentas SAST.
+- **Criptografia de Ponta a Ponta**: Trafego protegido por TLS 1.3 em trânsito e dados em repouso armazenados em volumes protegidos no PostgreSQL e MinIO.
+- **Segregação de Ambientes**: O ambiente de desenvolvimento utiliza exclusivamente documentos sintéticos, sem presença de dados reais de clientes ou proponentes do BNDES.
 
 ---
 
@@ -19,11 +19,11 @@ A plataforma opera sob os principios estritos de **Security by Design** e **Priv
 
 | Risco Técnico ou Operacional                     | Severidade | Impacto                                               | Estratégia de Mitigação Implementada                                                                                               |
 | :----------------------------------------------- | :--------- | :---------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
-| **Alucinacao de modelo de IA**                   | Critica    | Aprovacao indevida de certidao com debitos ativos.    | Padrao **Maker-Checker** compulsorio: citacao literal exata da evidencia e verificacao deterministica antes de qualquer aprovacao. |
-| **Degradacao de OCR em certidoes digitalizadas** | Alta       | Falha na extracao de datas de validade ou CNPJ.       | Pre-processamento de imagem, binarizacao adaptativa e exigencia de status `MANUAL_REVIEW_REQUIRED` quando a confianca for baixa.   |
-| **Vazamento de PII ou violacao da LGPD**         | Critica    | Sancoes administrativas e quebra de sigilo bancario.  | Sanitizacao de traces e logs (OpenTelemetry sem CPF ou dados bancarios), minimizacao de dados e destruicao controlada.             |
-| **Ambiguidade em normas e editais**              | Alta       | Divergencia interpretativa entre analistas e modelos. | Regras declarativas em JSON Schema versionado, revisadas tecnicamente e cobertas por testes de regressao.                          |
-| **Indisponibilidade de APIs governamentais**     | Media      | Paralizacao de esteiras de verificacao de credito.    | Arquitetura desacoplada via adaptadores e filas de re-tentativa com backoff exponencial no Celery.                                 |
+| **Alucinação de modelo de IA**                   | Critica    | Aprovação indevida de certidão com débitos ativos.    | Padrão **Maker-Checker** compulsório: citação literal exata da evidência e verificação determinística antes de qualquer aprovação. |
+| **Degradação de OCR em certidões digitalizadas** | Alta       | Falha na extração de datas de validade ou CNPJ.       | Pre-processamento de imagem, binarização adaptativa e exigência de status `MANUAL_REVIEW_REQUIRED` quando a confiança for baixa.   |
+| **Vazamento de PII ou violação da LGPD**         | Critica    | Sanções administrativas e quebra de sigilo bancário.  | Sanitização de traces e logs (OpenTelemetry sem CPF ou dados bancários), minimização de dados e destruição controlada.             |
+| **Ambiguidade em normas e editais**              | Alta       | Divergência interpretativa entre analistas e modelos. | Regras declarativas em JSON Schema versionado, revisadas tecnicamente e cobertas por testes de regressão.                          |
+| **Indisponibilidade de APIs governamentais**     | Media      | Paralisação de esteiras de verificação de crédito.    | Arquitetura desacoplada via adaptadores e filas de re-tentativa com backoff exponencial no Celery.                                 |
 
 ---
 
@@ -35,23 +35,23 @@ Para garantir a prestação de contas e a conformidade perante órgãos de fisca
 
 Toda avaliação gera um registro imutável no PostgreSQL contendo:
 
-1. **Identificador Unico da Avaliacao** (`report_id` UUID).
+1. **Identificador Único da Avaliação** (`report_id` UUID).
 2. **Hash Criptografico do Arquivo** (`sha256` do PDF original analisado).
-3. **Versao Normativa da Regra** (versao exata do checklist em `rules/schemas/`).
-4. **Citacao Literal da Evidencia** (trecho textual exato, numero da pagina e coordenadas).
-5. **Agente ou Usuario Executor** (identificador do processo automatizado ou do analista humano).
-6. **Timestamp UTC Imutavel** (data e hora exata da deliberacao).
-7. **Parecer Tecnico Consolidado** (justificativa tecnica e situacao de deferimento/indeferimento).
+3. **Versão Normativa da Regra** (versão exata do checklist em `rules/schemas/`).
+4. **Citação Literal da Evidência** (trecho textual exato, número da página e coordenadas).
+5. **Agente ou Usuário Executor** (identificador do processo automatizado ou do analista humano).
+6. **Timestamp UTC Imutável** (data e hora exata da deliberação).
+7. **Parecer Técnico Consolidado** (justificativa técnica e situação de deferimento/indeferimento).
 
 ---
 
-## 4. Tratamento Formal de Excecoes
+## 4. Tratamento Formal de Exceções
 
-No contexto de concessoes de credito publico, **uma excecao nunca significa ignorar uma regra**.
+No contexto de concessões de crédito público, **uma exceção nunca significa ignorar uma regra**.
 
-Quando uma certidao apresenta ressalva amparada por decisao judicial liminar ou autorizacao formal da diretoria do BNDES:
+Quando uma certidão apresenta ressalva amparada por decisão judicial liminar ou autorização formal da diretoria do BNDES:
 
-- O sistema mantem o historico da nao conformidade original registrada.
-- O analista humano insere um parecer circunstanciado informando o numero do processo judicial ou termo de autorizacao.
+- O sistema mantem o histórico da não conformidade original registrada.
+- O analista humano insere um parecer circunstanciado informando o número do processo judicial ou termo de autorização.
 - O status da regra e alterado para `EXCEPTION_AUTHORIZED`.
-- O registro de auditoria armazena simultaneamente o laudo tecnico original da IA e a motivacao formal da excecao humana.
+- O registro de auditoria armazena simultaneamente o laudo técnico original da IA e a motivação formal da exceção humana.

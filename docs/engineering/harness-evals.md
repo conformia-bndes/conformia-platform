@@ -4,7 +4,7 @@ Em aplicações que envolvem auditoria de crédito público e contratações de 
 
 ---
 
-## 1. O Padrao Maker-Checker
+## 1. O Padrão Maker-Checker
 
 Para eliminar o risco de alucinações em que o modelo infere erroneamente a conformidade de uma empresa, o sistema implementa a arquitetura de **Quatro Olhos Algorítmico (Maker-Checker)**:
 
@@ -34,32 +34,32 @@ sequenceDiagram
 ### 1.1 Responsabilidades do Maker
 
 - Formula uma hipótese preliminar de avaliação baseada exclusivamente no trecho documental fornecido.
-- Deve obrigatoriamente indicar o valor exato extraido e a justificativa logica.
+- Deve obrigatoriamente indicar o valor exato extraido e a justificativa lógica.
 - Restrito a esquemas de saida estruturados em JSON via Pydantic.
 
 ### 1.2 Responsabilidades do Checker
 
 - Opera de forma totalmente desacoplada e independente do Maker.
 - Audita se o trecho citado pelo Maker esta realmente contido no texto original do PDF.
-- Em caso de inconsistencia textual ou extrapolacao de contexto, o Checker invalida a hipotese, forçando o encaminhamento para analise humana.
+- Em caso de inconsistência textual ou extrapolação de contexto, o Checker invalida a hipótese, forçando o encaminhamento para análise humana.
 
 ---
 
-## 2. Metricas e Limiares Operacionais de Evals
+## 2. Métricas e Limiares Operacionais de Evals
 
-O pipeline de avaliacao continua (`evals/eval_pipeline.py`) monitora regressões atraves de casos de teste sinteticos e reais anonimizados:
+O pipeline de avaliação continua (`evals/eval_pipeline.py`) monitora regressões através de casos de teste sintéticos e reais anonimizados:
 
-| Dimensao              | Indicador                        | Meta                       | Limiar de Alerta        |
+| Dimensão              | Indicador                        | Meta                       | Limiar de Alerta        |
 | :-------------------- | :------------------------------- | :------------------------- | :---------------------- |
-| **Seguranca**         | Falsos Positivos de Conformidade | **0.0%** (Tolerancia Zero) | $> 0.0\%$ (Bloqueia CI) |
+| **Segurança**         | Falsos Positivos de Conformidade | **0.0%** (Tolerância Zero) | $> 0.0\%$ (Bloqueia CI) |
 | **Qualidade IDP**     | Character Error Rate (CER)       | $\le 1.5\%$                | $> 3.0\%$               |
-| **Extracao**          | Recall de Entidades Chave        | $\ge 98.5\%$               | $< 95.0\%$              |
-| **Confiabilidade IA** | Taxa de Deteccao de Alucinacao   | $\ge 99.0\%$               | $< 98.0\%$              |
+| **Extração**          | Recall de Entidades Chave        | $\ge 98.5\%$               | $< 95.0\%$              |
+| **Confiabilidade IA** | Taxa de Detecção de Alucinação   | $\ge 99.0\%$               | $< 98.0\%$              |
 | **Consenso**          | Maker-Checker Agreement Rate     | $\ge 95.0\%$               | $< 90.0\%$              |
 
 ---
 
-## 3. Execucao de Benchmarks de Regressao
+## 3. Execução de Benchmarks de Regressão
 
 O benchmark de Evals e executado localmente via:
 
@@ -67,4 +67,4 @@ O benchmark de Evals e executado localmente via:
 python evals/eval_pipeline.py
 ```
 
-O comando realiza o teste funcional completo contra o conjunto de regras do BNDES, verificando se documentos com falencia decretada ou pendencias fiscais sao rejeitados com precisao absoluta.
+O comando realiza o teste funcional completo contra o conjunto de regras do BNDES, verificando se documentos com falência decretada ou pendências fiscais são rejeitados com precisão absoluta.

@@ -53,6 +53,10 @@
       "items": { "type": "string" },
       "description": "Expressões regulares para validação de padrões (Ex: CNPJ, certidão negativa)"
     },
+    "requires_validity": {
+      "type": "boolean",
+      "description": "Exige data de validade legivel e vigente. Sem data legivel o resultado e MANUAL_REVIEW_REQUIRED; com data vencida, NON_COMPLIANT. Padrao: true para as categorias FISCAL e TRABALHISTA."
+    },
     "failure_message": {
       "type": "string",
       "description": "Mensagem detalhada reportada ao analista caso o documento falhe na regra"

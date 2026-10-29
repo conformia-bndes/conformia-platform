@@ -78,13 +78,15 @@ def extract_fields_and_evidence(
 
     # 1. Identificacao de Tipologia Documental
     detected_type: Optional[str] = None
-    if "CERTIDAO NEGATIVA" in text_norm and (
+    # Certidao positiva tambem e a mesma tipologia: precisa ser avaliada (e reprovada)
+    # pela regra da CND, e nao cair em "tipologia nao identificada".
+    if ("CERTIDAO NEGATIVA" in text_norm or "CERTIDAO POSITIVA" in text_norm) and (
         "TRIBUTOS FEDERAIS" in text_norm
         or "DIVIDA ATIVA DA UNIAO" in text_norm
         or "RECEITA FEDERAL" in text_norm
     ):
         detected_type = "CND_FEDERAL"
-        page_num, snippet = _find_page_and_snippet(r"CERTID[AÃ]O NEGATIVA", pages, text)
+        page_num, snippet = _find_page_and_snippet(r"CERTID[AÃ]O (NEGATIVA|POSITIVA)", pages, text)
         if snippet:
             ev = PageEvidence(text=snippet, page=page_num, confidence=1.0)
             evidences.append(ev)
