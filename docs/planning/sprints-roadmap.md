@@ -31,42 +31,42 @@ Este documento detalha o planejamento operacional das 8 sprints de desenvolvimen
 
 - ### E1 — Gestão Documental
 
-  Ingestão, validação de magic bytes (`%PDF-`), armazenamento durável no MinIO S3, catálogo de metadados e ciclo de vida de arquivos.
+    Ingestão, validação de magic bytes (`%PDF-`), armazenamento durável no MinIO S3, catálogo de metadados e ciclo de vida de arquivos.
 
 - ### E2 — Pipeline IDP Híbrido
 
-  Extração vetorial nativa de PDFs com pdfplumber e chaveamento automático para OCR Tesseract 5 em páginas digitalizadas.
+    Extração vetorial nativa de PDFs com pdfplumber e chaveamento automático para OCR Tesseract 5 em páginas digitalizadas.
 
 - ### E3 — Checklist Declarativo
 
-  Estruturação e versionamento de normas e critérios de conformidade em formato JSON Schema desacoplado do código-fonte.
+    Estruturação e versionamento de normas e critérios de conformidade em formato JSON Schema desacoplado do código-fonte.
 
 - ### E4 — Motor de Regras Determinístico
 
-  Processamento booleano e temporal de restrições cadastrais, fiscais e financeiras com tolerância zero a divergências.
+    Processamento booleano e temporal de restrições cadastrais, fiscais e financeiras com tolerância zero a divergências.
 
 - ### E5 — Orquestração de IA Maker-Checker
 
-  Avaliação semântica assistida por modelos de linguagem com citação literal obrigatória de evidências factuais.
+    Avaliação semântica assistida por modelos de linguagem com citação literal obrigatória de evidências factuais.
 
 - ### E6 — Camada de Conectores
 
-  Adaptadores desacoplados para integração com bases governamentais e APIs corporativas do BNDES.
+    Adaptadores desacoplados para integração com bases governamentais e APIs corporativas do BNDES.
 
 - ### E7 — Revisão Humana (HITL)
 
-  Interface operacional para análise de apontamentos, confirmação de laudos, contestação e deferimento de exceções motivadas.
+    Interface operacional para análise de apontamentos, confirmação de laudos, contestação e deferimento de exceções motivadas.
 
 - ### E8 — Trilha de Auditoria Imutável
 
-  Registro transacional cronológico (`append-only`) de todas as etapas de análise, timestamps UTC e identificadores de agentes.
+    Registro transacional cronológico (`append-only`) de todas as etapas de análise, timestamps UTC e identificadores de agentes.
 
 - ### E9 — Analytics e Qualidade
 
-  Dashboard de métricas de desempenho, acurácia geral, recall de extração, Character Error Rate (CER) e taxas de revisão.
+    Dashboard de métricas de desempenho, acurácia geral, recall de extração, Character Error Rate (CER) e taxas de revisão.
 
 - ### E10 — Segurança e Governança
-  Controle de acesso baseado em papeis (RBAC), conformidade estrita com a LGPD, gestão segura de credenciais e CI com SAST.
+    Controle de acesso baseado em papeis (RBAC), conformidade estrita com a LGPD, gestão segura de credenciais e CI com SAST.
 
 </div>
 

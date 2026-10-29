@@ -10,14 +10,14 @@ O Conform.IA BNDES estabelece padrões rigorosos de qualidade, segurança e conf
 
 - ### 1. Verificação Estática
 
-  Linter e formatação automática em Python (`black`, `flake8`) e TypeScript/React (`eslint`).
+    Linter e formatação automática em Python (`black`, `flake8`) e TypeScript/React (`eslint`).
 
 - ### 2. Testes de Regressão
 
-  Suíte completa de testes unitários e de integração via `pytest` (backend) e `vitest` (frontend).
+    Suíte completa de testes unitários e de integração via `pytest` (backend) e `vitest` (frontend).
 
 - ### 3. Harness Evals
-  Benchmark determinístico de acurácia documental com tolerância zero a falsos positivos.
+    Benchmark determinístico de acurácia documental com tolerância zero a falsos positivos.
 
 </div>
 

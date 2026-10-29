@@ -78,10 +78,10 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 
 | Configuração | Estado |
 | :-- | :-- |
-| Ruleset `main-protection` | PR com 1 aprovação, check **CI OK** obrigatório, sem push forçado nem exclusão |
-| Ruleset `dev-protection` | PR obrigatório, check **CI OK** obrigatório, sem push forçado nem exclusão |
+| Ruleset `main-protection` | PR com 1 aprovação, descartada a cada novo push e que não pode vir de quem fez o último push; branch atualizada com `main`; check **CI OK** obrigatório; sem push forçado nem exclusão |
+| Ruleset `dev-protection` | PR obrigatório, check **CI OK** obrigatório, sem push forçado nem exclusão; o bypass dos `maintainers` vale só para merge de PR |
 | *Allow GitHub Actions to create and approve pull requests* | Habilitado na organização e no repositório (necessário ao release-please) |
 | Code scanning (CodeQL) | Habilitado via `codeql.yml` |
 | Secret scanning e push protection | Habilitados |
 
-Somente o time `maintainers` pode ignorar os rulesets, e apenas para correções emergenciais.
+Somente o time `maintainers` pode ignorar os rulesets, e apenas para correções emergenciais. Em `dev`, esse bypass vale só para merge de PR: ninguém consegue apagar a branch nem fazer push direto, o que evita apagá-la pelo botão "Delete branch" após a promoção para `main`.
