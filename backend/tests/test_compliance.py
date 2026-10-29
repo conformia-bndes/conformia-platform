@@ -11,7 +11,8 @@ def test_rules_engine_deterministic_compliant():
             "REPUBLICA FEDERATIVA DO BRASIL - MINISTERIO DA FAZENDA\n"
             "CERTIDAO NEGATIVA DE DEBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
             "E A DIVIDA ATIVA DA UNIAO\n"
-            "Constatada a nao existencia de pendencias para o CNPJ 00.000.000/0001-91."
+            "Constatada a nao existencia de pendencias para o CNPJ 00.000.000/0001-91.\n"
+            "Valida ate: 31/12/2099"
         ),
         "metadata": {"total_pages": 1},
     }

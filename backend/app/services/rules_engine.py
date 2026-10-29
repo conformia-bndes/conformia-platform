@@ -1,16 +1,37 @@
 """Deterministic and Hybrid Rules Engine for BNDES Document Compliance."""
 
-from datetime import datetime
+from datetime import date
 import json
 import logging
 import os
 import re
 import unicodedata
-from typing import Dict, Any, List, Optional
+from typing import Callable, Dict, Any, List, Optional, Tuple
 
 from app.ai.llm_client import MakerCheckerValidator
 
 logger = logging.getLogger(__name__)
+
+# Categorias cujas certidoes so comprovam regularidade dentro do prazo de validade.
+VALIDITY_REQUIRED_CATEGORIES = ("FISCAL", "TRABALHISTA")
+
+
+def summarize_statuses(statuses: List[str]) -> Tuple[str, float]:
+    """
+    Consolida os status das regras em (status geral, score). Regras NOT_APPLICABLE nao
+    entram no calculo; sem nenhuma regra aplicavel o resultado e revisao manual.
+    """
+    applicable = [s for s in statuses if s != "NOT_APPLICABLE"]
+    compliant = sum(1 for s in applicable if s == "COMPLIANT")
+    score = (compliant / len(applicable)) if applicable else 0.0
+
+    if "NON_COMPLIANT" in applicable:
+        overall_status = "NON_COMPLIANT"
+    elif "MANUAL_REVIEW_REQUIRED" in applicable or score < 1.0:
+        overall_status = "MANUAL_REVIEW_REQUIRED"
+    else:
+        overall_status = "COMPLIANT"
+    return overall_status, round(score, 2)
 
 
 class RulesEngine:
@@ -21,10 +42,16 @@ class RulesEngine:
     - Suporta filtragem por tipologia documental para evitar avaliacoes indevidas.
     """
 
-    def __init__(self, rules_file: Optional[str] = None):
+    def __init__(
+        self,
+        rules_file: Optional[str] = None,
+        maker_checker: Optional[MakerCheckerValidator] = None,
+        today: Callable[[], date] = date.today,
+    ):
         self.rules_file = self._resolve_rules_file(rules_file)
         self.rules = self._load_rules()
-        self.maker_checker = MakerCheckerValidator()
+        self.maker_checker = maker_checker or MakerCheckerValidator()
+        self._today = today
 
     def _resolve_rules_file(self, rules_file: Optional[str]) -> str:
         """Resolve o caminho do arquivo de regras de forma resiliente."""
@@ -96,7 +123,7 @@ class RulesEngine:
             },
         ]
 
-    def _extract_validity_date(self, text: str) -> Optional[datetime]:
+    def _extract_validity_date(self, text: str) -> Optional[date]:
         """Extrai data de validade ou vigencia do texto da certidao."""
         patterns = [
             (
@@ -110,7 +137,7 @@ class RulesEngine:
             if match:
                 day, month, year = match.groups()
                 try:
-                    return datetime(int(year), int(month), int(day))
+                    return date(int(year), int(month), int(day))
                 except ValueError:
                     continue
         return None
@@ -120,9 +147,14 @@ class RulesEngine:
         extracted_data: Dict[str, Any],
         target_category: Optional[str] = None,
         target_rule_ids: Optional[List[str]] = None,
+        document_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Avalia o texto e metadados extraidos contra as regras pertinentes.
+
+        Quando `document_type` e informado, somente as regras cujo `code` corresponde a
+        tipologia identificada sao avaliadas; as demais ficam NOT_APPLICABLE. Sem esse
+        filtro, uma CND valida seria reprovada por nao ser, por exemplo, um CRF do FGTS.
         """
         full_text = extracted_data.get("full_text", "")
         results: List[Dict[str, Any]] = []
@@ -133,15 +165,19 @@ class RulesEngine:
             # Filtragem por categoria ou lista de IDs de regras
             if target_category and rule.get("category") != target_category:
                 results.append(
-                    {
-                        "rule_id": rule["id"],
-                        "rule_title": rule["title"],
-                        "category": rule["category"],
-                        "status": "NOT_APPLICABLE",
-                        "findings": "Regra nao aplicavel a tipologia documental informada.",
-                        "confidence_score": 1.0,
-                        "checker_type": "DETERMINISTIC",
-                    }
+                    self._not_applicable(
+                        rule, "Regra nao aplicavel a tipologia documental informada."
+                    )
+                )
+                continue
+
+            if document_type and rule.get("code") != document_type:
+                results.append(
+                    self._not_applicable(
+                        rule,
+                        f"Regra aplicavel a tipologia {rule.get('code')}; "
+                        f"documento identificado como {document_type}.",
+                    )
                 )
                 continue
 
@@ -154,27 +190,50 @@ class RulesEngine:
             if result.get("status") == "COMPLIANT":
                 compliant_count += 1
 
-        score = (compliant_count / evaluated_rules) if evaluated_rules > 0 else 0.0
-
-        has_non_compliant = any(r["status"] == "NON_COMPLIANT" for r in results)
-        has_manual_review = any(r["status"] == "MANUAL_REVIEW_REQUIRED" for r in results)
-
-        if has_non_compliant:
-            overall_status = "NON_COMPLIANT"
-        elif has_manual_review or score < 1.0:
-            overall_status = "MANUAL_REVIEW_REQUIRED"
-        else:
-            overall_status = "COMPLIANT"
+        overall_status, score = summarize_statuses([r["status"] for r in results])
 
         return {
             "status": overall_status,
             "overall_status": overall_status,
-            "compliance_score": round(score, 2),
+            "document_type": document_type,
+            "compliance_score": score,
             "total_rules": len(results),
             "evaluated_rules": evaluated_rules,
             "compliant_rules": compliant_count,
             "results": results,
             "checks": results,
+        }
+
+    def not_evaluable(self, reason: str) -> Dict[str, Any]:
+        """
+        Resultado para documentos que nao podem ser avaliados (ex.: tipologia nao
+        identificada). Nenhuma regra e aplicada e o laudo fica em revisao manual:
+        a ausencia de avaliacao nunca equivale a conformidade.
+        """
+        results = [self._not_applicable(rule, reason) for rule in self.rules]
+        return {
+            "status": "MANUAL_REVIEW_REQUIRED",
+            "overall_status": "MANUAL_REVIEW_REQUIRED",
+            "document_type": None,
+            "findings": reason,
+            "compliance_score": 0.0,
+            "total_rules": len(results),
+            "evaluated_rules": 0,
+            "compliant_rules": 0,
+            "results": results,
+            "checks": results,
+        }
+
+    @staticmethod
+    def _not_applicable(rule: Dict[str, Any], findings: str) -> Dict[str, Any]:
+        return {
+            "rule_id": rule["id"],
+            "rule_title": rule["title"],
+            "category": rule["category"],
+            "status": "NOT_APPLICABLE",
+            "findings": findings,
+            "confidence_score": 1.0,
+            "checker_type": "DETERMINISTIC",
         }
 
     def _normalize(self, text: str) -> str:
@@ -234,16 +293,16 @@ class RulesEngine:
             except re.error as re_err:
                 logger.warning(f"Padrao regex invalido na regra {rule['id']}: {pattern} - {re_err}")
 
-        # 4. Verificacao de validade temporal (Diretriz no 1 do AGENTS.md)
-        requires_validity = rule.get("requires_validity", False) or rule.get("category") in (
-            "FISCAL",
-            "TRABALHISTA",
+        # 4. Verificacao de validade temporal (Diretriz no 1 do AGENTS.md): sem data de
+        # validade legivel, a certidao nunca e aprovada automaticamente.
+        requires_validity = rule.get(
+            "requires_validity", rule.get("category") in VALIDITY_REQUIRED_CATEGORIES
         )
         validity_date = self._extract_validity_date(full_text)
 
         if validity_date:
-            today = datetime.now()
-            if validity_date < today:
+            # Comparacao por data: a certidao vale ate o fim do dia de validade.
+            if validity_date < self._today():
                 return {
                     "rule_id": rule["id"],
                     "rule_title": rule["title"],
@@ -257,8 +316,7 @@ class RulesEngine:
                         "matched_keywords": matched_required,
                     },
                 }
-        elif requires_validity and rule.get("strict_validity", False):
-            # Se a certidao exige data estrita e nao contem de forma legivel
+        elif requires_validity:
             return {
                 "rule_id": rule["id"],
                 "rule_title": rule["title"],
@@ -294,16 +352,16 @@ class RulesEngine:
 
         # Regra HIBRIDA / SEMANTICA: Se o deterministico deu positivo, valida com Maker-Checker
         harness_result = self.maker_checker.evaluate_rule(rule, full_text)
+        reasoning = (harness_result.get("maker_output") or {}).get(
+            "reasoning"
+        ) or harness_result.get("reasoning", "")
         return {
             "rule_id": rule["id"],
             "rule_title": rule["title"],
             "category": rule["category"],
             "status": harness_result.get("status", "MANUAL_REVIEW_REQUIRED"),
-            "findings": (
-                f"Avaliacao Maker-Checker: "
-                f"{harness_result.get('maker_output', {}).get('reasoning', '')}"
-            ),
-            "confidence_score": harness_result.get("final_confidence", 0.8),
+            "findings": f"Avaliacao Maker-Checker: {reasoning}",
+            "confidence_score": harness_result.get("final_confidence", 0.0),
             "checker_type": "MAKER_CHECKER",
             "evidence": harness_result,
         }
