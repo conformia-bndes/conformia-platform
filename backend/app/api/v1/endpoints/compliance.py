@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db.models.document import Document
 from app.db.models.compliance import ComplianceCheck, AuditLog
-from app.services.rules_engine import RulesEngine
+from app.services.compliance_service import evaluate_and_persist
+from app.services.rules_engine import RulesEngine, summarize_statuses
 
 router = APIRouter()
 
@@ -26,53 +27,18 @@ def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
             detail="O documento selecionado não possui texto extraído para validação.",
         )
 
-    engine = RulesEngine()
-    evaluation = engine.evaluate(
-        {"full_text": doc.extracted_text, "metadata": doc.extracted_metadata or {}}
-    )
-
-    # Limpa checagens anteriores do mesmo documento para idempotência
-    db.query(ComplianceCheck).filter(ComplianceCheck.document_id == document_id).delete()
-
-    saved_checks = []
-    for res in evaluation.get("results", []):
-        check = ComplianceCheck(
-            document_id=doc.id,
-            rule_id=res["rule_id"],
-            rule_title=res["rule_title"],
-            category=res["category"],
-            status=res["status"],
-            confidence_score=res.get("confidence_score", 1.0),
-            checker_type=res.get("checker_type", "DETERMINISTIC"),
-            findings=res.get("findings"),
-            evidence=res.get("evidence"),
-        )
-        db.add(check)
-        saved_checks.append(check)
-
-    # Gravação na trilha de auditoria
-    audit_entry = AuditLog(
-        entity_type="DOCUMENT",
-        entity_id=doc.id,
-        action="COMPLIANCE_VERIFIED",
-        performed_by="HARNESS_RULES_ENGINE",
-        details={
-            "status": evaluation.get("status"),
-            "compliance_score": evaluation.get("compliance_score"),
-            "total_rules": evaluation.get("total_rules"),
-            "compliant_rules": evaluation.get("compliant_rules"),
-        },
-    )
-    db.add(audit_entry)
+    evaluation, saved_checks = evaluate_and_persist(db, doc, performed_by="HARNESS_RULES_ENGINE")
     db.commit()
 
     return {
         "document_id": doc.id,
         "document_filename": doc.original_filename,
-        "overall_status": evaluation.get("status"),
-        "compliance_score": evaluation.get("compliance_score"),
-        "total_rules": evaluation.get("total_rules"),
-        "compliant_rules": evaluation.get("compliant_rules"),
+        "document_type": evaluation["document_type"],
+        "overall_status": evaluation["overall_status"],
+        "compliance_score": evaluation["compliance_score"],
+        "total_rules": evaluation["total_rules"],
+        "evaluated_rules": evaluation["evaluated_rules"],
+        "compliant_rules": evaluation["compliant_rules"],
         "checks": [
             {
                 "rule_id": c.rule_id,
@@ -82,6 +48,7 @@ def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
                 "confidence_score": c.confidence_score,
                 "checker_type": c.checker_type,
                 "findings": c.findings,
+                "evidence": c.evidence,
             }
             for c in saved_checks
         ],
@@ -105,15 +72,15 @@ def get_compliance_results(document_id: str, db: Session = Depends(get_db)):
             detail="Nenhuma verificação de conformidade encontrada para este documento.",
         )
 
-    compliant_count = sum(1 for c in checks if c.status == "COMPLIANT")
-    total = len(checks)
-    score = (compliant_count / total) if total > 0 else 0.0
+    overall_status, score = summarize_statuses([c.status for c in checks])
 
     return {
         "document_id": document_id,
-        "total_rules": total,
-        "compliant_rules": compliant_count,
-        "compliance_score": round(score, 2),
+        "overall_status": overall_status,
+        "total_rules": len(checks),
+        "evaluated_rules": sum(1 for c in checks if c.status != "NOT_APPLICABLE"),
+        "compliant_rules": sum(1 for c in checks if c.status == "COMPLIANT"),
+        "compliance_score": score,
         "checks": [
             {
                 "rule_id": c.rule_id,
