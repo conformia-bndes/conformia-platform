@@ -1,4 +1,4 @@
-# Guia de Inicio Rápido (Quickstart)
+# Guia de Início Rápido (Quickstart)
 
 Este guia orienta a inicialização e a execução do ambiente local de desenvolvimento da plataforma Conform.IA BNDES.
 

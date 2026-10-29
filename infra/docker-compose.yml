@@ -12,6 +12,9 @@
 # ==============================================================================
 
 x-backend: &backend
+  # backend e worker usam a mesma imagem; o nome explicito permite reaproveitar a imagem
+  # construida com cache no CI (docker buildx bake) sem novo build no "compose up".
+  image: conformia/backend:local
   build:
     context: ..
     dockerfile: infra/Dockerfile.backend
@@ -149,6 +152,7 @@ services:
   # Frontend SPA - React 18 + Vite + Tailwind CSS
   # ============================================================================
   frontend:
+    image: conformia/frontend:local
     build:
       context: ..
       dockerfile: infra/Dockerfile.frontend

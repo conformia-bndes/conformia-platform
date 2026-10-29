@@ -1,5 +1,11 @@
 # Planejamento Inicial de Projeto — Conform.IA BNDES
 
+!!! warning "Documento histórico"
+    Planejamento elaborado no início do projeto, mantido como registro. O escopo, as datas e o
+    estado atual estão no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md), no
+    [Backlog](IMPLEMENTATION_BACKLOG.md) e no [Relatório de Validação](VALIDATION_REPORT.md).
+    A data de entrega adotada é **05/12/2026**.
+
 **Plataforma de Intelligent Document Processing para Verificação Automatizada de Conformidade**
 _Documento Inicial de Direcionamento Técnico_
 
@@ -45,7 +51,7 @@ O edital disponibilizado não fornece amostras reais de documentos confidenciais
 
 A referência primária deste planejamento e a **CONSULTA PUBLICA BNDES No 01/2025**, cujo objeto e verificar a adequação de soluções voltadas a interpretação automatizada de documentos não estruturados e a aplicação de regras de negócio para verificação de conformidade. O edital explicita que a conferência deve relacionar informações dos documentos a normativos internos e dados de bases e sistemas de TI, buscando eficiência, rastreabilidade e segurança na tomada de decisão institucional.
 
-- **Documento de Referência**: Consulta Publica BNDES no 01/2025 (Errata de 17/09/2025).
+- **Documento de Referência**: Consulta Pública BNDES no 01/2025 (Errata de 17/09/2025).
 - **Plataforma Indicada**: WorldLabs — Consulta BNDES Checklist de Conformidade.
 
 ### 2.1 Contexto Apresentado pelo BNDES
@@ -71,7 +77,7 @@ O problema operacional e especialmente crítico porque a verificação manual ex
 
 ---
 
-## 3. Problematica a Ser Enfrentada
+## 3. Problemática a Ser Enfrentada
 
 ### 3.1 Problema Central
 
@@ -90,13 +96,13 @@ Transformar um processo predominantemente manual, fragmentado e moroso de confer
 
 ### 3.3 Problema de Engenharia de IA
 
-A utilização de Inteligência Artificial em processos que envolvem recursos públicos federais não pode se apoiar em chamadas simples e opacas a modelos de linguagem (chatbots generalistas). O sistema precisa restringir o contexto de operação, delimitar ferramentas, exigir citação literal exata de evidências, submeter a extração a validação por esquemas formais e aplicar regras determinísticas sobre os dados extraidos. Modelos de IA atuam sob o padrão **Maker-Checker**, no qual hipóteses de conformidade são auditadas por um verificador algoritmico independente antes de qualquer consolidação.
+A utilização de Inteligência Artificial em processos que envolvem recursos públicos federais não pode se apoiar em chamadas simples e opacas a modelos de linguagem (chatbots generalistas). O sistema precisa restringir o contexto de operação, delimitar ferramentas, exigir citação literal exata de evidências, submeter a extração a validação por esquemas formais e aplicar regras determinísticas sobre os dados extraídos. Modelos de IA atuam sob o padrão **Maker-Checker**, no qual hipóteses de conformidade são auditadas por um verificador algorítmico independente antes de qualquer consolidação.
 
 ### 3.4 Análise de Riscos e Mitigação
 
 | Risco Identificado                                  | Impacto    | Estratégia de Mitigação no Projeto                                                                            |
 | :-------------------------------------------------- | :--------- | :------------------------------------------------------------------------------------------------------------ |
-| **Alucinação ou extração incorreta de dados**       | Alto       | Citação literal compulsoria de evidência, validação Pydantic, padrão Maker-Checker e Human-in-the-Loop.       |
+| **Alucinação ou extração incorreta de dados**       | Alto       | Citação literal compulsória de evidência, validação Pydantic, padrão Maker-Checker e Human-in-the-Loop.       |
 | **Documentos digitalizados com OCR degradado**      | Medio/Alto | Pre-processamento de imagem, binarização, OCR Tesseract calibrado para português e índice de confiança.       |
 | **Regra de negócio ou editalicia ambigua**          | Alto       | Esquemas de regras versionados em JSON, suite de testes unitários de regressão e aprovação técnica.           |
 | **Exposição inadvertida de dados sensíveis (LGPD)** | Muito Alto | Uso estrito de dados sintéticos no ambiente de desenvolvimento, mascaramento de PII e políticas de retenção.  |
@@ -129,13 +135,13 @@ A utilização de Inteligência Artificial em processos que envolvem recursos p�
 O Conform.IA BNDES e estruturado como uma plataforma web de alta produtividade voltada a analistas e gestores de conformidade documental.
 
 ```mermaid
-flowchart LR
-    A["1. Ingestao PDF"] --> B["2. Extracao IDP & OCR"]
-    B --> C["3. Estruturacao JSON Schema"]
+flowchart TD
+    A["1. Ingestão PDF"] --> B["2. Extração IDP & OCR"]
+    B --> C["3. Estruturação JSON Schema"]
     C --> D["4. Motor de Regras"]
     D --> E["5. Maker-Checker IA"]
     E --> F["6. Painel do Analista"]
-    F --> G["7. Revisao Humana"]
+    F --> G["7. Revisão Humana"]
     G --> H["8. Laudo & Trilha de Auditoria"]
 ```
 
@@ -147,8 +153,8 @@ flowchart LR
 4. **Pre-processamento e IDP**: Extração automática de texto nativo com chaveamento para OCR em páginas digitalizadas.
 5. **Estruturação de Entidades**: Reconhecimento de CNPJ, razões sociais, datas de emissão, datas de validade e certidões.
 6. **Seleção do Checklist**: O sistema carrega a versão normativa vigente aplicável a operação.
-7. **Execução Determinística**: Verificações matematicas, temporais e lexicais executadas pelo motor de regras.
-8. **Análise Assistida por IA**: Avaliação semântica de cláusulas juridicas e apuração de controversias via Maker-Checker.
+7. **Execução Determinística**: Verificações matemáticas, temporais e lexicais executadas pelo motor de regras.
+8. **Análise Assistida por IA**: Avaliação semântica de cláusulas jurídicas e apuração de controversias via Maker-Checker.
 9. **Classificação dos Itens**: Cada critério e classificado como Conforme, Não Conforme ou Revisão Manual Obrigatória.
 10. **Apresentação de Evidências**: O analista visualiza o documento confrontado diretamente com o trecho probatório.
 11. **Intervenção Humana (HITL)**: Analista confirma laudo, insere parecer justificativo ou sinaliza exceção autorizada.
@@ -217,15 +223,15 @@ A solução adota uma arquitetura em camadas orientada a serviços conteinerizad
 | Camada / Componente          | Tecnologia Adotada                      | Justificativa de Engenharia                                                                                                                   |
 | :--------------------------- | :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Frontend**                 | React 18 + Vite + TypeScript + Tailwind | Compilação estática ultrarrapida, zero overhead de servidor Node em produção, tipagem estrita e rica experiência operacional para o analista. |
-| **Backend API**              | Python 3.11/3.13 + FastAPI + Uvicorn    | Alto desempenho assincrono (ASGI), integração nativa com bibliotecas de processamento de documentos e validação automática com Pydantic v2.   |
+| **Backend API**              | Python 3.11/3.13 + FastAPI + Uvicorn    | Alto desempenho assíncrono (ASGI), integração nativa com bibliotecas de processamento de documentos e validação automática com Pydantic v2.   |
 | **Gerenciador de Pacotes**   | Astral `uv`                             | Resolução determinística em milissegundos, workspace monorepo unificado e integração otimizada em containers Docker.                          |
 | **Banco Relacional**         | PostgreSQL 16 Alpine                    | Persistência transacional robusta, suporte a integridade referencial, consultas analiticas e histórico de auditoria.                          |
-| **Fila e Cache**             | Redis 7 Alpine                          | Fila de mensagens em memória de baixissima latência para despacho assincrono de tarefas pesadas.                                              |
-| **Processamento Assincrono** | Celery 5                                | Isolamento do processamento intensivo de OCR e IA do ciclo de vida das requisições HTTP da API.                                               |
+| **Fila e Cache**             | Redis 7 Alpine                          | Fila de mensagens em memória de baixíssima latência para despacho assíncrono de tarefas pesadas.                                              |
+| **Processamento Assíncrono** | Celery 5                                | Isolamento do processamento intensivo de OCR e IA do ciclo de vida das requisições HTTP da API.                                               |
 | **Armazenamento de Objetos** | MinIO S3 Compatible                     | Compatibilidade estrita com a API AWS S3, permitindo execução local e migração transparente para nuvens publicas brasileiras.                 |
 | **Pipeline OCR**             | Tesseract OCR 5 + Poppler Utils         | Solução robusta, auditável e de execução local com suporte consolidado ao português brasileiro (`por`).                                       |
 | **Motor de Regras**          | Motor Híbrido Python + JSON Schema      | Regras declarativas, desacopladas do código-fonte da aplicação, fáceis de versionar e auditar.                                                |
-| **Padrão Maker-Checker**     | `LLMClient` Abstraido                   | Propositor formula hipótese; auditor algoritmico valida a existência textual exata antes da aprovação.                                        |
+| **Padrão Maker-Checker**     | `LLMClient` Abstraido                   | Propositor formula hipótese; auditor algorítmico valida a existência textual exata antes da aprovação.                                        |
 | **Conteinerização**          | Docker Engine + Docker Compose          | Isolamento completo de dependências de sistema (Poppler, Tesseract) e portabilidade multiambiente.                                            |
 | **Integração Continua**      | GitHub Actions                          | Workflows com path-filtering inteligente, validação de linters, cobertura de testes e scans de segredos.                                      |
 
@@ -239,7 +245,7 @@ Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise reque
 
 ## 7. Matriz de Aderência ao Edital BNDES
 
-| Item Edital      | Expectativa da Consulta Publica             | Implementação no Conform.IA BNDES                                                                 |
+| Item Edital      | Expectativa da Consulta Pública             | Implementação no Conform.IA BNDES                                                                 |
 | :--------------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------ |
 | **II - III**     | Leitura de documentos, variações e OCR      | Pipeline IDP com extração nativa e OCR Tesseract automático em páginas sem camada de texto.       |
 | **IV**           | Extração de informações estruturadas        | Esquemas formais em JSON Schema e entidades estruturadas validadas por Pydantic.                  |
@@ -262,7 +268,7 @@ Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise reque
 
 ## 8. Segurança, LGPD, Governança e Auditoria
 
-### 8.1 Principios de Governança Publica
+### 8.1 Princípios de Governança Pública
 
 - **Security by Design e Privacy by Design**: Práticas de segurança incorporadas desde a primeira linha de código.
 - **Minimização de Dados**: O sistema processa estritamente os campos necessários a comprovação de regularidade editalicia.
@@ -307,13 +313,13 @@ O cronograma do projeto e organizado em 8 sprints sequenciais com objetivos mens
 | Sprint       | Período       | Foco Estratégico            | Objetivos Principais                                                                                                              | Entrega Consolidada                                                   |
 | :----------- | :------------ | :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
 | **Sprint 1** | 15/09 – 25/09 | Fundação e Descoberta       | Estrutura de monorepo, Docker Compose oficial, governança sem emojis, documentação inicial, toolchain Astral uv e baseline de CI. | Ambiente reproduzível, monorepo estruturado e CI aprovado.            |
-| **Sprint 2** | 26/09 – 06/10 | Ingestão Documental         | Upload de documentos, integração MinIO S3, despacho assincrono via Celery e pipeline de extração vetorial/OCR Tesseract.          | Documentos ingeridos, armazenados e convertidos em texto e metadados. |
+| **Sprint 2** | 26/09 – 06/10 | Ingestão Documental         | Upload de documentos, integração MinIO S3, despacho assíncrono via Celery e pipeline de extração vetorial/OCR Tesseract.          | Documentos ingeridos, armazenados e convertidos em texto e metadados. |
 | **Sprint 3** | 07/10 – 17/10 | Extração Estruturada        | Normalização de entidades cadastrais (CNPJ, datas), tabelas e citações de evidências em esquemas JSON Schema e Pydantic.          | JSON estruturado de dados documentais com índices de confiança.       |
 | **Sprint 4** | 18/10 – 31/10 | Checklist e Regras          | Motor de regras determinísticas, validação temporal de validade, detecção de falência e aplicação do checklist normativo.         | Checklist normativo executável com geração de laudo preliminar.       |
-| **Sprint 5** | 01/11 – 14/11 | IA e Explicabilidade        | Integração com LLMs sob padrão Maker-Checker, análise de cláusulas juridicas e geração de justificativas contextuais.             | Pipeline híbrido regras + IA com mitigação de alucinações.            |
-| **Sprint 6** | 15/11 – 24/11 | Interface e Revisão         | Aprimoramento da UI React, tela de split-view documento/evidencias, fluxo de contestação, exceções e relatório PDF.               | Fluxo operacional ponta a ponta utilizável pelo analista BNDES.       |
+| **Sprint 5** | 01/11 – 14/11 | IA e Explicabilidade        | Integração com LLMs sob padrão Maker-Checker, análise de cláusulas jurídicas e geração de justificativas contextuais.             | Pipeline híbrido regras + IA com mitigação de alucinações.            |
+| **Sprint 6** | 15/11 – 24/11 | Interface e Revisão         | Aprimoramento da UI React, tela de split-view documento/evidências, fluxo de contestação, exceções e relatório PDF.               | Fluxo operacional ponta a ponta utilizável pelo analista BNDES.       |
 | **Sprint 7** | 25/11 – 01/12 | Segurança e Observabilidade | Autenticação RBAC, endurecimento de políticas de segurança, traces OpenTelemetry, testes de carga e sanitização LGPD.             | Release Candidate homologada para demonstração técnica.               |
-| **Sprint 8** | 02/12 – 07/12 | Validação e Entrega Final   | Execução do benchmark consolidado, revisão integral da documentação, video demonstrativo e entrega oficial do MVP.                | MVP final entregue, demonstrado e auditável.                          |
+| **Sprint 8** | 02/12 – 07/12 | Validação e Entrega Final   | Execução do benchmark consolidado, revisão integral da documentação, vídeo demonstrativo e entrega oficial do MVP.                | MVP final entregue, demonstrado e auditável.                          |
 
 ### 10.1 Definition of Done (DoD)
 
@@ -325,30 +331,30 @@ Qualquer entrega ou pull request e considerado concluido apenas quando:
 4. Os linters e formatadores (`black`, `flake8`, `eslint`) passam com zero advertências.
 5. As varreduras de segredos (`gitleaks`) e dependências (`pip-audit`) concluem sem vulnerabilidades.
 6. A documentação técnica no MkDocs e no README reflete a realidade da implementação.
-7. Não ha presença de emojis em códigos, commits, testes ou documentação.
+7. Não há presença de emojis em códigos, commits, testes ou documentação.
 
 ---
 
 ## 11. Relação com Práticas de Harness Engineering
 
-O desenvolvimento da plataforma Conform.IA BNDES adota os principios de **Harness Engineering**, estabelecendo limites e controles operacionais tanto para o processo de desenvolvimento assistido por agentes de software quanto para a execução interna do produto:
+O desenvolvimento da plataforma Conform.IA BNDES adota os princípios de **Harness Engineering**, estabelecendo limites e controles operacionais tanto para o processo de desenvolvimento assistido por agentes de software quanto para a execução interna do produto:
 
 | Conceito de Harness        | Aplicação no Conform.IA BNDES                                                                                            |
 | :------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
 | **Context Engineering**    | Fornecimento de contexto estritamente delimitado aos modelos (trechos de documentos, normativos e schemas JSON formais). |
 | **Environment Control**    | Ambiente reproduzível via Docker Compose e gerenciamento veloz de dependências via Astral `uv`.                          |
-| **Explicit Tools**         | Ferramentas delimitadas e de mínimo privilegio para extração e consulta de dados.                                        |
+| **Explicit Tools**         | Ferramentas delimitadas e de mínimo privilégio para extração e consulta de dados.                                        |
 | **Verification Loop**      | Agentes submetem cada alteração a testes de regressão e suite de linters antes de qualquer consolidação.                 |
-| **Maker-Checker**          | Propositor formula hipótese de conformidade; auditor algoritmico confronta a evidência no texto original.                |
+| **Maker-Checker**          | Propositor formula hipótese de conformidade; auditor algorítmico confronta a evidência no texto original.                |
 | **Operational Guardrails** | Proibição de aprovação de certidões sem data legível ou com pendências (`MANUAL_REVIEW_REQUIRED`).                       |
 
 ---
 
-## 12. Backlog Inicial e Epicos
+## 12. Backlog Inicial e Épicos
 
 | Epico                             | Descrição e Escopo                                                                             |
 | :-------------------------------- | :--------------------------------------------------------------------------------------------- |
-| **E1 — Gestão Documental**        | Ingestão, armazenamento em MinIO S3, catalogo de metadados e ciclo de vida de documentos.      |
+| **E1 — Gestão Documental**        | Ingestão, armazenamento em MinIO S3, catálogo de metadados e ciclo de vida de documentos.      |
 | **E2 — Pipeline IDP**             | Extração vetorial nativa de PDFs e fallback automático de OCR para documentos digitalizados.   |
 | **E3 — Checklist Declarativo**    | Estruturação e versionamento de normas e critérios de conformidade em formato JSON Schema.     |
 | **E4 — Motor de Regras**          | Processamento determinístico de restrições temporais, cadastrais e de regularidade fiscal.     |
@@ -368,7 +374,7 @@ O cenário essencial a ser apresentado na conclusão do projeto abrange:
 3. Extração automática de texto e entidades via pipeline IDP.
 4. Aplicação automatizada do checklist normativo BNDES.
 5. Execução de checagem semântica assistida por IA sob padrão Maker-Checker.
-6. Apresentação do laudo de conformidade com destaque literal da evidência extraida.
+6. Apresentação do laudo de conformidade com destaque literal da evidência extraída.
 7. Intervenção do analista para confirmação ou registro de exceção motivada.
 8. Gravação da decisão na trilha de auditoria e emissão do relatório formal consolidado.
 
@@ -384,7 +390,7 @@ O cenário essencial a ser apresentado na conclusão do projeto abrange:
 - Todas as decisões de conformidade acompanhadas de evidências literais auditáveis.
 - Zero tolerância a falsos positivos em certidões criticas no benchmark de regressão.
 - Trilha de auditoria append-only completa com histórico temporal.
-- Conformidade integral com as diretrizes técnicas e de governança da Consulta Publica BNDES no 01/2025.
+- Conformidade integral com as diretrizes técnicas e de governança da Consulta Pública BNDES no 01/2025.
 
 ### 13.2 Entregáveis Finais Previstos (07/12/2026)
 
@@ -397,4 +403,4 @@ O cenário essencial a ser apresentado na conclusão do projeto abrange:
 7. Suite de avaliação continua (Harness Evals) com dataset de referência.
 8. Dashboard do analista com tela de revisão e laudos detalhados.
 9. Trilha de auditoria transacional imutável.
-10. Relatório final e video de demonstração técnica da solução.
+10. Relatório final e vídeo de demonstração técnica da solução.

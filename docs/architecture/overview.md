@@ -1,84 +1,114 @@
 # Visão Geral da Arquitetura
 
-O Conform.IA BNDES adota uma arquitetura modular baseada em microsserviços integrados em monorepo, projetada para desacoplamento de responsabilidades, alta disponibilidade e rastreabilidade total.
+O Conform.IA BNDES é um monorepo modular (ver [ADR-001](adr-001-monorepo-modular.md)) com uma
+SPA React, uma API FastAPI e workers Celery. O ciclo HTTP da API fica separado do processamento
+pesado (OCR, regras e IA), que roda de forma assíncrona.
 
 ---
 
-## Diagrama Estrutural do Sistema
+## 1. Topologia de serviços
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Camada de Apresentação"]
-        SPA["React 18 SPA (Vite / TypeScript / Tailwind)"]
-        UI_Upload["Modulo de Ingestao IDP"]
-        UI_Checklist["Painel de Checklist BNDES"]
-        UI_Audit["Trilha de Auditoria e Laudos"]
+    subgraph Cliente["Cliente"]
+        SPA["SPA React 19<br/>(Vite, Tailwind)"]
     end
 
-    subgraph API_Gateway["Camada de API e Roteamento"]
-        FastAPI["FastAPI 0.110+ (Uvicorn)"]
-        CORS["Middleware de CORS Parametrizado"]
-        ExceptionH["Tratamento Global de Excecoes"]
-        Route_Health["/api/v1/health"]
-        Route_Docs["/api/v1/documents"]
-        Route_Comp["/api/v1/compliance"]
+    subgraph API["API (FastAPI)"]
+        Docs["/api/v1/documents"]
+        Comp["/api/v1/compliance"]
+        Rev["/api/v1/compliance/reviews"]
+        Health["/api/v1/health"]
     end
 
-    subgraph Worker_Tier["Processamento Assíncrono e IA"]
-        CeleryWorker["Celery 5 Worker"]
-        IDPExtractor["Extrator Hibrido (pdfplumber / Tesseract)"]
-        RulesEngine["Motor de Regras (rules/schemas)"]
-        MakerChecker["Validador Maker-Checker (LLM Harness)"]
+    subgraph Worker["Worker (Celery)"]
+        Extractor["Extrator IDP<br/>(pdfplumber + Tesseract)"]
+        Rules["Motor de regras"]
+        MC["Maker-Checker (LLM)"]
     end
 
-    subgraph Persistence_Tier["Camada de Dados e Armazenamento"]
-        Postgres[("PostgreSQL 16\n(Documentos, Checks e Logs de Auditoria)")]
-        Redis[("Redis 7\n(Broker Celery e Cache)")]
-        MinIO[("MinIO S3\n(Bucket de Documentos PDF)")]
+    subgraph Dados["Dados"]
+        PG[("PostgreSQL 16")]
+        Redis[("Redis 7<br/>broker")]
+        MinIO[("MinIO<br/>PDFs originais")]
     end
 
-    SPA -->|HTTPS / JSON| FastAPI
-    FastAPI --> Route_Health & Route_Docs & Route_Comp
-    Route_Docs -->|Persistencia Binaria| MinIO
-    Route_Docs -->|Disparo de Tarefas| Redis
-    Redis --> CeleryWorker
-    CeleryWorker --> IDPExtractor --> RulesEngine --> MakerChecker
-    RulesEngine -->|Gravacao de Laudo| Postgres
-    MakerChecker -->|Trilha Imutavel| Postgres
-    Route_Comp -->|Consulta de Laudo| Postgres
+    SPA -->|REST / JSON| Docs & Comp & Rev
+    Docs -->|grava o PDF| MinIO
+    Docs -->|enfileira| Redis
+    Redis --> Extractor --> Rules
+    Rules -->|regras híbridas| MC
+    Rules -->|laudo e auditoria| PG
+    Comp & Rev --> PG
 ```
 
----
+| Serviço | Tecnologia | Responsabilidade |
+| :-- | :-- | :-- |
+| `frontend` | React 19, Vite, Tailwind CSS 4, Axios | Upload, acompanhamento do processamento, laudo e revisão humana |
+| `api` | Python 3.11, FastAPI, SQLAlchemy 2, Pydantic 2, Alembic | Contratos REST, autenticação por chave pessoal, persistência e auditoria |
+| `worker` | Celery 5, pdfplumber, pytesseract, Poppler | Extração, OCR, motor de regras e Maker-Checker fora do ciclo HTTP |
+| `postgres` | PostgreSQL 16 | Documentos, verificações, trilha de auditoria e eventos de revisão |
+| `redis` | Redis 7 | Broker e backend de resultados do Celery |
+| `minio` | MinIO (API S3) | Armazenamento dos PDFs originais |
 
-## Componentes da Solução
-
-### 1. Camada de Apresentação (Frontend)
-
-- **Tecnologias**: React 18, TypeScript, Tailwind CSS, Lucide Icons, Axios.
-- **Responsabilidade**: Fornecer interface reativa para analistas de crédito e operadores do BNDES, permitindo o carregamento de PDFs, visualização imediata de pendências e consulta do histórico de auditoria.
-
-### 2. Camada de API (Backend Core)
-
-- **Tecnologias**: Python 3.11, FastAPI, SQLAlchemy 2.0, Pydantic v2, Pydantic-Settings.
-- **Responsabilidade**: Exposição de endpoints RESTful seguros, validação estrita de contratos de entrada, gestão de conexões e persistência de estado.
-
-### 3. Camada de Processamento Assíncrono (Worker)
-
-- **Tecnologias**: Celery, Redis, pdfplumber, pytesseract, Poppler-utils.
-- **Responsabilidade**: Processamento de arquivos pesados, OCR em páginas digitalizadas e execução de regras de conformidade sem bloqueio das requisições HTTP da API.
-
-### 4. Camada de Persistência
-
-- **PostgreSQL 16**: Armazena entidades estruturadas (`Document`, `ComplianceCheck`, `AuditLog`).
-- **Redis 7**: Fila de mensagens para tarefas do Celery e cache de regras frequentes.
-- **MinIO**: Object storage compatível com a API S3 para persistência durável dos arquivos PDF originais.
+A orquestração local e do CI é feita por `infra/docker-compose.yml`.
 
 ---
 
-## Fluxo de Processamento de Documentos
+## 2. Fluxo de processamento
 
-1. **Ingestão**: O usuário envia um PDF através da interface ou de uma chamada de API (`POST /api/v1/documents/upload`).
-2. **Armazenamento**: O arquivo é salvo no volume seguro, e um registro inicial é criado no banco com status `PROCESSING`.
-3. **Extração IDP**: O extrator processa as páginas nativas. Se a densidade textual for inferior ao limiar mínimo, o OCR via Tesseract é acionado.
-4. **Avaliação de Conformidade**: O motor de regras compara o texto extraído com o catálogo normativo (BNDES 01/2025). Regras semânticas são validadas pelo ciclo Maker-Checker.
-5. **Auditoria**: O resultado é consolidado, salvo no banco e registrado na tabela de auditoria (`audit_logs`).
+1. **Ingestão.** `POST /api/v1/documents/upload` valida o arquivo (extensão, tipo e assinatura
+   `%PDF-`), calcula o SHA-256, grava o PDF no MinIO e cria o registro do documento (status
+   `PROCESSING` quando enviado à fila).
+2. **Fila.** A API enfileira a tarefa no Redis e devolve o `task_id`; o andamento é consultado em
+   `GET /api/v1/documents/tasks/{task_id}`.
+3. **Extração.** O worker extrai o texto nativo com pdfplumber e recorre ao OCR (Tesseract, idioma
+   `por`) nas páginas com menos de 50 caracteres. Ver [Pipeline IDP](../engineering/idp-pipeline.md).
+4. **Tipologia.** O parser identifica o tipo do documento (CND federal, CRF do FGTS, CNDT...). Sem
+   tipologia identificada, o laudo fica em `MANUAL_REVIEW_REQUIRED`.
+5. **Regras.** O [motor de regras](../engineering/rules-engine.md) avalia somente as regras da
+   tipologia; as demais ficam `NOT_APPLICABLE`. Regras híbridas passam pelo
+   [Maker-Checker](../engineering/maker-checker.md).
+6. **Laudo e auditoria.** As verificações substituem o laudo vigente em `compliance_checks`, na
+   mesma transação do registro em `audit_logs`, que guarda o histórico de cada avaliação. A
+   decisão humana é registrada em `review_events` (somente inserção).
+
+---
+
+## 3. Por que regras e IA ficam separadas
+
+O maior risco de usar IA em conformidade de crédito público é aprovar um documento irregular
+por erro do modelo. Por isso a decisão é dividida:
+
+| Aspecto | Motor de regras (determinístico) | Maker-Checker (LLM) |
+| :-- | :-- | :-- |
+| Usado para | Palavras-chave obrigatórias e impeditivas, validade temporal | Regras híbridas (falência, licença ambiental), após a triagem determinística |
+| Pode aprovar? | Sim, se todos os critérios forem atendidos | Somente se o Checker aprovar e a citação existir literalmente no documento |
+| Em caso de falha | `NON_COMPLIANT` ou `MANUAL_REVIEW_REQUIRED` | Sempre `MANUAL_REVIEW_REQUIRED` (LLM indisponível, resposta inválida, citação ausente) |
+
+Nenhum caminho de falha produz `COMPLIANT`: ausência de dado ou de avaliação vira revisão humana.
+
+---
+
+## 4. Modelo de dados
+
+| Tabela | Conteúdo |
+| :-- | :-- |
+| `documents` | Metadados do arquivo, caminho no MinIO, status do processamento, texto e metadados extraídos |
+| `compliance_checks` | Resultado por regra: status, confiança, evidência (JSON), achados e tipo de verificador |
+| `audit_logs` | Ação, entidade, executor e detalhes, com data e hora |
+| `review_events` | Propostas e confirmações da revisão humana, com perfil e justificativa |
+
+O esquema evolui por migrations do Alembic (`backend/alembic/`).
+
+---
+
+## 5. Decisões registradas
+
+| ADR | Decisão |
+| :-- | :-- |
+| [ADR-001](adr-001-monorepo-modular.md) | Monorepo modular |
+| [ADR-002](adr-002-astral-uv-toolchain.md) | Astral uv como gerenciador de pacotes e lockfile único |
+| [ADR-003](adr-003-spa-vs-nextjs.md) | SPA React em vez de Next.js |
+
+Novas decisões seguem o [modelo de ADR](adr-template.md).

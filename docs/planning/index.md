@@ -1,4 +1,4 @@
-# Planejamento do Projeto — Visão Geral
+# Visão Geral do Produto
 
 **Conform.IA BNDES: Plataforma de Intelligent Document Processing para Verificação Automatizada de Conformidade**
 _Documento de Direcionamento Estratégico e Técnico_
@@ -15,11 +15,11 @@ _Documento de Direcionamento Estratégico e Técnico_
 
 - ### Data de Conclusão
 
-  **07/12/2026** — Execução organizada em 8 sprints sequenciais de desenvolvimento e validação.
+  **05/12/2026** — Milestones M1 a M6, detalhados no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md).
 
 - ### Modalidade Proposta
 
-  SaaS multi-tenant, conteinerizado em Docker, projetado para hospedagem soberana em território nacional.
+  Aplicação conteinerizada em Docker, sem dependência de nuvem estrangeira para o processamento dos documentos (exceto o LLM opcional das regras híbridas).
 
 - ### Público-Alvo
   Analistas de crédito, revisores técnicos, operadores de compliance e auditores institucionais do BNDES.
@@ -36,8 +36,8 @@ A solução adota uma arquitetura de **Intelligent Document Processing (IDP)**, 
 
 ### Objetivos Estratégicos
 
-1. **Eliminação de Gargalos Manuais**: Reduzir o tempo médio de conferência documental de dias para segundos por operação.
-2. **Confiabilidade Absoluta**: Garantir tolerância zero a falsos positivos em certidões inválidas ou com pendências fiscais.
+1. **Menos conferência manual**: Automatizar a verificação das certidões mais frequentes e deixar ao analista apenas os casos com dúvida.
+2. **Nenhuma aprovação indevida**: Tolerância zero a falsos positivos em certidões inválidas ou com pendências, verificada no CI.
 3. **Auditabilidade Integral**: Assegurar que qualquer laudo de conformidade seja rastreável perante órgãos de controle (TCU, CGU).
 4. **Governança Agent-First**: Integrar práticas de Harness Engineering para desenvolvimento seguro e verificável assistido por IA.
 
@@ -45,28 +45,29 @@ A solução adota uma arquitetura de **Intelligent Document Processing (IDP)**, 
 
 ## 2. Estrutura Modular do Planejamento
 
-Para facilitar a leitura e manutenção, o planejamento oficial esta decomposto nos seguintes capitulos técnicos:
+Para aprofundar, siga para os capítulos:
 
 <div class="grid cards" markdown>
 
-- ### [1. Requisitos e Escopo](requirements.md)
+- ### [Requisitos e Escopo](requirements.md)
 
-  Detalhamento dos requisitos funcionais RF01 a RF15, requisitos não funcionais e matriz de dores operacionais.
+  Requisitos funcionais RF01 a RF15, requisitos não funcionais e jornada do analista.
 
-- ### [2. Arquitetura da Solução](architecture-design.md)
+- ### [Arquitetura](../architecture/overview.md)
 
-  Topologia em camadas, seleção tecnologica fundamentada, separação entre regras e IA e modelo formal de laudo.
+  Serviços, fluxo de processamento, separação entre regras e IA e modelo de dados.
 
-- ### [3. Cronograma e Sprints](sprints-roadmap.md)
+- ### [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md)
 
-  Planejamento das 8 sprints até 07/12/2026, backlog priorizado de epicos (E1 a E10) e Definition of Done.
+  Escopo do MVP, caminho crítico, cronograma até 05/12/2026 e critérios de Go/No-Go.
 
-- ### [4. Segurança e Governança](governance-security.md)
+- ### [Segurança, LGPD e Auditoria](governance-security.md)
 
-  Security by Design, conformidade com a LGPD, matriz de mitigação de riscos e auditoria transacional.
+  Controles implementados, trilha de auditoria, riscos e pendências para produção.
 
-- ### [5. Harness Engineering](harness-engineering.md)
-  Metodologia de contexto delimitado, padrão Maker-Checker, guardrails operacionais e ciclo de trabalho de agentes.
+- ### [Maker-Checker e Guardrails](../engineering/maker-checker.md)
+
+  Como a IA participa da decisão sem poder aprovar sozinha.
 
 </div>
 
@@ -74,6 +75,6 @@ Para facilitar a leitura e manutenção, o planejamento oficial esta decomposto 
 
 ## 3. Premissas e Delimitação de Escopo
 
-O edital oficial da Consulta Publica no 01/2025 não disponibiliza amostras de documentos sigilosos de clientes do BNDES, contratos de APIs internas ou regras de negócio confidenciais.
+O edital oficial da Consulta Pública nº 01/2025 não disponibiliza amostras de documentos sigilosos de clientes do BNDES, contratos de APIs internas ou regras de negócio confidenciais.
 
 Por essa razão, o MVP opera com **documentos sintéticos fidedignos e bases simuladas**, mantendo interfaces e adaptadores rigorosamente tipados para que a conexão com sistemas legados do BNDES ocorra de forma transparente na fase de implantação institucional.
