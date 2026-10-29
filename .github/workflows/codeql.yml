@@ -2,9 +2,9 @@ name: CodeQL - Analise Estatica de Seguranca
 
 on:
   push:
-    branches: [main, developer]
+    branches: [main, dev]
   pull_request:
-    branches: [main, developer]
+    branches: [main, dev]
   schedule:
     - cron: "17 6 * * 1"  # segundas-feiras, 06:17 UTC
 

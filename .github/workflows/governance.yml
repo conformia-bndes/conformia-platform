@@ -2,10 +2,10 @@ name: Governanca - PRs e Workflows
 
 on:
   pull_request:
-    branches: [main, developer]
+    branches: [main, dev]
     types: [opened, edited, synchronize, reopened]
   push:
-    branches: [main, developer]
+    branches: [main, dev]
 
 permissions:
   contents: read

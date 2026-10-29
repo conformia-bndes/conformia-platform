@@ -53,7 +53,7 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 | **actionlint** | Erros em workflows só apareciam ao executar | `governance.yml` |
 | **CodeQL** | Não havia análise estática de segurança (SAST) | `codeql.yml` |
 | **OpenSSF Scorecard** | Sem medição das práticas de segurança da cadeia de suprimentos | `scorecard.yml` |
-| **Dependabot agrupado em `developer`** | PRs de dependência isolados e direto em `main` | `.github/dependabot.yml` |
+| **Dependabot agrupado em `dev`** | PRs de dependência isolados e direto em `main` | `.github/dependabot.yml` |
 | **release-please** | Versões e CHANGELOG manuais | `release-please.yml`, `release-please-config.json` |
 | **MLflow (local)** | Resultados de evals não eram comparáveis entre execuções | `evals/eval_pipeline.py --mlflow` |
 | **promptfoo** | Comportamento do LLM sem teste reproduzível | `evals/promptfoo/`, `llm-evals.yml` |
@@ -76,7 +76,7 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 
 ## 5. Próximos ajustes recomendados (manuais, na interface do GitHub)
 
-1. Ruleset para `developer` exigindo os checks `Backend Lint & Test`, `Frontend Lint, Test & Build`
+1. Ruleset para `dev` exigindo os checks `Backend Lint & Test`, `Frontend Lint, Test & Build`
    e `Titulo do PR (Conventional Commits)`.
 2. Incluir os mesmos checks como obrigatórios no ruleset `main-protection` (hoje a lista está vazia).
 3. Habilitar *Allow GitHub Actions to create and approve pull requests* para o release-please.

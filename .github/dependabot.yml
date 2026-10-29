@@ -1,10 +1,10 @@
 version: 2
-# Atualizacoes entram por developer (branch de integracao) e chegam a main na promocao.
+# Atualizacoes entram por dev (branch de integracao) e chegam a main na promocao.
 # Patches e minors sao agrupados para reduzir o volume de PRs; majors chegam isolados.
 updates:
   - package-ecosystem: "pip"
     directory: "/backend"
-    target-branch: "developer"
+    target-branch: "dev"
     schedule:
       interval: "weekly"
     labels:
@@ -17,7 +17,7 @@ updates:
 
   - package-ecosystem: "npm"
     directory: "/frontend"
-    target-branch: "developer"
+    target-branch: "dev"
     schedule:
       interval: "weekly"
     labels:
@@ -32,7 +32,7 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "developer"
+    target-branch: "dev"
     schedule:
       interval: "monthly"
     labels:
@@ -45,7 +45,7 @@ updates:
 
   - package-ecosystem: "docker"
     directory: "/infra"
-    target-branch: "developer"
+    target-branch: "dev"
     schedule:
       interval: "monthly"
     labels:

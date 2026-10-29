@@ -86,7 +86,7 @@ issue -> branch -> alteração (regra, prompt, modelo ou parser)
       -> make llm-eval (se prompt/modelo mudou)   -> resultado anexado ao PR
       -> make eval-mlflow (comparação com a execução anterior)
       -> revisão do time ai-evals (CODEOWNERS)
-      -> merge em developer
+      -> merge em dev
 ```
 
 ---

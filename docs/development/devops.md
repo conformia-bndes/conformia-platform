@@ -4,7 +4,7 @@ Como o código sai da máquina do desenvolvedor e chega à demonstração, com q
 em cada etapa e como voltar atrás quando algo falha.
 
 !!! info "Resumo"
-    `feature/*` → PR para **`developer`** (integração) → PR de promoção para **`main`** →
+    `feature/*` → PR para **`dev`** (integração) → PR de promoção para **`main`** →
     release-please abre o PR de versão → merge gera a tag `vX.Y.Z` e o GitHub Release.
 
 ---
@@ -14,16 +14,16 @@ em cada etapa e como voltar atrás quando algo falha.
 | Branch | Papel | Proteção |
 | :-- | :-- | :-- |
 | `main` | Versão estável e demonstrável; origem das releases | Ruleset `main-protection`: PR obrigatório com 1 aprovação, sem push forçado nem exclusão. Bypass apenas do time `maintainers` |
-| `developer` | Integração contínua do time | Sem proteção hoje (recomendado: ruleset com CI obrigatório) |
-| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Trabalho de uma issue | Abertas a partir de `developer` |
+| `dev` | Integração contínua do time | Sem proteção hoje (recomendado: ruleset com CI obrigatório) |
+| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Trabalho de uma issue | Abertas a partir de `dev` |
 
 **Regras práticas**
 
 1. Toda mudança começa em uma issue do [Project do MVP](https://github.com/orgs/conformia-bndes/projects/2).
 2. O título do PR segue **Conventional Commits** (`feat:`, `fix:`, `docs:`...). O workflow de
    governança valida o título; o release-please usa os tipos para gerar o CHANGELOG.
-3. PRs empilhados são permitidos: a base é o PR anterior e muda para `developer` após o merge dele.
-4. Dependabot abre PRs em `developer`, com atualizações minor e patch agrupadas.
+3. PRs empilhados são permitidos: a base é o PR anterior e muda para `dev` após o merge dele.
+4. Dependabot abre PRs em `dev`, com atualizações minor e patch agrupadas.
 
 ---
 
@@ -31,8 +31,8 @@ em cada etapa e como voltar atrás quando algo falha.
 
 | Workflow | Gatilho | O que garante |
 | :-- | :-- | :-- |
-| `ci.yml` | push e PR em `main` e `developer` | Backend: black, flake8, pytest com cobertura, evals (relatório como artefato). Frontend: ESLint, Vitest, build. Smoke em Docker Compose. Gitleaks e pip-audit |
-| `governance.yml` | push e PR em `main` e `developer` | Título do PR, actionlint nos workflows e todos os hooks do pre-commit |
+| `ci.yml` | push e PR em `main` e `dev` | Backend: black, flake8, pytest com cobertura, evals (relatório como artefato). Frontend: ESLint, Vitest, build. Smoke em Docker Compose. Gitleaks e pip-audit |
+| `governance.yml` | push e PR em `main` e `dev` | Título do PR, actionlint nos workflows e todos os hooks do pre-commit |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
 | `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG |
@@ -80,7 +80,7 @@ detecção de chaves privadas e validação de YAML/JSON.
 
 **Release**
 
-1. Promover `developer` para `main` por PR.
+1. Promover `dev` para `main` por PR.
 2. O release-please atualiza o PR de release (versão em `pyproject.toml`,
    `backend/pyproject.toml`, `frontend/package.json` e `config.py`, mais o CHANGELOG).
 3. Merge do PR de release → tag `vX.Y.Z` e GitHub Release.
@@ -103,4 +103,4 @@ detecção de chaves privadas e validação de YAML/JSON.
 | Upload retorna 503 | Redis ou MinIO indisponível |
 | Documento preso em `PROCESSING` | Logs do `worker` (`make logs`); estado em `GET /api/v1/documents/tasks/{task_id}` |
 | Revisão humana retorna 401 | Usuário ausente em `API_USERS` ou chave errada |
-| CI do PR não rodou | Base do PR precisa ser `main` ou `developer` |
+| CI do PR não rodou | Base do PR precisa ser `main` ou `dev` |
