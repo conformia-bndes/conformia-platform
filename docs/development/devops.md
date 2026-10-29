@@ -13,8 +13,8 @@ em cada etapa e como voltar atrás quando algo falha.
 
 | Branch | Papel | Proteção |
 | :-- | :-- | :-- |
-| `main` | Versão estável e demonstrável; origem das releases | Ruleset `main-protection`: PR obrigatório com 1 aprovação e check **CI OK** verde, sem push forçado nem exclusão. Bypass apenas do time `maintainers` |
-| `dev` | Integração contínua do time | Ruleset `dev-protection`: PR obrigatório e check **CI OK** verde, sem push forçado nem exclusão. Bypass apenas do time `maintainers` |
+| `main` | Versão estável e demonstrável; origem das releases | Ruleset `main-protection`: PR com 1 aprovação (descartada a cada novo push; quem fez o último push não aprova), branch atualizada e check **CI OK** verde, sem push forçado nem exclusão. Bypass do time `maintainers` |
+| `dev` | Integração contínua do time | Ruleset `dev-protection`: PR obrigatório e check **CI OK** verde, sem push forçado nem exclusão. O time `maintainers` só ignora as regras ao mergear PRs: ninguém apaga `dev` nem faz push direto |
 | `feat/*`, `fix/*`, `chore/*`, `docs/*` | Trabalho de uma issue | Abertas a partir de `dev` |
 
 **Regras práticas**
