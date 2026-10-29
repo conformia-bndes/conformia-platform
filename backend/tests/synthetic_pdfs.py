@@ -121,12 +121,10 @@ PENDING_PDF_LINES: List[str] = [
     "Valor total do debito: R$ 150.000,00",
 ]
 
-ILLEGIBLE_PDF_LINES: List[str] = [
-    # Texto intencionalmente ilegível / digitalizado de baixa qualidade
-    "XXXX XXXX XXXX XXXX",
-    "???? ???? ???? ????",
-    "~~~~ ~~~~ ~~~~ ~~~~",
-]
+# Pagina digitalizada sem nenhum texto: nada para o OCR ler, em qualquer versao do
+# Tesseract. Caracteres desenhados (mesmo "XXXX") sao lidos pelo OCR e o documento
+# seria processado como COMPLETED, e nao como EXTRACTION_FAILED.
+ILLEGIBLE_PDF_LINES: List[str] = []
 
 INVALID_FILE_CONTENT: bytes = (
     b"ESTE NAO E UM ARQUIVO PDF - CONTEUDO ALEATORIO SEM ASSINATURA BINARIA"
