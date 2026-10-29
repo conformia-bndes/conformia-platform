@@ -57,7 +57,7 @@ D3 clean CND overall: NON_COMPLIANT {'RULE-BNDES-001': 'COMPLIANT', 'RULE-BNDES-
 | Frontend lint | `npm run lint` | OK |
 | Frontend testes | `npm test` | 8 passed (2 arquivos) |
 | Frontend build | `npm run build` (inclui `tsc`) | OK (295 kB JS) |
-| Docs | `uv run --frozen mkdocs build --strict` | Falha somente por 3 avisos do plugin `git-revision-date` nas paginas novas ainda sem historico git (nao versionadas). Links e nav resolvem. Reexecutar apos o commit |
+| Docs | `uv run --frozen mkdocs build --strict` | OK apos o commit das paginas novas (antes do commit falhava apenas por avisos do plugin `git-revision-date` em arquivos sem historico git) |
 | Compose / smoke | `make up && make smoke` | **Nao executado** (Docker parado) |
 
 ### Reproducao apos a correcao (`$TEMP/conformia_repro/repro_after.py`)
