@@ -249,6 +249,34 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  fuzz:
+    name: Fuzzing do motor de regras (Atheris)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # O Atheris so publica wheels para Linux com Python 3.12+ (extra `fuzz` do backend).
+      FUZZ_PYTHON: "3.12"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.FUZZ_PYTHON }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar dependencias do backend com o extra de fuzzing
+        run: uv sync --package conformia-backend --extra fuzz --python "$FUZZ_PYTHON"
+
+      - name: Fuzzing por 60 segundos (falha em excecao ou invariante violada)
+        run: |
+          uv run --python "$FUZZ_PYTHON" python backend/fuzz/fuzz_regras.py \
+            -max_total_time=60 -rss_limit_mb=2048 -print_final_stats=1
+
   frontend:
     name: Frontend (lint, testes e build)
     needs: changes
@@ -373,7 +401,7 @@ jobs:
   ci-ok:
     name: CI OK
     if: always()
-    needs: [changes, lint, actionlint, security, backend, frontend, docs, smoke]
+    needs: [changes, lint, actionlint, security, backend, fuzz, frontend, docs, smoke]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -37,6 +37,7 @@ bloqueia o merge, um job com falha bloqueia.
 ```mermaid
 flowchart LR
     changes["Detectar mudanças"] --> backend["Backend<br/>pytest + evals"]
+    changes --> fuzz["Fuzzing<br/>Atheris"]
     changes --> frontend["Frontend<br/>ESLint, Vitest, build"]
     changes --> docs["Documentação<br/>build estrito"]
     lint["Lint<br/>pre-commit"] --> ok
@@ -45,6 +46,7 @@ flowchart LR
     backend --> smoke["Smoke em<br/>Docker Compose"]
     frontend --> smoke
     backend --> ok["CI OK"]
+    fuzz --> ok
     frontend --> ok
     docs --> ok
     smoke --> ok
@@ -52,7 +54,7 @@ flowchart LR
 
 | Workflow | Gatilho | O que garante |
 | :-- | :-- | :-- |
-| `ci.yml` | push e PR em `main` e `dev` | Lint (todos os hooks do pre-commit), actionlint, segurança (gitleaks, pip-audit sobre o `uv.lock`, npm audit), backend (pytest com cobertura e evals com relatório como artefato), frontend (ESLint, Vitest, build), documentação (build estrito) e smoke em Docker Compose com imagens em cache |
+| `ci.yml` | push e PR em `main` e `dev` | Lint (todos os hooks do pre-commit), actionlint, segurança (gitleaks, pip-audit sobre o `uv.lock`, npm audit), backend (pytest com cobertura e evals com relatório como artefato), fuzzing do motor de regras (Atheris, 60 s), frontend (ESLint, Vitest, build), documentação (build estrito) e smoke em Docker Compose com imagens em cache |
 | `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
