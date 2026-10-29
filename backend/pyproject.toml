@@ -40,6 +40,11 @@ dev = [
     "isort>=5.13.2",
     "mypy>=1.9.0"
 ]
+# Fuzzing do motor de regras (backend/fuzz/). O Atheris so publica wheels para Linux com
+# Python 3.12+; o job de fuzzing do CI usa esse ambiente.
+fuzz = [
+    "atheris==3.1.0; python_version >= '3.12' and sys_platform == 'linux'"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

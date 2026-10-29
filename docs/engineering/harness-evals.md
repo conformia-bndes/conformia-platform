@@ -8,6 +8,7 @@ papéis diferentes:
 | Benchmark de regras | `make eval` | Status por regra no caminho do produto (parser, tipologia e motor) | Sim |
 | Dataset sintético de PDFs | `uv run python evals/sintetico/avaliar.py` | Extração, OCR e classificação de 22 certidões fictícias | Não (linha de base) |
 | Comportamento do LLM | `make llm-eval` | Maker-Checker contra alucinação e injeção de instruções (promptfoo) | Não; manual e pago |
+| Fuzzing | Job "Fuzzing do motor de regras" do CI | Invariantes de segurança com textos arbitrários (Atheris) | Sim |
 
 O versionamento dos resultados e a comparação entre execuções estão em [MLOps](mlops.md).
 
@@ -53,6 +54,24 @@ Testa o Maker-Checker com o modelo real: aprovação só com citação existente
 documentos com pendência e resistência a instruções injetadas no texto do PDF. Roda manualmente
 (`make llm-eval` ou workflow `llm-evals.yml`) porque consome créditos e exige `OPENAI_API_KEY`.
 Toda mudança de prompt ou de modelo deve anexar o resultado ao PR.
+
+---
+
+## 4. Fuzzing (`backend/fuzz/`)
+
+O `fuzz_regras.py` usa o Atheris (libFuzzer para Python) para gerar textos arbitrários de
+documento por 60 segundos em cada PR que altera o backend. Em vez de procurar só exceções, ele
+verifica as invariantes de segurança:
+
+1. Nenhum texto derruba a extração de validade, o motor de regras ou a verificação de citação.
+2. Com o LLM indisponível, nenhuma regra avaliada pelo Maker-Checker sai `COMPLIANT`.
+3. Certidão fiscal ou trabalhista só sai `COMPLIANT` com data de validade identificada.
+4. O laudo geral só é `COMPLIANT` quando todas as regras aplicáveis são `COMPLIANT`.
+5. Todo trecho literal do documento é aceito como citação, e toda citação aceita existe no texto.
+
+O Atheris só publica pacotes para Linux com Python 3.12+, por isso fica no extra `fuzz` do
+backend e roda no CI. As invariantes ficam na função `check()`, que pode ser chamada sem o
+Atheris em qualquer sistema.
 
 ---
 
