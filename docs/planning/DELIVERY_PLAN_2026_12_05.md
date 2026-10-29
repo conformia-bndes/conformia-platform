@@ -24,8 +24,8 @@ prioridade Alta (`requirements.md`).
 | 4 | Checklist declarativo + motor deterministico | RF05, RF06 | Corrigido nesta execucao (validade e tipologia). |
 | 5 | Maker-Checker com citacao literal obrigatoria | RF07 | Corrigido para fail-closed. Sem chave LLM, regras hibridas vao para revisao manual. |
 | 6 | Laudo apresentado ao analista com status compreensiveis | RF08 | Corrigido (rotulos de revisao manual / nao aplicavel; sem dados simulados). |
-| 7 | **Revisao humana: aprovar, rejeitar ou excecao motivada** | RF09 | **Ausente.** Bloqueado pela decisao de identidade (secao 6). |
-| 8 | Trilha de auditoria com executor, timestamp e hash do arquivo | RF10 | Parcial: hash SHA-256 no upload adicionado; executor humano inexistente. |
+| 7 | **Revisao humana: aprovar, rejeitar ou excecao motivada** | RF09 | API implementada e testada com segregacao (chaves pessoais, D1). **UI pendente** (T06b, T06c). |
+| 8 | Trilha de auditoria com executor, timestamp e hash do arquivo | RF10 | Implementado: hash SHA-256 no upload e eventos `REVIEW_*` com o analista. |
 | 9 | Execucao reproduzivel em Docker Compose + smoke test | RNF04 | Arquivos existem; **nao executado** nesta maquina (Docker parado). |
 
 **Tipologias obrigatorias propostas para o MVP:** `CND_FEDERAL` e `CRF_FGTS` (as duas citadas no
@@ -49,15 +49,14 @@ regra, porem **nao tem deteccao de tipologia no parser**: hoje sempre resultam e
 ## 2. Caminho critico e dependencias
 
 ```text
-[D1 Decisao de identidade]--+
-                            v
-[T05a Identidade minima] -> [T05b Endpoint de revisao + migration 002] -> [T06 UI de revisao]
+[D1 decidida] -> [T05a/T05b concluidos] -> [T06c chave na UI] -> [T06b UI de revisao]
                                                                               |
 [T09 Compose + smoke em maquina com Docker] ----------------------------------+--> [Ensaio de demo] -> [Go/No-Go 04/12]
 [D2 Politica para palavra-chave ausente] -> [T04c ajuste de regra + evals] ---+
 ```
 
-- **D1** (identidade e segregacao de funcoes) bloqueia RF09 e a parte humana do RF10.
+- **D1** foi decidida (chaves pessoais); a API de revisao existe. O caminho critico passa a
+  ser a UI de revisao (T06c, T06b) e a validacao em compose com PostgreSQL (T09a, T05d).
 - **T09** precisa de uma maquina com Docker ativo; nenhum teste ponta a ponta com Postgres,
   Redis, MinIO e worker reais foi executado nesta auditoria.
 
@@ -121,7 +120,7 @@ sem segregacao, com a restricao declarada no roteiro e aceita formalmente pelo r
 
 | ID | Decisao | Opcoes | Prazo |
 | :-- | :-- | :-- | :-- |
-| D1 | Como identificar analistas para revisao e segregacao Maker-Checker humana | (a) chaves de API por usuario mapeadas no servidor; (b) JWT emitido por IdP corporativo; (c) adiar segregacao (GO com restricoes) | 04/11 |
+| D1 | Como identificar analistas para revisao e segregacao Maker-Checker humana | **Decidida em 29/10: (a) chaves de API pessoais mapeadas no servidor** (`API_USERS`). JWT/IdP fica fora do MVP. | - |
 | D2 | Documento de tipologia reconhecida sem uma palavra-chave obrigatoria (ex.: OCR ilegivel) | (a) `NON_COMPLIANT` (atual); (b) `MANUAL_REVIEW_REQUIRED` (o que o dataset `edge_cases` espera) | 04/11 |
 | D3 | Data oficial de entrega | 05/12 (este plano) ou 07/12 (`sprints-roadmap.md`) | 31/10 |
 

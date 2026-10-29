@@ -81,7 +81,24 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 
 ---
 
-## 3. Limitacoes desta validacao
+## 3. Incremento: identidade por chave pessoal e revisao humana (T05a, T05b)
+
+| Verificacao | Comando | Resultado |
+| :-- | :-- | :-- |
+| Testes backend | `uv run --frozen pytest backend/tests/ -q --cov=backend/app` | **94 passed, 1 skipped** (OCR), codigo 0. Cobertura 89% (`security.py` 100%, `review_service.py` 99%) |
+| Testes novos | `pytest backend/tests/test_reviews.py backend/tests/test_config.py` | 26 passed (17 de revisao, 5 novos de configuracao) |
+| Migration 002 | `alembic upgrade head`, `alembic check`, `alembic downgrade -1`, `alembic upgrade head` em SQLite descartavel (`$TEMP/conformia_repro/alembic_check_002.db`) | Upgrade e downgrade OK; "No new upgrade operations detected" |
+| Formatacao / lint | `black --check backend/`, `flake8 backend/` | OK / 0 |
+| Evals | `python evals/eval_pipeline.py` | PASS, 0 falsos positivos (inalterado) |
+| Docs | `mkdocs build --strict` | OK |
+| Script de chave | `python backend/scripts/create_api_user.py ana.silva ANALISTA` | Gera chave e entrada JSON; argumentos invalidos retornam 2 |
+
+Nao validado: migration 002 em PostgreSQL; concorrencia real (o lock `with_for_update` e a
+restricao unica foram verificados apenas por leitura de codigo e teste sequencial).
+
+---
+
+## 4. Limitacoes desta validacao
 
 1. Nenhum teste com Postgres, Redis, MinIO e worker reais. O worker foi exercitado chamando a
    tarefa diretamente com SQLite em memoria; o despacho pela fila nao foi testado.
