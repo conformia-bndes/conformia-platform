@@ -1,74 +1,65 @@
-# Pipeline de Processamento Inteligente de Documentos (IDP)
+# Pipeline IDP e OCR
 
-O pipeline de IDP do Conform.IA BNDES e responsável pela conversão de documentos binários PDF em representações textuais estruturadas, tabelas e metadados normalizados.
+O pipeline de Intelligent Document Processing converte o PDF enviado em texto, tabelas e
+metadados por página, e identifica a tipologia do documento para o motor de regras.
+
+Implementação: `backend/app/idp/extractor.py` (`DocumentExtractor`) e
+`backend/app/idp/parser.py` (tipologia, campos e evidências).
 
 ---
 
-## 1. Arquitetura do Extrator Híbrido
-
-O processamento adota uma abordagem em duas etapas:
+## 1. Extração híbrida
 
 ```mermaid
 flowchart TD
-    PDF[Arquivo PDF Ingerido] --> Parser[Extrator Vetorial Nativo - pdfplumber]
-    Parser --> CheckDensity{Densidade de Caracteres >= Limiar?}
-    CheckDensity -- Sim --> TextExtraction[Extracao de Texto e Tabelas Nativas]
-    CheckDensity -- Não (Documento Digitalizado) --> ImageRender[Renderização de Página em 300 DPI]
-    ImageRender --> Preprocess[Normalizacao de Imagem e Escala de Cinza]
-    Preprocess --> Tesseract[Tesseract OCR - Idioma por]
-    Tesseract --> OCRExtraction[Extracao Textual Via OCR]
-    TextExtraction --> Aggregator[Agregador de Paginas e Metadados]
-    OCRExtraction --> Aggregator
-    Aggregator --> OutputJSON[JSON Estruturado para o Motor de Regras]
+    PDF["PDF recebido"] --> Native["Texto nativo da página<br/>(pdfplumber)"]
+    Native --> Check{"50 caracteres ou mais?"}
+    Check -->|sim| Keep["Usa o texto nativo<br/>e as tabelas"]
+    Check -->|não| Render["Renderiza a página em 300 DPI"]
+    Render --> OCR["Tesseract OCR (idioma por)"]
+    OCR --> Keep2["Usa o texto do OCR<br/>(is_scanned: true)"]
+    Keep --> Join["Junta as páginas"]
+    Keep2 --> Join
+    Join --> Parser["Parser: tipologia, campos e evidências"]
 ```
 
----
+1. Cada página é aberta com pdfplumber, que extrai texto e tabelas nativas.
+2. Se a página tem menos de 50 caracteres nativos (`min_char_threshold`), é tratada como
+   digitalizada: é renderizada em 300 DPI e enviada ao Tesseract com o idioma `por`.
+3. As páginas são unidas no `full_text`, separadas por `--- [QUEBRA DE PÁGINA] ---`.
+4. O parser identifica a tipologia (`CND_FEDERAL`, `CRF_FGTS`, `CNDT_TRABALHISTA`...) e registra,
+   para cada campo, a página e o trecho em que foi encontrado.
 
-## 2. Estratégia de Fallback para OCR
-
-1. **Análise Vetorial Primária**:
-   - O arquivo PDF e aberto utilizando `pdfplumber`.
-   - Para cada página, avalia-se o volume de caracteres nativos extraíveis.
-2. **Detecção de Páginas Digitalizadas (Scanned Pages)**:
-   - Se a contagem de caracteres da página for inferior ao limiar configurado (`min_char_threshold`, padrão: 50 caracteres), a página e classificada como imagem digitalizada.
-3. **Execução do OCR**:
-   - A página e rasterizada com densidade otimizada de 300 DPI (`page.to_image(resolution=300)`).
-   - O Tesseract OCR e acionado configurado para o dicionário de Lingua Portuguesa (`tesseract-ocr-por`).
-   - O resultado do OCR e integrado a representação textual unificada do documento, marcando o atributo `is_scanned: true`.
+O OCR exige `tesseract-ocr` e `tesseract-ocr-por`, já instalados na imagem do backend.
 
 ---
 
-## 3. Estrutura de Dados de Saida do Pipeline
+## 2. Saída por página
 
-O extrator retorna uma estrutura formal serializável com o seguinte formato:
+| Campo | Conteúdo |
+| :-- | :-- |
+| `page_number` | Número da página (a partir de 1) |
+| `text`, `char_count` | Texto final da página e seu tamanho |
+| `tables` | Tabelas nativas extraídas pelo pdfplumber |
+| `is_scanned`, `ocr_attempted` | Se a página foi tratada como digitalizada e se o OCR foi executado |
+| `extraction_method` | `native` ou `ocr` |
+| `error` | Erro da página, quando houver (`OCR_FAILED` ou `EMPTY_PAGE`) |
 
-```json
-{
-  "file_path": "/tmp/conformia_uploads/doc-uuid-123.pdf",
-  "metadata": {
-    "total_pages": 3,
-    "pdf_metadata": {
-      "Author": "Receita Federal",
-      "CreationDate": "D:20260115"
-    },
-    "has_scanned_pages": false
-  },
-  "pages": [
-    {
-      "page_number": 1,
-      "text": "CERTIDAO NEGATIVA DE DEBITOS...",
-      "tables": [],
-      "is_scanned": false,
-      "char_count": 1420
-    }
-  ],
-  "full_text": "CERTIDAO NEGATIVA DE DEBITOS...\n\n--- [QUEBRA DE PAGINA] ---\n\n..."
-}
-```
+Os erros por página também ficam em `metadata["page_errors"]`. A extração estruturada do
+documento pode ser consultada em `GET /api/v1/documents/{document_id}/processing`.
 
 ---
 
-## 4. Tratamento de Exceções e Resiliência
+## 3. Falhas
 
-- Documentos corrompidos ou com senha geram erro `RuntimeError` capturado de forma transparente pela API, registrando status `EXTRACTION_FAILED` no banco relacional.
-- Limite máximo de processamento por documento configurado no worker Celery (`task_time_limit: 600 segundos`).
+| Situação | Comportamento |
+| :-- | :-- |
+| Uma página sem texto (nativo e OCR vazios) ou com OCR falho | A página registra o erro; as demais seguem |
+| Nenhuma página legível, PDF corrompido ou protegido por senha | Extração falha e o documento fica com status `EXTRACTION_FAILED` |
+| Tipologia não identificada | Nenhuma regra é aplicada e o laudo fica em `MANUAL_REVIEW_REQUIRED` |
+| Processamento acima de 10 minutos | O Celery interrompe a tarefa (`task_time_limit = 600`) |
+
+!!! note "Limitações conhecidas"
+    Não há pré-processamento de imagem (correção de inclinação, binarização) antes do OCR, e a
+    data de validade é reconhecida apenas em formatos `dd/mm/aaaa` próximos a palavras como
+    "válida até" ou "validade". Ver os resultados em [Avaliação contínua](harness-evals.md).

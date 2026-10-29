@@ -49,8 +49,8 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 | Ferramenta | Problema que resolve | Onde |
 | :-- | :-- | :-- |
 | **pre-commit** | Erros de formatação, segredos e YAML/JSON inválidos chegavam ao CI | `.pre-commit-config.yaml`, `make hooks` |
-| **Conventional Commits no título do PR** | Histórico sem padrão impedia CHANGELOG automático | `governance.yml` (`amannn/action-semantic-pull-request`) |
-| **actionlint** | Erros em workflows só apareciam ao executar | `governance.yml` |
+| **Conventional Commits no título do PR** | Histórico sem padrão impedia CHANGELOG automático | `pr-title.yml` (`amannn/action-semantic-pull-request`) |
+| **actionlint** | Erros em workflows só apareciam ao executar | Job "Lint dos workflows" do `ci.yml` |
 | **CodeQL** | Não havia análise estática de segurança (SAST) | `codeql.yml` |
 | **OpenSSF Scorecard** | Sem medição das práticas de segurança da cadeia de suprimentos | `scorecard.yml` |
 | **Dependabot agrupado em `dev`** | PRs de dependência isolados e direto em `main` | `.github/dependabot.yml` |
@@ -74,10 +74,14 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 
 ---
 
-## 5. Próximos ajustes recomendados (manuais, na interface do GitHub)
+## 5. Configuração do repositório
 
-1. Ruleset para `dev` exigindo os checks `Backend Lint & Test`, `Frontend Lint, Test & Build`
-   e `Titulo do PR (Conventional Commits)`.
-2. Incluir os mesmos checks como obrigatórios no ruleset `main-protection` (hoje a lista está vazia).
-3. Habilitar *Allow GitHub Actions to create and approve pull requests* para o release-please.
-4. Habilitar *Code scanning* e *Secret scanning push protection* em **Settings → Code security**.
+| Configuração | Estado |
+| :-- | :-- |
+| Ruleset `main-protection` | PR com 1 aprovação, check **CI OK** obrigatório, sem push forçado nem exclusão |
+| Ruleset `dev-protection` | PR obrigatório, check **CI OK** obrigatório, sem push forçado nem exclusão |
+| *Allow GitHub Actions to create and approve pull requests* | Habilitado na organização e no repositório (necessário ao release-please) |
+| Code scanning (CodeQL) | Habilitado via `codeql.yml` |
+| Secret scanning e push protection | Habilitados |
+
+Somente o time `maintainers` pode ignorar os rulesets, e apenas para correções emergenciais.

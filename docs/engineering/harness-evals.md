@@ -1,70 +1,67 @@
-# Harness Engineering e Avaliação Contínua de IA (Evals)
+# Avaliação Contínua (Evals)
 
-Em aplicações que envolvem auditoria de crédito público e contratações de grande porte no BNDES, a aplicação de modelos de linguagem (LLMs) requer governança rigorosa contra alucinações, vieses e instabilidades de geração. O Conform.IA BNDES adota os princípios de **Harness Engineering**.
+Os evals medem se o produto toma a decisão certa e impedem regressões. São três suítes, com
+papéis diferentes:
 
----
+| Suíte | Comando | O que mede | Bloqueia o CI? |
+| :-- | :-- | :-- | :-- |
+| Benchmark de regras | `make eval` | Status por regra no caminho do produto (parser, tipologia e motor) | Sim |
+| Dataset sintético de PDFs | `uv run python evals/sintetico/avaliar.py` | Extração, OCR e classificação de 22 certidões fictícias | Não (linha de base) |
+| Comportamento do LLM | `make llm-eval` | Maker-Checker contra alucinação e injeção de instruções (promptfoo) | Não; manual e pago |
 
-## 1. O Padrão Maker-Checker
-
-Para eliminar o risco de alucinações em que o modelo infere erroneamente a conformidade de uma empresa, o sistema implementa a arquitetura de **Quatro Olhos Algorítmico (Maker-Checker)**:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Engine as Motor de Regras
-    participant Maker as Agente Maker (Propositor)
-    participant Checker as Agente Checker (Auditor)
-    participant Postgres as Banco de Dados / Auditoria
-
-    Engine->>Maker: Envia Texto do Documento e Definição da Regra
-    Note over Maker: Analisa o texto e formula hipotese com citacao literal
-    Maker-->>Engine: Retorna Proposta (Status, Evidencia, Confianca)
-
-    Engine->>Checker: Envia Texto Original e Proposta do Maker
-    Note over Checker: Verifica se a citacao existe literalmente no documento original
-    Checker-->>Engine: Retorna Parecer (APPROVED / REJECTED, Alucinacao detectada?)
-
-    alt Checker Aprovou e Sem Alucinacao
-        Engine->>Postgres: Registra Status da Proposta do Maker
-    else Divergencia ou Alucinacao
-        Engine->>Postgres: Degrada Status para MANUAL_REVIEW_REQUIRED
-    end
-```
-
-### 1.1 Responsabilidades do Maker
-
-- Formula uma hipótese preliminar de avaliação baseada exclusivamente no trecho documental fornecido.
-- Deve obrigatoriamente indicar o valor exato extraido e a justificativa lógica.
-- Restrito a esquemas de saida estruturados em JSON via Pydantic.
-
-### 1.2 Responsabilidades do Checker
-
-- Opera de forma totalmente desacoplada e independente do Maker.
-- Audita se o trecho citado pelo Maker esta realmente contido no texto original do PDF.
-- Em caso de inconsistência textual ou extrapolação de contexto, o Checker invalida a hipótese, forçando o encaminhamento para análise humana.
+O versionamento dos resultados e a comparação entre execuções estão em [MLOps](mlops.md).
 
 ---
 
-## 2. Métricas e Limiares Operacionais de Evals
+## 1. Benchmark de regras (`evals/eval_pipeline.py`)
 
-O pipeline de avaliação continua (`evals/eval_pipeline.py`) monitora regressões através de casos de teste sintéticos e reais anonimizados:
+Executa os casos de `evals/datasets/` (conformes, não conformes e casos de borda) pelo mesmo
+caminho do produto e compara o status de cada verificação com o esperado.
 
-| Dimensão              | Indicador                        | Meta                       | Limiar de Alerta        |
-| :-------------------- | :------------------------------- | :------------------------- | :---------------------- |
-| **Segurança**         | Falsos Positivos de Conformidade | **0.0%** (Tolerância Zero) | $> 0.0\%$ (Bloqueia CI) |
-| **Qualidade IDP**     | Character Error Rate (CER)       | $\le 1.5\%$                | $> 3.0\%$               |
-| **Extração**          | Recall de Entidades Chave        | $\ge 98.5\%$               | $< 95.0\%$              |
-| **Confiabilidade IA** | Taxa de Detecção de Alucinação   | $\ge 99.0\%$               | $< 98.0\%$              |
-| **Consenso**          | Maker-Checker Agreement Rate     | $\ge 95.0\%$               | $< 90.0\%$              |
+**Critério de aprovação:** zero falsos positivos (nenhum `COMPLIANT` indevido) e acurácia
+mínima de 90%. O job de backend do CI falha se qualquer um dos dois não for atendido e publica
+o relatório JSON (`--json-report`) como artefato.
+
+**Última execução local (29/10/2026):** 14 verificações, 13 corretas, **0 falsos positivos**,
+acurácia de 92,86%. A divergência restante é conservadora: uma certidão ilegível esperada como
+`MANUAL_REVIEW_REQUIRED` saiu `NON_COMPLIANT`.
+
+!!! note "Alcance"
+    O benchmark tem poucos casos e todos são sintéticos. Ele protege contra regressões nas
+    regras, mas não mede o desempenho com documentos reais.
 
 ---
 
-## 3. Execução de Benchmarks de Regressão
+## 2. Dataset sintético de PDFs (`evals/sintetico/`)
 
-O benchmark de Evals e executado localmente via:
+22 certidões fictícias (CND federal e CRF do FGTS), 12 nativas e 10 digitalizadas, cobrindo
+documentos válidos, vencidos, com pendência, ilegíveis e sem validade. O gabarito traz a
+evidência esperada e a página de cada campo. A metodologia completa está em
+`evals/sintetico/RELATORIO.md`.
 
-```bash
-python evals/eval_pipeline.py
-```
+A linha de base registrada em 19/10/2026 (anterior à correção da validade obrigatória) teve
+extração de 82/82 trechos de evidência e classificação correta em 10 de 22 documentos, com 6
+falsos positivos. As correções posteriores (validade obrigatória para FISCAL e TRABALHISTA e
+filtro por tipologia) atacam essas falhas; a medição atualizada depende de uma nova execução com
+Tesseract instalado.
 
-O comando realiza o teste funcional completo contra o conjunto de regras do BNDES, verificando se documentos com falência decretada ou pendências fiscais são rejeitados com precisão absoluta.
+---
+
+## 3. Comportamento do LLM (`evals/promptfoo/`)
+
+Testa o Maker-Checker com o modelo real: aprovação só com citação existente, rejeição de
+documentos com pendência e resistência a instruções injetadas no texto do PDF. Roda manualmente
+(`make llm-eval` ou workflow `llm-evals.yml`) porque consome créditos e exige `OPENAI_API_KEY`.
+Toda mudança de prompt ou de modelo deve anexar o resultado ao PR.
+
+---
+
+## 4. Metas ainda não medidas
+
+As métricas abaixo orientam a evolução, mas **ainda não são calculadas** por nenhuma suíte:
+
+| Dimensão | Indicador | Meta |
+| :-- | :-- | :-- |
+| Qualidade do OCR | Character Error Rate (CER) | ≤ 1,5% |
+| Extração | Recall de entidades (CNPJ, datas) | ≥ 98,5% |
+| IA | Concordância Maker-Checker | ≥ 95% |

@@ -1,6 +1,6 @@
 # Plano de Entrega - MVP até 05/12/2026
 
-Data de referência: 29/10/2026. Base auditada: branch `developer`, commit `d76f41c` (contem `e39217b`).
+Data de referência: 29/10/2026. Base auditada: branch `developer`, commit `d76f41c` (contém `e39217b`).
 
 Este plano substitui hipóteses da análise preliminar por fatos verificados no código. O backlog
 detalhado esta em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) e as evidências de
@@ -19,7 +19,7 @@ prioridade Alta (`requirements.md`).
 | # | Fluxo essencial | Requisito | Estado em 29/10 |
 | :- | :-- | :-- | :-- |
 | 1 | Upload de PDF com validação (extensão, `%PDF-`, 50 MB) e armazenamento MinIO | RF02 | Implementado e testado (unitário). Sem validação em compose nesta maquina. |
-| 2 | Extração nativa + OCR Tesseract por página, assincrona via Celery | RF03 | Implementado; OCR real não testado aqui (Tesseract ausente). |
+| 2 | Extração nativa + OCR Tesseract por página, assíncrona via Celery | RF03 | Implementado; OCR real não testado aqui (Tesseract ausente). |
 | 3 | Campos tipados com evidência (página + trecho) | RF04, RF08 | Implementado (regex). Coordenadas (`bounding_box`) sempre nulas. |
 | 4 | Checklist declarativo + motor determinístico | RF05, RF06 | Corrigido nesta execução (validade e tipologia). |
 | 5 | Maker-Checker com citação literal obrigatória | RF07 | Corrigido para fail-closed. Sem chave LLM, regras híbridas vao para revisão manual. |
@@ -69,7 +69,7 @@ regra, porém **não tem detecção de tipologia no parser**: hoje sempre result
 | 29/10-04/11 | Auditoria, correções P0 do motor e da UI (feito), **decisões D1/D2**, smoke em compose | `make up && make smoke` com código 0 em maquina da equipe; D1 e D2 registradas |
 | **04/11** | **Congelamento de escopo** (tipologias e fluxos do MVP) | Este documento aprovado pelo responsável de produto |
 | 05/11-12/11 | Identidade mínima, endpoint de revisão humana append-only, migration 002 | Testes de autorização (próprio autor não aprova) e de persistência passando |
-| 13/11-19/11 | UI de revisão (aprovar/rejeitar/excecao com justificativa), evidências por página na UI | Fluxo upload -> laudo -> decisão humana exercitado em compose |
+| 13/11-19/11 | UI de revisão (aprovar/rejeitar/exceção com justificativa), evidências por página na UI | Fluxo upload -> laudo -> decisão humana exercitado em compose |
 | 20/11-26/11 | Integração ponta a ponta, smoke estendido (inclui verificação e decisão), evals ampliados com PDFs reais anonimizados | **Congelamento de funcionalidades em 26/11** |
 | 27/11-01/12 | Correções, regressão completa, RC1 | **Code freeze em 01/12** (30/11 e feriado no DF: considerar disponibilidade) |
 | 02/12-04/12 | Ensaio da demonstração, smoke em ambiente de demo, **Go/No-Go em 04/12** | Checklist da seção 5 preenchido com evidências |
@@ -78,7 +78,7 @@ regra, porém **não tem detecção de tipologia no parser**: hoje sempre result
 **Capacidade:** o tamanho e a disponibilidade da equipe não estão documentados no repositório;
 não e possível calcular folga real. Estimativa de esforço P0 restante: ~6 a 9 dias-pessoa
 (T05a 1-2, T05b 2-3, T06 2-3, T09 1). Se a equipe tiver menos de 1,5 pessoa dedicada, reduzir
-o escopo: revisão humana somente via API (sem UI própria) e demo com uma unica tipologia (CND).
+o escopo: revisão humana somente via API (sem UI própria) e demo com uma única tipologia (CND).
 
 ---
 

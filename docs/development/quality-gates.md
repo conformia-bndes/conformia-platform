@@ -1,6 +1,6 @@
 # Protocolos de Qualidade e Quality Gates
 
-O Conform.IA BNDES estabelece padrões rigorosos de qualidade, segurança e conformidade que devem ser atendidos antes de qualquer commit ou integração na branch `main`.
+O Conform.IA BNDES estabelece padrões rigorosos de qualidade, segurança e conformidade que devem ser atendidos antes de qualquer integração nas branches `dev` e `main`.
 
 ---
 
@@ -25,25 +25,27 @@ O Conform.IA BNDES estabelece padrões rigorosos de qualidade, segurança e conf
 
 ## 2. Comandos do Quality Gate Local
 
-Antes de submeter um Pull Request, execute os comandos do gate de qualidade:
+Os mesmos verificadores do CI, com as versões fixadas no `uv.lock`:
 
 ```bash
-# 1. Execução de Testes Automatizados
-uv run pytest backend/tests/ -v --cov=backend/app --cov-report=term-missing
-cd frontend && npm test
-
-# 2. Execução do Benchmark de Evals
-uv run python evals/eval_pipeline.py
-
-# 3. Validação de Linters e Formatação
-uv run black --check backend/
-uv run flake8 backend/
-cd frontend && npm run lint
-
-# 4. Varredura Local de Segredos e Dependências
-gitleaks detect --source . --config .gitleaks.toml --verbose
-pip-audit -r backend/requirements.txt
+make hooks        # uma vez por clone: instala os hooks do pre-commit
+make lint         # flake8, black e ESLint
+make test         # pytest e Vitest
+make eval         # benchmark de regras: 0 falsos positivos e acurácia mínima de 90%
+make docs-build   # documentação em modo estrito
 ```
+
+Verificações de segurança, equivalentes ao job "Segurança" do CI:
+
+```bash
+uvx pre-commit@4.7.0 run gitleaks --all-files
+uv export --all-packages --all-extras --no-emit-workspace --no-hashes -o /tmp/req.txt
+uvx pip-audit -r /tmp/req.txt --no-deps --disable-pip
+cd frontend && npm audit --audit-level=high
+```
+
+No PR, o check obrigatório **CI OK** só fica verde quando todos os jobs afetados passam. Ver
+[DevOps e CI/CD](devops.md).
 
 ---
 

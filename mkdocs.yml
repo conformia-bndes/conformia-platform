@@ -45,9 +45,8 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
-extra_javascript:
-  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
-  - javascripts/extra.js
+hooks:
+  - docs_hooks/check_site.py
 
 plugins:
   - search
@@ -81,20 +80,13 @@ markdown_extensions:
 nav:
   - Início: index.md
   - Produto:
-      - Visão Geral do Planejamento: planning/index.md
+      - Visão Geral: planning/index.md
       - Requisitos e Escopo: planning/requirements.md
       - Matriz de Conformidade BNDES: bndes/compliance-matrix.md
       - Tipologias de Documentos: bndes/document-types.md
-  - Gestão do Projeto:
-      - Plano de Entrega (05/12/2026): planning/DELIVERY_PLAN_2026_12_05.md
-      - Backlog de Implementação: planning/IMPLEMENTATION_BACKLOG.md
-      - Relatório de Validação: planning/VALIDATION_REPORT.md
-      - Governança e Ferramentas: development/governance.md
-      - Cronograma e Sprints: planning/sprints-roadmap.md
-      - Plano Consolidado: planning/project-plan.md
+      - Rastreabilidade RF01 a RF10: planning/matriz_rastreabilidade_rf01_rf10.md
   - Arquitetura:
       - Visão Geral: architecture/overview.md
-      - Arquitetura da Solução: planning/architecture-design.md
       - Decisões Arquiteturais (ADRs):
           - Índice: architecture/adr-index.md
           - ADR-001 Monorepo Modular: architecture/adr-001-monorepo-modular.md
@@ -104,13 +96,22 @@ nav:
   - Engenharia:
       - Pipeline IDP e OCR: engineering/idp-pipeline.md
       - Motor de Regras: engineering/rules-engine.md
-      - Harness Engineering: planning/harness-engineering.md
-      - Harness e Avaliação de IA: engineering/harness-evals.md
-  - Operação:
-      - DevOps: development/devops.md
+      - Maker-Checker e Guardrails: engineering/maker-checker.md
+      - Avaliação Contínua (Evals): engineering/harness-evals.md
       - MLOps: engineering/mlops.md
-      - Segurança e Governança: planning/governance-security.md
+  - Operação:
+      - DevOps e CI/CD: development/devops.md
+      - Segurança, LGPD e Auditoria: planning/governance-security.md
+      - Governança do Repositório: development/governance.md
   - Desenvolvimento:
       - Início Rápido: development/quickstart.md
       - Referência da API REST: development/api-reference.md
       - Quality Gates e Testes: development/quality-gates.md
+  - Gestão:
+      - Plano de Entrega (05/12/2026): planning/DELIVERY_PLAN_2026_12_05.md
+      - Backlog de Implementação: planning/IMPLEMENTATION_BACKLOG.md
+      - Relatório de Validação: planning/VALIDATION_REPORT.md
+      - Log de Defeitos do Fluxo Inicial: planning/log_defeitos_fluxo_inicial.md
+      - Histórico:
+          - Planejamento Inicial: planning/project-plan.md
+          - Cronograma Original de Sprints: planning/sprints-roadmap.md
