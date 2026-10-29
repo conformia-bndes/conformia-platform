@@ -6,15 +6,23 @@ BENCHMARK_CASES abaixo e os arquivos JSON em evals/datasets/.
 
 Limite de interpretacao: os casos sao textos sinteticos de poucas certidoes. Eles detectam
 regressoes de regra deterministica; nao medem a qualidade de OCR nem do LLM.
+
+Rastreabilidade (MLOps):
+    --json-report CAMINHO  grava metricas, resultado por verificacao, commit e hash do checklist
+    --mlflow               registra a execucao no MLflow (sem dependencia do projeto):
+        uv run --with mlflow==3.17.2 python evals/eval_pipeline.py --mlflow
 """
 
+import argparse
 import glob
+import hashlib
 import json
 import os
+import subprocess
 import sys
 import time
-from datetime import date
-from typing import List, Dict, Any
+from datetime import date, datetime, timezone
+from typing import List, Dict, Any, Optional
 
 # Garante suporte a UTF-8 no console do Windows/Linux
 if hasattr(sys.stdout, "reconfigure"):
@@ -178,7 +186,7 @@ def evaluate_like_product(engine: RulesEngine, text: str) -> Dict[str, Any]:
     return engine.evaluate({"full_text": text, "metadata": {}}, document_type=document_type)
 
 
-def run_evaluation() -> bool:
+def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) -> bool:
     print("=" * 70)
     print("Conform.IA BNDES - Pipeline de Avaliacao Continua (Evals)")
     print(f"Data de referencia: {REFERENCE_DATE.isoformat()}")
@@ -188,6 +196,7 @@ def run_evaluation() -> bool:
     total_checks = 0
     passed_checks = 0
     false_positives = 0
+    check_records: List[Dict[str, Any]] = []
     start_time = time.time()
 
     for case in BENCHMARK_CASES + load_dataset_cases():
@@ -209,12 +218,25 @@ def run_evaluation() -> bool:
             # Falso Positivo: qualquer aprovacao (COMPLIANT) onde a verdade nao era COMPLIANT
             if expected_status != "COMPLIANT" and actual_status == "COMPLIANT":
                 false_positives += 1
+                outcome = "FALSE_POSITIVE"
                 print(f"  [FAIL] FALHA CRITICA (Falso Positivo) em {rule_id}: Esperado={expected_status}, Obtido={actual_status}")
             elif actual_status == expected_status:
                 passed_checks += 1
+                outcome = "PASS"
                 print(f"  [PASS] {rule_id}: Sucesso (Status: {actual_status})")
             else:
+                outcome = "DIVERGENCE"
                 print(f"  [WARN] {rule_id}: Divergencia. Esperado={expected_status}, Obtido={actual_status}")
+            check_records.append(
+                {
+                    "case_id": case["id"],
+                    "rule_id": rule_id,
+                    "document_type": eval_result["document_type"],
+                    "expected": expected_status,
+                    "actual": actual_status,
+                    "outcome": outcome,
+                }
+            )
 
     elapsed = time.time() - start_time
     accuracy = (passed_checks / total_checks) * 100 if total_checks > 0 else 0
@@ -228,7 +250,30 @@ def run_evaluation() -> bool:
     print(f"Tempo de Execucao:     {elapsed:.4f}s")
     print("=" * 70)
 
-    if false_positives > 0 or accuracy < ACCURACY_THRESHOLD:
+    passed = false_positives == 0 and accuracy >= ACCURACY_THRESHOLD
+    report = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": _git_commit(),
+        "rules_sha256": _sha256_of(RULES_FILE),
+        "reference_date": REFERENCE_DATE.isoformat(),
+        "accuracy_threshold": ACCURACY_THRESHOLD,
+        "metrics": {
+            "total_checks": total_checks,
+            "passed_checks": passed_checks,
+            "false_positives": false_positives,
+            "accuracy": round(accuracy, 2),
+        },
+        "passed": passed,
+        "checks": check_records,
+    }
+    if json_report:
+        with open(json_report, "w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        print(f"Relatorio JSON gravado em {json_report}")
+    if use_mlflow:
+        _log_to_mlflow(report, json_report)
+
+    if not passed:
         print("[FAIL] Regressao detectada nos Evals. O pipeline nao atingiu os criterios de aceitacao.")
         return False
 
@@ -236,6 +281,58 @@ def run_evaluation() -> bool:
     return True
 
 
+def _sha256_of(path: str) -> str:
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def _git_commit() -> Optional[str]:
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=EVALS_DIR, check=True
+        )
+        return out.stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _log_to_mlflow(report: Dict[str, Any], json_report: Optional[str]) -> None:
+    """
+    Registra a execucao no MLflow. Sem MLFLOW_TRACKING_URI, usa o banco SQLite local
+    mlflow.db na raiz do repositorio (o MLflow 3 nao aceita mais o file store por padrao).
+    """
+    try:
+        import mlflow
+    except ImportError as exc:
+        raise SystemExit(
+            "MLflow nao instalado. Execute com: "
+            "uv run --with mlflow==3.17.2 python evals/eval_pipeline.py --mlflow"
+        ) from exc
+
+    if not os.environ.get("MLFLOW_TRACKING_URI"):
+        repo_root = os.path.abspath(os.path.join(EVALS_DIR, ".."))
+        mlflow.set_tracking_uri("sqlite:///" + os.path.join(repo_root, "mlflow.db").replace("\\", "/"))
+    mlflow.set_experiment("conformia-evals")
+    with mlflow.start_run(run_name=f"evals-{report['reference_date']}"):
+        mlflow.log_params(
+            {
+                "git_commit": report["git_commit"] or "desconhecido",
+                "rules_sha256": report["rules_sha256"],
+                "reference_date": report["reference_date"],
+                "accuracy_threshold": report["accuracy_threshold"],
+            }
+        )
+        mlflow.log_metrics(report["metrics"])
+        mlflow.set_tag("passed", str(report["passed"]))
+        if json_report:
+            mlflow.log_artifact(json_report)
+    print("Execucao registrada no MLflow (experimento 'conformia-evals').")
+
+
 if __name__ == "__main__":
-    success = run_evaluation()
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--json-report", help="Grava o relatorio da execucao em JSON")
+    parser.add_argument("--mlflow", action="store_true", help="Registra a execucao no MLflow")
+    args = parser.parse_args()
+    success = run_evaluation(json_report=args.json_report, use_mlflow=args.mlflow)
     sys.exit(0 if success else 1)
