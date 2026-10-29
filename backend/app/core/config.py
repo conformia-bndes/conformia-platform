@@ -6,6 +6,18 @@ from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _with_explicit_postgres_driver(url: str) -> str:
+    """
+    Fixa o driver psycopg2 (o instalado pelo projeto) em URLs PostgreSQL sem driver.
+    A partir do SQLAlchemy 2.1, "postgresql://" passa a usar o psycopg 3 por padrao, que
+    nao e dependencia do backend; a URL explicita independe da versao do SQLAlchemy.
+    """
+    for scheme in ("postgresql://", "postgres://"):
+        if url.startswith(scheme):
+            return "postgresql+psycopg2://" + url[len(scheme) :]
+    return url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
@@ -57,7 +69,7 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_db_connection(cls, v: Union[str, None], info) -> str:
         if isinstance(v, str) and v:
-            return v
+            return _with_explicit_postgres_driver(v)
         # Extrai valores para montar a URL caso DATABASE_URL não seja passada explicitamente
         values = info.data
         user = values.get("POSTGRES_USER", "conformia_user")
@@ -65,7 +77,9 @@ class Settings(BaseSettings):
         server = values.get("POSTGRES_SERVER", "postgres")
         port = values.get("POSTGRES_PORT", 5432)
         db = values.get("POSTGRES_DB", "conformia_db")
-        return f"postgresql://{user}:{password}@{server}:{port}/{db}"
+        return _with_explicit_postgres_driver(
+            f"postgresql://{user}:{password}@{server}:{port}/{db}"
+        )
 
     # Cache e Filas - Redis & Celery
     REDIS_URL: str = "redis://redis:6379/0"

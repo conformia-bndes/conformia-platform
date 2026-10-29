@@ -89,6 +89,9 @@ nav:
       - Seguranca e Governanca: planning/governance-security.md
       - Harness Engineering: planning/harness-engineering.md
       - Plano Consolidado (Master): planning/project-plan.md
+      - Plano de Entrega 05/12: planning/DELIVERY_PLAN_2026_12_05.md
+      - Backlog de Implementacao: planning/IMPLEMENTATION_BACKLOG.md
+      - Relatorio de Validacao: planning/VALIDATION_REPORT.md
   - Arquitetura:
       - Visao Geral: architecture/overview.md
       - Decisoes Arquiteturais (ADRs):
