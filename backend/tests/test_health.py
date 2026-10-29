@@ -16,3 +16,10 @@ def test_health_endpoint(client):
     assert "status" in data
     assert "services" in data
     assert data["services"]["database"] == "healthy"
+
+
+def test_health_reports_minio_state(client, monkeypatch):
+    monkeypatch.setattr("app.core.storage.storage_service.ping", lambda: False)
+    data = client.get("/api/v1/health").json()
+    assert data["services"]["minio"] == "degraded"
+    assert data["status"] == "degraded"

@@ -1,0 +1,65 @@
+name: Governanca - PRs e Workflows
+
+on:
+  pull_request:
+    branches: [main, dev]
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title:
+    name: Titulo do PR (Conventional Commits)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Tipos aceitos espelham o template de PR do repositorio
+          types: |
+            feat
+            fix
+            docs
+            refactor
+            test
+            chore
+            ci
+            build
+            perf
+            revert
+            sec
+            infra
+          requireScope: false
+
+  actionlint:
+    name: Lint dos workflows (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Executar actionlint
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  pre-commit:
+    name: Hooks pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Sincronizar dependencias (black e flake8 do uv.lock)
+        run: uv sync --all-packages --all-extras --frozen
+      - name: Executar todos os hooks
+        run: uvx pre-commit run --all-files --show-diff-on-failure

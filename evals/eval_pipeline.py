@@ -1,9 +1,28 @@
-"""Regression and Evaluation Pipeline for Document Extraction & Compliance Rules."""
+"""Regression and Evaluation Pipeline for Document Extraction & Compliance Rules.
 
+Cada caso percorre o mesmo caminho do produto: deteccao da tipologia pelo parser IDP
+e avaliacao somente das regras daquela tipologia. Casos vem de duas fontes: a lista
+BENCHMARK_CASES abaixo e os arquivos JSON em evals/datasets/.
+
+Limite de interpretacao: os casos sao textos sinteticos de poucas certidoes. Eles detectam
+regressoes de regra deterministica; nao medem a qualidade de OCR nem do LLM.
+
+Rastreabilidade (MLOps):
+    --json-report CAMINHO  grava metricas, resultado por verificacao, commit e hash do checklist
+    --mlflow               registra a execucao no MLflow (sem dependencia do projeto):
+        uv run --with mlflow==3.17.2 python evals/eval_pipeline.py --mlflow
+"""
+
+import argparse
+import glob
+import hashlib
+import json
 import os
+import subprocess
 import sys
 import time
-from typing import List, Dict, Any
+from datetime import date, datetime, timezone
+from typing import List, Dict, Any, Optional
 
 # Garante suporte a UTF-8 no console do Windows/Linux
 if hasattr(sys.stdout, "reconfigure"):
@@ -14,20 +33,33 @@ if hasattr(sys.stderr, "reconfigure"):
 # Adiciona o backend ao path para importação dos módulos
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-from app.services.rules_engine import RulesEngine
+# O benchmark nao usa banco, fila nem storage; valores descartaveis apenas satisfazem a
+# validacao de Settings no import (segredos nao possuem default no codigo).
+for _name in ("SECRET_KEY", "API_KEY", "POSTGRES_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"):
+    os.environ.setdefault(_name, "eval-only")
+
+from app.idp.parser import extract_fields_and_evidence  # noqa: E402
+from app.services.rules_engine import RulesEngine  # noqa: E402
+
+EVALS_DIR = os.path.dirname(os.path.abspath(__file__))
+RULES_FILE = os.path.join(EVALS_DIR, "..", "rules", "schemas", "bndes_sample_checklist.json")
+# Data de referencia fixa: o resultado do benchmark nao depende do dia em que roda.
+REFERENCE_DATE = date(2026, 10, 29)
+ACCURACY_THRESHOLD = 90.0
 
 
 # Casos de teste de referência com Ground Truth
 BENCHMARK_CASES: List[Dict[str, Any]] = [
     {
         "id": "CASE-001",
-        "description": "CND Federal - Certidão Limpa e Regular",
+        "description": "CND Federal - Certidão Limpa, Regular e Vigente",
         "input_text": (
             "REPÚBLICA FEDERATIVA DO BRASIL - MINISTÉRIO DA FAZENDA\n"
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
             "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
-            "É certificado que não constam pendências em nome do sujeito passivo."
+            "É certificado que não constam pendências em nome do sujeito passivo.\n"
+            "Válida até: 31/12/2026"
         ),
         "expected_results": {
             "RULE-BNDES-001": "COMPLIANT"
@@ -47,12 +79,13 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
     },
     {
         "id": "CASE-003",
-        "description": "CRF FGTS Regular",
+        "description": "CRF FGTS Regular e Vigente",
         "input_text": (
             "CAIXA ECONÔMICA FEDERAL\n"
             "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
             "Inscrição: 12.345.678/0001-90\n"
-            "A Caixa Econômica Federal certifica que a empresa encontra-se em SITUAÇÃO REGULAR."
+            "A Caixa Econômica Federal certifica que a empresa encontra-se em SITUAÇÃO REGULAR.\n"
+            "Validade: 15/11/2026"
         ),
         "expected_results": {
             "RULE-BNDES-002": "COMPLIANT"
@@ -83,42 +116,127 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
         "expected_results": {
             "RULE-BNDES-001": "NON_COMPLIANT"
         }
-    }
+    },
+    {
+        "id": "CASE-006",
+        "description": "CND Federal sem Data de Validade Legível (AGENTS.md, diretriz 1)",
+        "input_text": (
+            "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "É certificado que não constam pendências em nome do sujeito passivo."
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "MANUAL_REVIEW_REQUIRED"
+        }
+    },
+    {
+        "id": "CASE-007",
+        "description": "CRF FGTS Regular sem Data de Validade",
+        "input_text": (
+            "CAIXA ECONÔMICA FEDERAL\n"
+            "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
+            "A Caixa Econômica Federal certifica que a empresa encontra-se em SITUAÇÃO REGULAR."
+        ),
+        "expected_results": {
+            "RULE-BNDES-002": "MANUAL_REVIEW_REQUIRED"
+        }
+    },
+    {
+        "id": "CASE-008",
+        "description": "CND Federal válida não é reprovada por regras de outras tipologias",
+        "input_text": (
+            "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "Válida até: 31/12/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "COMPLIANT",
+            "RULE-BNDES-002": "NOT_APPLICABLE",
+            "RULE-BNDES-004": "NOT_APPLICABLE"
+        },
+        "expected_overall": "COMPLIANT"
+    },
 ]
 
 
+def load_dataset_cases() -> List[Dict[str, Any]]:
+    """Converte os arquivos JSON de evals/datasets/ para o formato de BENCHMARK_CASES."""
+    cases = []
+    pattern = os.path.join(EVALS_DIR, "datasets", "*", "*.json")
+    for path in sorted(glob.glob(pattern)):
+        with open(path, encoding="utf-8") as f:
+            sample = json.load(f)
+        cases.append(
+            {
+                "id": sample["id"],
+                "description": f"Dataset {os.path.relpath(path, EVALS_DIR)}",
+                "input_text": sample["text"],
+                "expected_results": {sample["expected_rule"]: sample["expected_status"]},
+            }
+        )
+    return cases
 
-def run_evaluation() -> bool:
+
+def evaluate_like_product(engine: RulesEngine, text: str) -> Dict[str, Any]:
+    """Reproduz o fluxo do produto: tipologia detectada pelo parser, regras filtradas."""
+    document_type = extract_fields_and_evidence(text).document_type
+    if document_type is None:
+        return engine.not_evaluable("Tipologia documental nao identificada.")
+    return engine.evaluate({"full_text": text, "metadata": {}}, document_type=document_type)
+
+
+def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) -> bool:
     print("=" * 70)
     print("Conform.IA BNDES - Pipeline de Avaliacao Continua (Evals)")
+    print(f"Data de referencia: {REFERENCE_DATE.isoformat()}")
     print("=" * 70)
 
-    engine = RulesEngine(rules_file="rules/schemas/bndes_sample_checklist.json")
+    engine = RulesEngine(rules_file=RULES_FILE, today=lambda: REFERENCE_DATE)
     total_checks = 0
     passed_checks = 0
     false_positives = 0
+    check_records: List[Dict[str, Any]] = []
     start_time = time.time()
 
-    for case in BENCHMARK_CASES:
+    for case in BENCHMARK_CASES + load_dataset_cases():
         print(f"\n[EVAL] Executando {case['id']}: {case['description']}")
-        eval_result = engine.evaluate({"full_text": case["input_text"], "metadata": {}})
-        
+        eval_result = evaluate_like_product(engine, case["input_text"])
+        print(f"  Tipologia detectada: {eval_result['document_type']}")
+
         # Mapeia resultados por rule_id
         actual_by_rule = {r["rule_id"]: r["status"] for r in eval_result["results"]}
+        expectations = dict(case["expected_results"])
+        if "expected_overall" in case:
+            actual_by_rule["OVERALL"] = eval_result["overall_status"]
+            expectations["OVERALL"] = case["expected_overall"]
 
-        for rule_id, expected_status in case["expected_results"].items():
+        for rule_id, expected_status in expectations.items():
             total_checks += 1
             actual_status = actual_by_rule.get(rule_id, "NOT_EVALUATED")
 
-            # Verificacao estrita de Falso Positivo (rejeitar algo irregular dado como conforme)
-            if expected_status == "NON_COMPLIANT" and actual_status == "COMPLIANT":
+            # Falso Positivo: qualquer aprovacao (COMPLIANT) onde a verdade nao era COMPLIANT
+            if expected_status != "COMPLIANT" and actual_status == "COMPLIANT":
                 false_positives += 1
+                outcome = "FALSE_POSITIVE"
                 print(f"  [FAIL] FALHA CRITICA (Falso Positivo) em {rule_id}: Esperado={expected_status}, Obtido={actual_status}")
             elif actual_status == expected_status:
                 passed_checks += 1
+                outcome = "PASS"
                 print(f"  [PASS] {rule_id}: Sucesso (Status: {actual_status})")
             else:
+                outcome = "DIVERGENCE"
                 print(f"  [WARN] {rule_id}: Divergencia. Esperado={expected_status}, Obtido={actual_status}")
+            check_records.append(
+                {
+                    "case_id": case["id"],
+                    "rule_id": rule_id,
+                    "document_type": eval_result["document_type"],
+                    "expected": expected_status,
+                    "actual": actual_status,
+                    "outcome": outcome,
+                }
+            )
 
     elapsed = time.time() - start_time
     accuracy = (passed_checks / total_checks) * 100 if total_checks > 0 else 0
@@ -128,11 +246,34 @@ def run_evaluation() -> bool:
     print(f"Total de Verificacoes: {total_checks}")
     print(f"Casos Bem-Sucedidos:   {passed_checks}")
     print(f"Falsos Positivos:      {false_positives} (Tolerancia Maxima: 0)")
-    print(f"Acuracia Geral:        {accuracy:.2f}%")
+    print(f"Acuracia Geral:        {accuracy:.2f}% (Minimo: {ACCURACY_THRESHOLD:.0f}%)")
     print(f"Tempo de Execucao:     {elapsed:.4f}s")
     print("=" * 70)
 
-    if false_positives > 0 or accuracy < 90.0:
+    passed = false_positives == 0 and accuracy >= ACCURACY_THRESHOLD
+    report = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": _git_commit(),
+        "rules_sha256": _sha256_of(RULES_FILE),
+        "reference_date": REFERENCE_DATE.isoformat(),
+        "accuracy_threshold": ACCURACY_THRESHOLD,
+        "metrics": {
+            "total_checks": total_checks,
+            "passed_checks": passed_checks,
+            "false_positives": false_positives,
+            "accuracy": round(accuracy, 2),
+        },
+        "passed": passed,
+        "checks": check_records,
+    }
+    if json_report:
+        with open(json_report, "w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        print(f"Relatorio JSON gravado em {json_report}")
+    if use_mlflow:
+        _log_to_mlflow(report, json_report)
+
+    if not passed:
         print("[FAIL] Regressao detectada nos Evals. O pipeline nao atingiu os criterios de aceitacao.")
         return False
 
@@ -140,6 +281,58 @@ def run_evaluation() -> bool:
     return True
 
 
+def _sha256_of(path: str) -> str:
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def _git_commit() -> Optional[str]:
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=EVALS_DIR, check=True
+        )
+        return out.stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _log_to_mlflow(report: Dict[str, Any], json_report: Optional[str]) -> None:
+    """
+    Registra a execucao no MLflow. Sem MLFLOW_TRACKING_URI, usa o banco SQLite local
+    mlflow.db na raiz do repositorio (o MLflow 3 nao aceita mais o file store por padrao).
+    """
+    try:
+        import mlflow
+    except ImportError as exc:
+        raise SystemExit(
+            "MLflow nao instalado. Execute com: "
+            "uv run --with mlflow==3.17.2 python evals/eval_pipeline.py --mlflow"
+        ) from exc
+
+    if not os.environ.get("MLFLOW_TRACKING_URI"):
+        repo_root = os.path.abspath(os.path.join(EVALS_DIR, ".."))
+        mlflow.set_tracking_uri("sqlite:///" + os.path.join(repo_root, "mlflow.db").replace("\\", "/"))
+    mlflow.set_experiment("conformia-evals")
+    with mlflow.start_run(run_name=f"evals-{report['reference_date']}"):
+        mlflow.log_params(
+            {
+                "git_commit": report["git_commit"] or "desconhecido",
+                "rules_sha256": report["rules_sha256"],
+                "reference_date": report["reference_date"],
+                "accuracy_threshold": report["accuracy_threshold"],
+            }
+        )
+        mlflow.log_metrics(report["metrics"])
+        mlflow.set_tag("passed", str(report["passed"]))
+        if json_report:
+            mlflow.log_artifact(json_report)
+    print("Execucao registrada no MLflow (experimento 'conformia-evals').")
+
+
 if __name__ == "__main__":
-    success = run_evaluation()
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--json-report", help="Grava o relatorio da execucao em JSON")
+    parser.add_argument("--mlflow", action="store_true", help="Registra a execucao no MLflow")
+    args = parser.parse_args()
+    success = run_evaluation(json_report=args.json_report, use_mlflow=args.mlflow)
     sys.exit(0 if success else 1)

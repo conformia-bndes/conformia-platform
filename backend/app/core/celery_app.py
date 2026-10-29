@@ -31,9 +31,8 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
     logger.info(f"Iniciando processamento IDP do documento {document_id} a partir de {file_path}")
     from app.db.session import SessionLocal
     from app.db.models.document import Document
-    from app.db.models.compliance import ComplianceCheck, AuditLog
     from app.idp.extractor import DocumentExtractor
-    from app.services.rules_engine import RulesEngine
+    from app.services.compliance_service import evaluate_and_persist
     from app.core.storage import storage_service
     import os
 
@@ -53,8 +52,7 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
             storage_service.download_file(object_name, file_path)
 
         extractor = DocumentExtractor()
-        extracted_data = extractor.extract(file_path)
-
+        extracted_data = extractor.extract(file_path, document_id=document_id)
         doc.extracted_text = extracted_data.get("full_text")
         doc_metadata = extracted_data.get("metadata") or {}
 
@@ -68,37 +66,8 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
         doc_metadata["extraction"] = extraction_result.model_dump()
         doc.extracted_metadata = doc_metadata
 
-        engine = RulesEngine()
-        compliance_results = engine.evaluate(extracted_data)
-
-        # Persistir resultados de conformidade individuais
-        for check in compliance_results.get("checks", []):
-            compliance_check = ComplianceCheck(
-                document_id=doc.id,
-                rule_id=check["rule_id"],
-                rule_title=check["rule_title"],
-                category=check["category"],
-                status=check["status"],
-                confidence_score=check.get("confidence_score", 1.0),
-                evidence=check.get("evidence", {}),
-                findings=check.get("findings", ""),
-                checker_type=check.get("checker_type", "DETERMINISTIC"),
-            )
-            db.add(compliance_check)
-
-        # Registrar log de auditoria imutavel
-        audit = AuditLog(
-            entity_type="DOCUMENT",
-            entity_id=doc.id,
-            action="COMPLIANCE_EVALUATION",
-            performed_by="CELERY_WORKER",
-            details={
-                "overall_status": compliance_results.get("overall_status"),
-                "total_rules": compliance_results.get("total_rules"),
-                "compliance_score": compliance_results.get("compliance_score"),
-            },
-        )
-        db.add(audit)
+        # Laudo, auditoria e status COMPLETED sao gravados no mesmo commit.
+        compliance_results, _ = evaluate_and_persist(db, doc, performed_by="CELERY_WORKER")
 
         doc.status = "COMPLETED"
         db.commit()
@@ -129,7 +98,7 @@ def process_document_task(self, document_id: str, file_path: str, object_name: s
                 }
                 db.commit()
         except Exception:
-            pass
+            logger.exception(f"Falha ao registrar EXTRACTION_FAILED para {document_id}")
         self.retry(exc=exc, countdown=10, max_retries=3)
     finally:
         db.close()

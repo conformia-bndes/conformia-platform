@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "conformia-platform",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        { "type": "feat", "section": "Adicionado" },
+        { "type": "fix", "section": "Corrigido" },
+        { "type": "sec", "section": "Seguranca" },
+        { "type": "perf", "section": "Desempenho" },
+        { "type": "refactor", "section": "Refatoracao" },
+        { "type": "docs", "section": "Documentacao" },
+        { "type": "ci", "section": "Integracao Continua", "hidden": true },
+        { "type": "chore", "section": "Manutencao", "hidden": true },
+        { "type": "test", "section": "Testes", "hidden": true }
+      ],
+      "extra-files": [
+        { "type": "toml", "path": "pyproject.toml", "jsonpath": "$.project.version" },
+        { "type": "toml", "path": "backend/pyproject.toml", "jsonpath": "$.project.version" },
+        { "type": "json", "path": "frontend/package.json", "jsonpath": "$.version" },
+        { "type": "generic", "path": "backend/app/core/config.py" }
+      ]
+    }
+  }
+}

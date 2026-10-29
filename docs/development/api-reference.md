@@ -197,22 +197,82 @@ Retorna estrutura detalhada do erro para análise e rastreabilidade:
 ### `POST /api/v1/compliance/verify/{document_id}`
 
 Executa a avaliação automatizada das regras do checklist BNDES contra o documento ingerido.
+Somente as regras da tipologia detectada (`document_type`) são avaliadas; as demais ficam
+`NOT_APPLICABLE`. Tipologia não identificada resulta em `MANUAL_REVIEW_REQUIRED` sem regras
+avaliadas. O laudo vigente é substituído e cada execução é registrada na trilha de auditoria.
 
 **Resposta (`200 OK`):**
 
 ```json
 {
-  "report_id": "rep-7f8e9a-2026",
-  "document_id": "doc-550e8400-e29b-41d4-a716-446655440000",
+  "document_id": "550e8400-e29b-41d4-a716-446655440000",
+  "document_filename": "cnd_receita_federal.pdf",
+  "document_type": "CND_FEDERAL",
   "overall_status": "COMPLIANT",
-  "total_checks": 5,
-  "compliant_count": 5,
-  "non_compliant_count": 0,
-  "manual_review_count": 0,
-  "evaluated_at": "2026-09-27T03:51:00Z"
+  "compliance_score": 1.0,
+  "total_rules": 6,
+  "evaluated_rules": 1,
+  "compliant_rules": 1,
+  "checks": [
+    {
+      "rule_id": "RULE-BNDES-001",
+      "rule_title": "Certidão Negativa de Débitos Federais e Dívida Ativa da União",
+      "category": "FISCAL",
+      "status": "COMPLIANT",
+      "confidence_score": 1.0,
+      "checker_type": "DETERMINISTIC",
+      "findings": "Todos os criterios deterministicos de conformidade foram atendidos.",
+      "evidence": {"matched_keywords": ["..."], "validity_date": "31/12/2026"}
+    }
+  ]
 }
 ```
+
+Status por regra: `COMPLIANT`, `NON_COMPLIANT`, `MANUAL_REVIEW_REQUIRED` (inclui certidão sem
+data de validade legível e regra híbrida sem LLM disponível) e `NOT_APPLICABLE`. O
+`compliance_score` considera apenas regras aplicáveis.
 
 ### `GET /api/v1/compliance/rules`
 
 Retorna todas as regras ativas configuradas no catálogo declarativo JSON Schema do BNDES.
+
+---
+
+## 4. Revisão Humana Maker-Checker (`/compliance/reviews`)
+
+Decisão humana sobre o laudo automatizado (RF09). Um analista propõe (Maker) e **outro**
+analista confirma ou devolve (Checker). Os eventos são append-only e cada um gera um registro
+na trilha de auditoria com o identificador do analista.
+
+**Autenticação:** as operações de escrita exigem a chave pessoal de um usuário com perfil
+`ANALISTA` em `X-API-Key` (ou `Authorization: Bearer`), em qualquer ambiente. A chave de
+serviço (`API_KEY`) e o acesso anônimo de desenvolvimento não podem decidir. Perfis `AUDITOR`
+e `ADMIN` apenas consultam.
+
+A chave pessoal tem o formato `<user_id>:<segredo>`. O servidor guarda em `API_USERS` apenas o
+hash PBKDF2-HMAC-SHA256 do segredo, com sal próprio (campo `key_hash`); gere a chave e a entrada
+com `python backend/scripts/create_api_user.py <user_id> <perfil>`: a chave é gravada em
+`<user_id>.key` (permissão só do dono, sem sobrescrever) e não aparece no terminal. O prefixo
+`user_id` limita a verificação a um único hash por requisição.
+
+| Método e rota | Função | Respostas de erro |
+| :-- | :-- | :-- |
+| `GET /api/v1/compliance/reviews/{document_id}` | Estado derivado e histórico | `404` documento |
+| `POST /api/v1/compliance/reviews/{document_id}` | Propor `APPROVE`, `REJECT` ou `EXCEPTION` com `justification` (20 a 4000 caracteres) | `401`, `403` perfil, `404`, `409` sem laudo ou proposta pendente, `422` validação ou `APPROVE` de laudo `NON_COMPLIANT` |
+| `POST /api/v1/compliance/reviews/{document_id}/{proposal_id}/confirm` | Confirmar proposta de outro analista (`comment`, 10 a 4000) | `403` autor da proposta, `404`, `409` já resolvida |
+| `POST /api/v1/compliance/reviews/{document_id}/{proposal_id}/return` | Devolver proposta de outro analista | idem |
+
+**Estados (`state`):** `NO_REVIEW`, `PENDING_CHECK`, `FINAL` (última resolução confirmou),
+`RETURNED` (última proposta devolvida; nova proposta permitida). `final_decision` é a decisão
+da proposta confirmada mais recente.
+
+```bash
+# Analista A propõe
+curl -s -X POST http://localhost:8000/api/v1/compliance/reviews/<document_id> \
+  -H "X-API-Key: <analista-a>:<segredo>" -H "Content-Type: application/json" \
+  -d '{"decision": "APPROVE", "justification": "Validade e CNPJ conferidos contra o original."}'
+# Analista B confirma
+curl -s -X POST http://localhost:8000/api/v1/compliance/reviews/<document_id>/<proposal_id>/confirm \
+  -H "X-API-Key: <analista-b>:<segredo>" -H "Content-Type: application/json" \
+  -d '{"comment": "Conferido de forma independente."}'
+```

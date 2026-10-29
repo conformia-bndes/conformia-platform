@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from app.core.config import settings
 from app.db.session import Base
-from app.db.models import Document, ComplianceCheck, AuditLog  # noqa: F401
+from app.db.models import Document, ComplianceCheck, AuditLog, ReviewEvent  # noqa: F401
 
 config = context.config
 
@@ -23,10 +23,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return (
-        settings.DATABASE_URL
-        or "postgresql://conformia_user:conformia_secret_pass@localhost:5432/conformia_db"
-    )
+    return settings.DATABASE_URL
 
 
 def run_migrations_offline() -> None:

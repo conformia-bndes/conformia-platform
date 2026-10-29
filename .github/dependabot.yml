@@ -1,28 +1,54 @@
 version: 2
+# Atualizacoes entram por dev (branch de integracao) e chegam a main na promocao.
+# Patches e minors sao agrupados para reduzir o volume de PRs; majors chegam isolados.
 updates:
   - package-ecosystem: "pip"
     directory: "/backend"
+    target-branch: "dev"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "backend"
+      - "area: backend"
+    groups:
+      backend-minor-patch:
+        update-types: ["minor", "patch"]
     open-pull-requests-limit: 5
 
   - package-ecosystem: "npm"
     directory: "/frontend"
+    target-branch: "dev"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "frontend"
+      - "area: frontend"
+    groups:
+      frontend-minor-patch:
+        update-types: ["minor", "patch"]
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
     open-pull-requests-limit: 5
 
   - package-ecosystem: "github-actions"
-    directory: "/.github/workflows"
+    directory: "/"
+    target-branch: "dev"
     schedule:
       interval: "monthly"
     labels:
       - "dependencies"
-      - "ci-cd"
+      - "area: devops"
+    groups:
+      actions:
+        patterns: ["*"]
     open-pull-requests-limit: 5
+
+  - package-ecosystem: "docker"
+    directory: "/infra"
+    target-branch: "dev"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "area: devops"
+    open-pull-requests-limit: 3

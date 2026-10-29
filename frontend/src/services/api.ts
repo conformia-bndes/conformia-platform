@@ -92,14 +92,17 @@ export interface ComplianceCheckResult {
   confidence_score: number;
   checker_type: string;
   findings: string;
+  evidence?: Record<string, unknown> | null;
 }
 
 export interface ComplianceReport {
   document_id: string;
   document_filename: string;
+  document_type: string | null;
   overall_status: string;
   compliance_score: number;
   total_rules: number;
+  evaluated_rules: number;
   compliant_rules: number;
   checks: ComplianceCheckResult[];
 }

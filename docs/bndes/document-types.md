@@ -13,10 +13,10 @@ Este documento estabelece as especificações técnicas das tipologias documenta
   - Razão Social da pessoa jurídica.
   - Código de controle da certidão.
   - Data de emissão e data limite de validade.
-  - Frase de efeito legal: _"certidao negativa de debitos relativos aos tributos federais e a divida ativa da uniao"_ ou _"certidao positiva com efeitos de negativa"_.
-- **Expressoes Regulares**:
+  - Frase de efeito legal: _"certidão negativa de débitos relativos aos tributos federais e a dívida ativa da União"_ ou _"certidão positiva com efeitos de negativa"_.
+- **Expressões Regulares**:
   - CNPJ: `\b[0-9]{2}\.[0-9]{3}\.[0-9]{3}\/[0-9]{4}\-[0-9]{2}\b`
-  - Codigo de Controle: `[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}`
+  - Código de Controle: `[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}\.[0-9A-F]{4}`
 
 ---
 
@@ -25,11 +25,11 @@ Este documento estabelece as especificações técnicas das tipologias documenta
 - **Órgão Emissor**: Caixa Econômica Federal (CEF).
 - **Finalidade**: Atestar o cumprimento das obrigações trabalhistas com o Fundo de Garantia do Tempo de Serviço.
 - **Campos Obrigatórios**:
-  - Razao Social e Endereco do empregador.
-  - Inscricao CNPJ ou CEI.
-  - Numero do Certificado (CRF).
-  - Periodo de validade (de DD/MM/AAAA a DD/MM/AAAA).
-  - Atestado de situacao regular: _"encontra-se em situacao regular perante o Fundo de Garantia do Tempo de Servico"_.
+  - Razão Social e Endereço do empregador.
+  - Inscrição CNPJ ou CEI.
+  - Número do Certificado (CRF).
+  - Período de validade (de DD/MM/AAAA a DD/MM/AAAA).
+  - Atestado de situação regular: _"encontra-se em situação regular perante o Fundo de Garantia do Tempo de Serviço"_.
 
 ---
 
@@ -38,10 +38,10 @@ Este documento estabelece as especificações técnicas das tipologias documenta
 - **Órgão Emissor**: Justiça do Trabalho / Tribunal Superior do Trabalho (TST).
 - **Finalidade**: Demonstrar que o proponente não figura como inadimplente no Banco Nacional de Devedores Trabalhistas (BNDT).
 - **Campos Obrigatórios**:
-  - Nome / Razao Social.
+  - Nome / Razão Social.
   - CNPJ.
-  - Numero da certidao e ano de expedicao.
-  - Declaracao formal de que _"NAO CONSTAM"_ debitos trabalhistas inadimplidos.
+  - Número da certidão e ano de expedição.
+  - Declaração formal de que _"NÃO CONSTAM"_ débitos trabalhistas inadimplidos.
 
 ---
 
@@ -49,9 +49,9 @@ Este documento estabelece as especificações técnicas das tipologias documenta
 
 - **Órgão Emissor**: Tribunais de Justiça Estaduais (Varas de Falência e Recuperações Judiciais da comarca da sede da empresa).
 - **Finalidade**: Certificar a inexistência de pedidos de falência decretada ou plano de recuperação judicial não homologado.
-- **Tratamento Hibrido (Maker-Checker)**:
-  - Textos de certidoes judiciais variam conforme a comarca estadual.
-  - O pipeline IDP extrai o texto integral; o agente Maker avalia a presenca de acoes distribuidas; o agente Checker confirma se nao ha mencao a decretacao falimentar.
+- **Tratamento Híbrido (Maker-Checker)**:
+  - Textos de certidões judiciais variam conforme a comarca estadual.
+  - O pipeline IDP extrai o texto integral; o agente Maker avalia a presença de ações distribuidas; o agente Checker confirma se não ha menção a decretação falimentar.
 
 ---
 

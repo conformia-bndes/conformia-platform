@@ -1,36 +1,36 @@
 # Conform.IA BNDES - Plataforma de Conformidade Documental
 
 [![CI](https://github.com/conformia-bndes/conformia-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/conformia-bndes/conformia-platform/actions/workflows/ci.yml)
-[![Documentacao](https://img.shields.io/badge/Docs-GitHub%20Pages-blue.svg)](https://conformia-bndes.github.io/conformia-platform/)
+[![Documentação](https://img.shields.io/badge/Docs-GitHub%20Pages-blue.svg)](https://conformia-bndes.github.io/conformia-platform/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18%2B-61DAFB.svg)](https://react.dev/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2-2496ED.svg)](https://www.docker.com/)
 
-Plataforma SaaS de Processamento Inteligente de Documentos (IDP) para verificacao automatizada de conformidade cadastral, fiscal, trabalhista e regulatoria em operacoes de credito e investimentos no BNDES, desenvolvida para atender aos requisitos da Consulta Publica BNDES no 01/2025.
+Plataforma SaaS de Processamento Inteligente de Documentos (IDP) para verificação automatizada de conformidade cadastral, fiscal, trabalhista e regulatoria em operações de crédito e investimentos no BNDES, desenvolvida para atender aos requisitos da Consulta Publica BNDES no 01/2025.
 
 ---
 
-## 1. Visao Geral do Projeto
+## 1. Visão Geral do Projeto
 
-A concessao de apoio financeiro pelo BNDES exige a comprovacao estrita de regularidade documental por parte das empresas proponentes (certidoes negativas de tributos federais, regularidade com o FGTS, certidoes de falencia e concordata, debitos trabalhistas e licencas socioambientais). O processo manual tradicional gera sobrecarga operacional e estende o tempo medio de analise.
+A concessão de apoio financeiro pelo BNDES exige a comprovação estrita de regularidade documental por parte das empresas proponentes (certidões negativas de tributos federais, regularidade com o FGTS, certidões de falência e concordata, débitos trabalhistas e licenças socioambientais). O processo manual tradicional gera sobrecarga operacional e estende o tempo médio de análise.
 
 O Conform.IA BNDES endereca esse desafio por meio de:
 
-1. **Pipeline IDP Hibrido**: Extracao vetorial nativa de PDFs com fallback automatico para OCR Tesseract em paginas digitalizadas.
-2. **Motor de Regras Declarativo**: Avaliacao baseada em schemas JSON normativos com tolerancia zero a pendencias criticas.
-3. **Harness Engineering e Padrao Maker-Checker**: Agentes de linguagem operando sob contexto estritamente delimitado com auditoria algoritmica para eliminacao de alucinacoes.
-4. **Trilha de Auditoria Imutavel**: Registro cronologico e detalhado de todas as operacoes para compliance e prestacao de contas.
+1. **Pipeline IDP Híbrido**: Extração vetorial nativa de PDFs com fallback automático para OCR Tesseract em páginas digitalizadas.
+2. **Motor de Regras Declarativo**: Avaliação baseada em schemas JSON normativos com tolerância zero a pendências criticas.
+3. **Harness Engineering e Padrão Maker-Checker**: Agentes de linguagem operando sob contexto estritamente delimitado com auditoria algoritmica para eliminação de alucinações.
+4. **Trilha de Auditoria Imutável**: Registro cronológico e detalhado de todas as operações para compliance e prestação de contas.
 
 ---
 
-## 2. Documentacao Oficial do Projeto
+## 2. Documentação Oficial do Projeto
 
-A documentacao tecnica completa, abrangendo especificacoes de engenharia, matriz de requisitos e Registros de Decisao Arquitetural (ADRs), esta publicada no GitHub Pages:
+A documentação técnica completa, abrangendo especificações de engenharia, matriz de requisitos e Registros de Decisão Arquitetural (ADRs), esta publicada no GitHub Pages:
 
-- **Portal de Documentacao**: [https://conformia-bndes.github.io/conformia-platform/](https://conformia-bndes.github.io/conformia-platform/)
+- **Portal de Documentação**: [https://conformia-bndes.github.io/conformia-platform/](https://conformia-bndes.github.io/conformia-platform/)
 
-Para executar a documentacao localmente com recarregamento a quente:
+Para executar a documentação localmente com recarregamento a quente:
 
 ```bash
 make docs
@@ -82,20 +82,20 @@ flowchart TD
 
 ---
 
-## 4. Matriz de Servicos e Portas
+## 4. Matriz de Serviços e Portas
 
-| Servico      | Tecnologia                 | Porta Host      | Finalidade                                           |
+| Serviço      | Tecnologia                 | Porta Host      | Finalidade                                           |
 | :----------- | :------------------------- | :-------------- | :--------------------------------------------------- |
-| **frontend** | React 18 / Vite / Tailwind | `5173`          | Interface web para analistas de credito do BNDES     |
-| **backend**  | FastAPI / Python 3.11      | `8000`          | API RESTful, ingestao e motor de conformidade        |
-| **worker**   | Celery 5 / Python 3.11     | -               | Execucao assincrona de OCR, extracao e regras de IA  |
+| **frontend** | React 18 / Vite / Tailwind | `5173`          | Interface web para analistas de crédito do BNDES     |
+| **backend**  | FastAPI / Python 3.11      | `8000`          | API RESTful, ingestão e motor de conformidade        |
+| **worker**   | Celery 5 / Python 3.11     | -               | Execução assincrona de OCR, extração e regras de IA  |
 | **postgres** | PostgreSQL 16 Alpine       | `5432`          | Banco relacional para laudos, documentos e auditoria |
-| **redis**    | Redis 7 Alpine             | `6379`          | Broker de mensagens Celery e cache                   |
-| **minio**    | MinIO (S3 Compatible)      | `9000` / `9001` | Armazenamento de arquivos PDF ingeridos              |
+| **redis**    | Redis 7 Alpine             | `6380` (host)   | Broker de mensagens Celery e cache                   |
+| **minio**    | MinIO (fork `pgsty/minio`) | `9000` / `9001` | Armazenamento de arquivos PDF ingeridos              |
 
 ---
 
-## 5. Estrutura de Diretorios do Monorepo
+## 5. Estrutura de Diretórios do Monorepo
 
 ```text
 conformia-platform/
@@ -156,46 +156,102 @@ conformia-platform/
 
 ---
 
-## 6. Guia Rapido de Inicializacao
+## 6. Guia Rápido de Inicialização
 
 ### Pre-requisitos
 
-- Docker Engine >= 24.0 e Docker Compose Plugin >= 2.20
-- Make (utilitario de comandos)
-- Astral `uv` >= 0.5.0 (gerenciador de pacotes e workspace Python ultrarrapido) ou Python 3.11+
-- Node.js 20+ e npm >= 10 (para desenvolvimento frontend local)
+- Docker Engine >= 24.0 e Docker Compose Plugin >= 2.20 (para `up --wait`)
+- Make e Bash (no Windows, use WSL2 ou Git Bash)
+- Para desenvolvimento local fora do Docker (opcional): Astral `uv` >= 0.5.0 ou Python 3.11+, e Node.js 22+ com npm >= 10
 
-### 1. Configuracao de Ambiente e Dependencias
+### Subir o ambiente em 3 comandos
 
 ```bash
-make setup
-# O comando cria o arquivo .env e sincroniza dependencias via uv sync (ou pip/npm)
+git clone https://github.com/conformia-bndes/conformia-platform.git
+cd conformia-platform
+
+make up      # gera o .env (se nao existir), constroi as imagens e espera tudo ficar saudavel
+make smoke   # teste de fumaca: upload -> fila -> worker -> estado da tarefa
 ```
 
-Caso utilize `uv` diretamente na linha de comando:
+`make up` executa `make env` antes: ele copia `.env.example` para `.env` trocando cada `CHANGE_ME`
+por um valor aleatório. **Nenhuma credencial e versionada**; o `.env` esta no `.gitignore`.
+As senhas ficam no seu `.env` (por exemplo, o login do console MinIO e `MINIO_ROOT_USER` /
+`MINIO_ROOT_PASSWORD`).
+
+Sem Make, os comandos equivalentes são:
 
 ```bash
-# Sincronizar dependencias de desenvolvimento do workspace
-uv sync --all-packages --all-extras
+bash scripts/setup-env.sh
+docker compose --env-file .env -f infra/docker-compose.yml up --build -d --wait
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend python scripts/smoke_test.py
+```
 
-# Executar testes ou benchmarks no ambiente isolado
+> O `--env-file .env` e obrigatório: o Compose resolve o `.env` relativo a pasta `infra/`,
+> não a raiz do repositório.
+
+### Teste de fumaca (reproduzível)
+
+`make smoke` roda `backend/scripts/smoke_test.py` dentro do container `backend` (somente
+biblioteca padrão do Python, sem fixtures: o PDF e gerado pelo próprio script) e valida:
+
+1. `GET /api/v1/health` retorna `healthy` (PostgreSQL, Redis e MinIO respondendo);
+2. `POST /api/v1/documents/upload` retorna `201` com um `task_id` (tarefa despachada a fila);
+3. `GET /api/v1/documents/tasks/{task_id}` evolui para `SUCCESS` (so ocorre se o **worker**
+   consumiu a fila);
+4. `GET /api/v1/documents/{id}` retorna `status: COMPLETED`.
+
+Saida esperada (resumida):
+
+```text
+[smoke] 1/4 health OK: {'database': 'healthy', 'redis': 'healthy', 'minio': 'healthy'}
+[smoke] 2/4 upload OK: document_id=... task_id=...
+[smoke]      estado da tarefa: STARTED
+[smoke]      estado da tarefa: SUCCESS
+[smoke] 4/4 documento COMPLETED (paginas: 1)
+[smoke] OK - ambiente sobe e processa pela fila.
+```
+
+O código de saida e `0` em caso de sucesso e `1` em qualquer falha (inclusive worker parado
+ou Redis fora do ar). Para repetir manualmente com `curl`:
+
+```bash
+curl -s -F "file=@documento.pdf" http://localhost:8000/api/v1/documents/upload   # -> id e task_id
+curl -s http://localhost:8000/api/v1/documents/tasks/<task_id>                   # -> state
+curl -s http://localhost:8000/api/v1/documents/<id>                              # -> status
+```
+
+Estados da tarefa: `PENDING` (na fila), `STARTED`, `RETRY`, `SUCCESS`, `FAILURE`. O Celery não
+distingue um `task_id` inexistente de uma tarefa ainda na fila (ambos `PENDING`).
+
+### Rotas e Endpoints de Acesso Local
+
+- **Frontend SPA**: [http://localhost:5173](http://localhost:5173)
+- **Documentação Swagger (OpenAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Healthcheck da API**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001) _(credenciais em `.env`)_
+
+### Problemas comuns
+
+| Sintoma                                                      | Causa e solução                                                                                         |
+| :----------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `Segredos nao configurados: ... CHANGE_ME`                   | `.env` copiado a mao. Rode `bash scripts/setup-env.sh --force`.                                         |
+| `password authentication failed` no Postgres / MinIO         | Volumes antigos com outras senhas. Rode `make clean` e depois `make up` (apaga os dados locais).        |
+| `make up` expira esperando `backend` saudável                | `docker compose --env-file .env -f infra/docker-compose.yml logs backend`; `/api/v1/health` mostra qual serviço esta `degraded`. |
+| `port is already allocated`                                  | Ajuste `*_PORT` no `.env` (ex.: `POSTGRES_PORT=5433`).                                                  |
+| Upload retorna `503`                                         | Redis ou MinIO indisponível; confira `make ps` e `/api/v1/health`.                                      |
+
+> **Sobre a imagem do MinIO:** o repositório oficial `minio/minio` foi arquivado e as imagens
+> deixaram de ser publicadas no Docker Hub. O compose usa o fork mantido `pgsty/minio`
+> (variável `MINIO_IMAGE`). Fixe uma tag/digest na variável após validar no seu ambiente.
+
+### Dependências locais (opcional)
+
+```bash
+make setup   # gera .env + uv sync + npm install
 uv run pytest backend/tests/ -v
 uv run python evals/eval_pipeline.py
 ```
-
-### 2. Inicializacao dos Servicos
-
-```bash
-make up
-# Executa docker compose -f infra/docker-compose.yml up --build -d
-```
-
-### 3. Rotas e Endpoints de Acesso Local
-
-- **Frontend SPA**: [http://localhost:5173](http://localhost:5173)
-- **Documentacao Swagger (OpenAPI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Healthcheck da API**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
-- **MinIO Console**: [http://localhost:9001](http://localhost:9001) _(Usuario: `conformia_minio_admin` / Senha: `conformia_minio_secret`)_
 
 ---
 
@@ -208,14 +264,14 @@ make test
 # Executa a suite de testes com pytest e relatorio de cobertura (via uv run se instalado)
 ```
 
-### Pipeline de Avaliacao Continua (Harness Evals)
+### Pipeline de Avaliação Continua (Harness Evals)
 
 ```bash
 make eval
 # Executa a validacao contra casos de teste com tolerancia zero a falsos positivos
 ```
 
-### Formatacao e Linters
+### Formatação e Linters
 
 ```bash
 make lint
@@ -227,9 +283,11 @@ make format
 
 ---
 
-## 8. Governanca e Regras de Contribuicao
+## 8. Governança e Regras de Contribuição
 
-1. **Roteamento de Revisao**: Alteracoes estruturais sao encaminhadas automaticamente aos responsaveis designados em `.github/CODEOWNERS`.
+1. **Roteamento de Revisão**: Alterações estruturais são encaminhadas automaticamente aos responsáveis designados em `.github/CODEOWNERS`.
 2. **Definition of Done (DoD)**: Todo Pull Request deve cumprir rigorosamente o checklist estrito em `.github/PULL_REQUEST_TEMPLATE.md`.
-3. **Agentes Autonomos**: Devem operar em estrita conformidade com as diretrizes de contexto delimitado e seguranca estabelecidas em `.agents/AGENTS.md`.
-4. **Padrao Estilistico**: Proibicao expressa de emojis em codigos, commits, templates e documentacao.
+3. **Agentes Autonomos**: Devem operar em estrita conformidade com as diretrizes de contexto delimitado e segurança estabelecidas em `.agents/AGENTS.md`.
+4. **Padrão Estilístico**: Proibição expressa de emojis em códigos, commits, templates e documentação.
+5. **Planejamento**: issues, milestones e o [Project do MVP](https://github.com/orgs/conformia-bndes/projects/2) (Kanban, Roadmap e Backlog) concentram o trabalho até 05/12/2026.
+6. **Ferramentas de governança**: hooks pre-commit (`make hooks`), títulos de PR em Conventional Commits, CodeQL, OpenSSF Scorecard e release-please. Detalhes em [Governança e Ferramentas](https://conformia-bndes.github.io/conformia-platform/development/governance/).
