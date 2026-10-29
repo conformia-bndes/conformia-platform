@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # Informações do Projeto
     PROJECT_NAME: str = "Conform.IA BNDES Platform"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.1.0"  # x-release-please-version
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True

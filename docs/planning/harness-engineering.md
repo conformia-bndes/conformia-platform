@@ -12,7 +12,7 @@ A confiabilidade de um sistema de decisão crítica não depende do texto isolad
 
 ---
 
-## 2. As Duas Dimensoes de Harness na Plataforma
+## 2. As Duas Dimensões de Harness na Plataforma
 
 ```mermaid
 flowchart TD
@@ -44,9 +44,9 @@ Controla a execução interna da IA durante a análise documental. O modelo rece
 
 ---
 
-## 3. O Padrao Maker-Checker (Quatro Olhos Algoritmico)
+## 3. O Padrão Maker-Checker (Quatro Olhos Algoritmico)
 
-Para erradicar qualquer possibilidade de aprovacao indevida por alucinacao semantica, a verificacao de clausulas e documentos adota o padrao **Maker-Checker**:
+Para erradicar qualquer possibilidade de aprovação indevida por alucinação semântica, a verificação de cláusulas e documentos adota o padrão **Maker-Checker**:
 
 ```mermaid
 sequenceDiagram
@@ -71,15 +71,15 @@ sequenceDiagram
 
 ---
 
-## 4. Guardrails e Limites Operacionais Inviolaveis
+## 4. Guardrails e Limites Operacionais Invioláveis
 
-Conforme definido no estatuto de operacao em `.agents/AGENTS.md`, vigoram os seguintes limites absolutos:
+Conforme definido no estatuto de operação em `.agents/AGENTS.md`, vigoram os seguintes limites absolutos:
 
-1. **Nunca Assumir Validade por Ausencia de Dados**:
-   - Se uma certidao nao contem a data de validade de forma legivel, ela deve ser marcada como `MANUAL_REVIEW_REQUIRED`, nunca como `COMPLIANT`.
-2. **Minimo Privilegio de Ferramentas**:
-   - As ferramentas acessiveis aos agentes de extracao sao estritamente de leitura sobre o documento. Apenas a camada transacional de servicos grava no banco.
-3. **Protecao de PII e Sigilo Bancario**:
-   - Logs e traces OpenTelemetry sao higienizados para nao expor CPF ou dados bancarios de socios proponentes.
-4. **Validacao Estrita de Regras**:
+1. **Nunca Assumir Validade por Ausência de Dados**:
+   - Se uma certidão não contem a data de validade de forma legível, ela deve ser marcada como `MANUAL_REVIEW_REQUIRED`, nunca como `COMPLIANT`.
+2. **Mínimo Privilegio de Ferramentas**:
+   - As ferramentas acessíveis aos agentes de extração são estritamente de leitura sobre o documento. Apenas a camada transacional de serviços grava no banco.
+3. **Proteção de PII e Sigilo Bancário**:
+   - Logs e traces OpenTelemetry são higienizados para não expor CPF ou dados bancários de socios proponentes.
+4. **Validação Estrita de Regras**:
    - Nenhuma regra pode ser adicionada a `rules/schemas/` sem que haja um caso de teste correspondente no benchmark de `evals/eval_pipeline.py`.

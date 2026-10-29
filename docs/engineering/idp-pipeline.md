@@ -1,6 +1,6 @@
 # Pipeline de Processamento Inteligente de Documentos (IDP)
 
-O pipeline de IDP do Conform.IA BNDES e responsavel pela conversao de documentos binarios PDF em representacoes textuais estruturadas, tabelas e metadados normalizados.
+O pipeline de IDP do Conform.IA BNDES e responsável pela conversão de documentos binários PDF em representações textuais estruturadas, tabelas e metadados normalizados.
 
 ---
 
@@ -24,23 +24,23 @@ flowchart TD
 
 ---
 
-## 2. Estrategia de Fallback para OCR
+## 2. Estratégia de Fallback para OCR
 
-1. **Analise Vetorial Primaria**:
+1. **Análise Vetorial Primária**:
    - O arquivo PDF e aberto utilizando `pdfplumber`.
-   - Para cada pagina, avalia-se o volume de caracteres nativos extraiveis.
-2. **Deteccao de Paginas Digitalizadas (Scanned Pages)**:
-   - Se a contagem de caracteres da pagina for inferior ao limiar configurado (`min_char_threshold`, padrao: 50 caracteres), a pagina e classificada como imagem digitalizada.
-3. **Execucao do OCR**:
-   - A pagina e rasterizada com densidade otimizada de 300 DPI (`page.to_image(resolution=300)`).
-   - O Tesseract OCR e acionado configurado para o dicionario de Lingua Portuguesa (`tesseract-ocr-por`).
-   - O resultado do OCR e integrado a representacao textual unificada do documento, marcando o atributo `is_scanned: true`.
+   - Para cada página, avalia-se o volume de caracteres nativos extraíveis.
+2. **Detecção de Páginas Digitalizadas (Scanned Pages)**:
+   - Se a contagem de caracteres da página for inferior ao limiar configurado (`min_char_threshold`, padrão: 50 caracteres), a página e classificada como imagem digitalizada.
+3. **Execução do OCR**:
+   - A página e rasterizada com densidade otimizada de 300 DPI (`page.to_image(resolution=300)`).
+   - O Tesseract OCR e acionado configurado para o dicionário de Lingua Portuguesa (`tesseract-ocr-por`).
+   - O resultado do OCR e integrado a representação textual unificada do documento, marcando o atributo `is_scanned: true`.
 
 ---
 
 ## 3. Estrutura de Dados de Saida do Pipeline
 
-O extrator retorna uma estrutura formal serializavel com o seguinte formato:
+O extrator retorna uma estrutura formal serializável com o seguinte formato:
 
 ```json
 {
@@ -68,7 +68,7 @@ O extrator retorna uma estrutura formal serializavel com o seguinte formato:
 
 ---
 
-## 4. Tratamento de Excecoes e Resiliencia
+## 4. Tratamento de Exceções e Resiliência
 
 - Documentos corrompidos ou com senha geram erro `RuntimeError` capturado de forma transparente pela API, registrando status `EXTRACTION_FAILED` no banco relacional.
-- Limite maximo de processamento por documento configurado no worker Celery (`task_time_limit: 600 segundos`).
+- Limite máximo de processamento por documento configurado no worker Celery (`task_time_limit: 600 segundos`).
