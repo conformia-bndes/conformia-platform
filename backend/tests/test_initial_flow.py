@@ -16,27 +16,37 @@ Cobertura:
 """
 
 import io
+import shutil
+import unicodedata
 from types import SimpleNamespace
 
 import pytest
 
-from app.db.models.document import Document
 from app.services.rules_engine import RulesEngine
 from tests.synthetic_pdfs import (
     build_reference_pdf,
     get_expected_result,
     INVALID_FILE_CONTENT,
     list_reference_types,
-    VALID_PDF_LINES,
-    EXPIRED_PDF_LINES,
-    PENDING_PDF_LINES,
-    ILLEGIBLE_PDF_LINES,
 )
+
+
+def _patch_task_dispatch(monkeypatch):
+    """Simula o despacho ao Celery: o upload padrao (assincrono) devolve PROCESSING."""
+    monkeypatch.setattr(
+        "app.api.v1.endpoints.documents.process_document_task.delay",
+        lambda *args, **kwargs: SimpleNamespace(id="task-fluxo-inicial"),
+    )
+
+
+def _sem_acentos(texto):
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
 
 
 # ---------------------------------------------------------------------------
 # Fixtures de PDFs de referencia
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def pdf_valido():
@@ -67,20 +77,19 @@ def arquivo_invalido():
 # 1. Upload de arquivo valido
 # ---------------------------------------------------------------------------
 
+
 def test_upload_pdf_valido_retorna_201(client, monkeypatch, pdf_valido):
     """RF02: Upload de PDF valido deve retornar 201 e iniciar processamento."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
+    _patch_task_dispatch(monkeypatch)
 
     response = client.post(
-        "/api/v1/documents/upload?async_process=false",
+        "/api/v1/documents/upload",
         files={"file": ("certidao_valida.pdf", io.BytesIO(pdf_valido), "application/pdf")},
     )
     expected = get_expected_result("valido")
@@ -93,18 +102,16 @@ def test_upload_pdf_valido_retorna_201(client, monkeypatch, pdf_valido):
 
 def test_upload_pdf_vencido_retorna_201(client, monkeypatch, pdf_vencido):
     """RF02: Upload de certidao vencida deve ser aceito (a regra temporal e avaliada depois)."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
+    _patch_task_dispatch(monkeypatch)
 
     response = client.post(
-        "/api/v1/documents/upload?async_process=false",
+        "/api/v1/documents/upload",
         files={"file": ("certidao_vencida.pdf", io.BytesIO(pdf_vencido), "application/pdf")},
     )
     expected = get_expected_result("vencido")
@@ -115,18 +122,16 @@ def test_upload_pdf_vencido_retorna_201(client, monkeypatch, pdf_vencido):
 
 def test_upload_pdf_pendente_retorna_201(client, monkeypatch, pdf_pendente):
     """RF02: Upload de certidao com pendencia deve ser aceito."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
+    _patch_task_dispatch(monkeypatch)
 
     response = client.post(
-        "/api/v1/documents/upload?async_process=false",
+        "/api/v1/documents/upload",
         files={"file": ("certidao_pendente.pdf", io.BytesIO(pdf_pendente), "application/pdf")},
     )
     expected = get_expected_result("pendente")
@@ -138,6 +143,7 @@ def test_upload_pdf_pendente_retorna_201(client, monkeypatch, pdf_pendente):
 # ---------------------------------------------------------------------------
 # 2. Rejeicao de arquivo invalido
 # ---------------------------------------------------------------------------
+
 
 def test_upload_arquivo_sem_extensao_pdf_eh_rejeitado(client, arquivo_invalido):
     """RF02: Arquivo sem extensao .pdf deve ser rejeitado com 400."""
@@ -175,17 +181,15 @@ def test_upload_arquivo_binario_invalido_eh_rejeitado(client, arquivo_invalido):
 # 3. Processamento de PDFs de referencia
 # ---------------------------------------------------------------------------
 
+
 def test_processamento_pdf_valido_fluxo_completo(client, monkeypatch, pdf_valido):
     """RF02 + RF03 + RF04: Upload + extracao nativa + entidades + evidencias."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
 
     response = client.post(
         "/api/v1/documents/upload?async_process=false",
@@ -212,15 +216,12 @@ def test_processamento_pdf_valido_fluxo_completo(client, monkeypatch, pdf_valido
 
 def test_processamento_certidao_vencida_nao_conforme(client, monkeypatch, pdf_vencido):
     """RF06: Certidao vencida deve resultar em NON_COMPLIANT no motor de regras."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
 
     response = client.post(
         "/api/v1/documents/upload?async_process=false",
@@ -242,7 +243,16 @@ def test_processamento_certidao_vencida_nao_conforme(client, monkeypatch, pdf_ve
     if not full_text and data["extraction"].get("evidences"):
         full_text = " ".join(e["text"] for e in data["extraction"]["evidences"])
 
-    result = engine.evaluate({"full_text": full_text or "CERTIDAO NEGATIVA TRIBUTOS FEDERAIS DIVIDA ATIVA UNIAO Valida ate: 01/01/2020 CNPJ: 12.345.678/0001-90", "metadata": {}})
+    result = engine.evaluate(
+        {
+            "full_text": full_text
+            or (
+                "CERTIDAO NEGATIVA TRIBUTOS FEDERAIS DIVIDA ATIVA UNIAO "
+                "Valida ate: 01/01/2020 CNPJ: 12.345.678/0001-90"
+            ),
+            "metadata": {},
+        }
+    )
     cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
     expected = get_expected_result("vencido")
     assert cnd_check["status"] == expected["rule_status"]
@@ -251,15 +261,12 @@ def test_processamento_certidao_vencida_nao_conforme(client, monkeypatch, pdf_ve
 
 def test_processamento_certidao_pendente_nao_conforme(client, monkeypatch, pdf_pendente):
     """RF06: Certidao com pendencia deve resultar em NON_COMPLIANT."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
 
     response = client.post(
         "/api/v1/documents/upload?async_process=false",
@@ -279,28 +286,38 @@ def test_processamento_certidao_pendente_nao_conforme(client, monkeypatch, pdf_p
     if not full_text and data["extraction"].get("evidences"):
         full_text = " ".join(e["text"] for e in data["extraction"]["evidences"])
 
-    result = engine.evaluate({"full_text": full_text or "CERTIDAO POSITIVA DEBITOS TRIBUTOS FEDERAIS DIVIDA ATIVA CONSTA PENDENCIA CNPJ: 98.765.432/0001-11", "metadata": {}})
+    result = engine.evaluate(
+        {
+            "full_text": full_text
+            or (
+                "CERTIDAO POSITIVA DEBITOS TRIBUTOS FEDERAIS DIVIDA ATIVA "
+                "CONSTA PENDENCIA CNPJ: 98.765.432/0001-11"
+            ),
+            "metadata": {},
+        }
+    )
     cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
     expected = get_expected_result("pendente")
     assert cnd_check["status"] == expected["rule_status"]
-    assert expected["error_contains"] in cnd_check["findings"].lower()
+    assert expected["error_contains"] in _sem_acentos(cnd_check["findings"].lower())
 
 
 # ---------------------------------------------------------------------------
 # 4. Tratamento de falha (PDF ilegivel)
 # ---------------------------------------------------------------------------
 
+
+@pytest.mark.skipif(
+    shutil.which("tesseract") is None, reason="Tesseract nao instalado neste ambiente"
+)
 def test_processamento_pdf_ilegivel_extração_falha(client, monkeypatch, pdf_ilegivel):
     """RF03: PDF digitalizado sem texto legível deve resultar em EXTRACTION_FAILED."""
-    from app.api.v1.endpoints.documents import storage_service
 
     class _FakeStorage:
         def upload_file(self, file_data, object_name, content_type="application/pdf"):
             return f"s3://documents/{object_name}"
 
-    monkeypatch.setattr(
-        "app.api.v1.endpoints.documents.storage_service", _FakeStorage()
-    )
+    monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
 
     response = client.post(
         "/api/v1/documents/upload?async_process=false",
@@ -322,6 +339,7 @@ def test_processamento_pdf_ilegivel_extração_falha(client, monkeypatch, pdf_il
 # ---------------------------------------------------------------------------
 # 5. Matriz de referencia: todos os 5 tipos de PDF
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("pdf_type", list_reference_types())
 def test_todos_pdfs_referencia_tem_resultado_esperado_registrado(pdf_type):

@@ -11,7 +11,7 @@ Inclui os 5 PDFs de referencia exigidos pela base de testes do fluxo inicial:
 import io
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -128,7 +128,9 @@ ILLEGIBLE_PDF_LINES: List[str] = [
     "~~~~ ~~~~ ~~~~ ~~~~",
 ]
 
-INVALID_FILE_CONTENT: bytes = b"ESTE NAO E UM ARQUIVO PDF - CONTEUDO ALEATORIO SEM ASSINATURA BINARIA"
+INVALID_FILE_CONTENT: bytes = (
+    b"ESTE NAO E UM ARQUIVO PDF - CONTEUDO ALEATORIO SEM ASSINATURA BINARIA"
+)
 
 # Resultado esperado para cada PDF de referencia (ground truth)
 REFERENCE_PDF_EXPECTED_RESULTS: Dict[str, Dict[str, Any]] = {
