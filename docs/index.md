@@ -9,7 +9,7 @@ hide:
 <div class="apple-hero">
   <span class="apple-eyebrow">Consulta Pública BNDES nº 01/2025</span>
   <h1 class="apple-title">Conform.IA BNDES</h1>
-  <p class="apple-headline">Processamento Inteligente de Documentos e Auditoria Imutável</p>
+  <p class="apple-headline">Processamento Inteligente de Documentos com Trilha de Auditoria</p>
   <p class="apple-subheadline">
     Verificação automatizada de certidões cadastrais, fiscais, trabalhistas e regulatórias para operações de crédito do BNDES, com evidência rastreável e revisão humana quando há dúvida.
   </p>

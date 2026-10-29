@@ -135,9 +135,9 @@ A utilização de Inteligência Artificial em processos que envolvem recursos p�
 O Conform.IA BNDES e estruturado como uma plataforma web de alta produtividade voltada a analistas e gestores de conformidade documental.
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["1. Ingestão PDF"] --> B["2. Extração IDP & OCR"]
-    B --> C["3. Estruturacao JSON Schema"]
+    B --> C["3. Estruturação JSON Schema"]
     C --> D["4. Motor de Regras"]
     D --> E["5. Maker-Checker IA"]
     E --> F["6. Painel do Analista"]

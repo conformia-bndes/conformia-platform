@@ -45,6 +45,9 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+hooks:
+  - docs_hooks/check_site.py
+
 plugins:
   - search
   - git-revision-date-localized:

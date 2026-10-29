@@ -19,20 +19,24 @@ O processo tradicional de verificação de conformidade cadastral e documental e
 ## 2. Jornada do Usuário Analista
 
 ```mermaid
-flowchart TD
-    A["1. Autenticar no Sistema (RBAC)"] --> B["2. Vincular Operação de Crédito"]
-    B --> C["3. Upload do PDF (MinIO S3)"]
-    C --> D["4. Pipeline IDP (pdfplumber + OCR)"]
-    D --> E["5. Estruturacao de Entidades (Pydantic)"]
-    E --> F["6. Carga do Checklist Normativo"]
-    F --> G["7. Motor Determinístico de Regras"]
-    G --> H["8. Verificação Maker-Checker (LLM)"]
-    H --> I["9. Painel com Evidências e Coordenadas"]
-    I --> J{"10. Pendencia ou Divergência?"}
-    J -->|Sim| K["11. Revisão Humana / Exceção Motivada"]
-    J -->|Não| L["11. Aprovação Automatizada"]
-    K --> M["12. Gravação em Trilha de Auditoria e Emissão de Laudo"]
-    L --> M
+flowchart LR
+    subgraph Entrada["Entrada"]
+        direction TB
+        A["1. Autenticar"] --> B["2. Vincular operação de crédito"] --> C["3. Enviar o PDF"]
+    end
+    subgraph Analise["Análise automática"]
+        direction TB
+        D["4. Extração e OCR"] --> E["5. Tipologia e campos"] --> F["6. Motor de regras"] --> G["7. Maker-Checker<br/>(regras híbridas)"]
+    end
+    subgraph Decisao["Decisão"]
+        direction TB
+        H["8. Laudo com evidências"] --> I{"9. Pendência ou dúvida?"}
+        I -->|sim| J["10. Revisão humana"]
+        I -->|não| K["10. Aprovação automática"]
+        J --> L["11. Trilha de auditoria"]
+        K --> L
+    end
+    Entrada --> Analise --> Decisao
 ```
 
 ---
