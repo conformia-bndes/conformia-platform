@@ -15,8 +15,16 @@ VALID = {
 
 
 def test_settings_accepts_explicit_secrets(monkeypatch):
-    # O CI define DATABASE_URL no ambiente; aqui a URL deve ser montada a partir dos campos.
-    monkeypatch.delenv("DATABASE_URL", raising=False)
+    # O CI define DATABASE_URL e POSTGRES_* no ambiente; aqui a URL deve ser montada a partir
+    # dos padroes e do segredo informado.
+    for name in (
+        "DATABASE_URL",
+        "POSTGRES_SERVER",
+        "POSTGRES_PORT",
+        "POSTGRES_USER",
+        "POSTGRES_DB",
+    ):
+        monkeypatch.delenv(name, raising=False)
     cfg = Settings(_env_file=None, **VALID)
     assert cfg.DATABASE_URL.startswith("postgresql+psycopg2://conformia_user:p@")
 
