@@ -67,3 +67,23 @@ def test_create_api_user_script_output_authenticates(monkeypatch):
     principal = resolve_principal(key)
     assert key.startswith("carla.souza:")
     assert (principal.user_id, principal.role) == ("carla.souza", "ANALISTA")
+
+
+def test_create_api_user_writes_key_to_private_file_only(tmp_path, monkeypatch, capsys):
+    """A chave vai para <user_id>.key (sem sobrescrever) e nunca para o terminal."""
+    path = Path(__file__).resolve().parents[1] / "scripts" / "create_api_user.py"
+    spec = importlib.util.spec_from_file_location("create_api_user", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.chdir(tmp_path)
+
+    assert module.main(["create_api_user.py", "dani", "ANALISTA"]) == 0
+    key = (tmp_path / "dani.key").read_text(encoding="utf-8").strip()
+    output = capsys.readouterr().out
+    assert key.startswith("dani:")
+    assert key.split(":", 1)[1] not in output
+    assert '"key_hash": "pbkdf2_sha256$' in output
+
+    # Segunda execucao nao sobrescreve a chave existente
+    assert module.main(["create_api_user.py", "dani", "ANALISTA"]) == 1
+    assert (tmp_path / "dani.key").read_text(encoding="utf-8").strip() == key

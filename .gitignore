@@ -95,3 +95,6 @@ evals/reports/
 # PDFs do dataset sintetico (gerados por evals/sintetico/gerar_dataset.py)
 evals/sintetico/pdfs/
 evals/sintetico/resultados/
+
+# Chaves pessoais geradas por backend/scripts/create_api_user.py
+*.key

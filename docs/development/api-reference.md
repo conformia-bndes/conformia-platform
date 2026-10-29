@@ -251,8 +251,9 @@ e `ADMIN` apenas consultam.
 
 A chave pessoal tem o formato `<user_id>:<segredo>`. O servidor guarda em `API_USERS` apenas o
 hash PBKDF2-HMAC-SHA256 do segredo, com sal próprio (campo `key_hash`); gere a chave e a entrada
-com `python backend/scripts/create_api_user.py <user_id> <perfil>`. O prefixo `user_id` limita a
-verificação a um único hash por requisição.
+com `python backend/scripts/create_api_user.py <user_id> <perfil>`: a chave é gravada em
+`<user_id>.key` (permissão só do dono, sem sobrescrever) e não aparece no terminal. O prefixo
+`user_id` limita a verificação a um único hash por requisição.
 
 | Método e rota | Função | Respostas de erro |
 | :-- | :-- | :-- |
