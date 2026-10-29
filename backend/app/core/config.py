@@ -8,16 +8,30 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 UserRole = Literal["ANALISTA", "AUDITOR", "ADMIN"]
 
+# Minimo aceito de iteracoes PBKDF2 para hashes de chave configurados em API_USERS.
+MIN_API_KEY_HASH_ITERATIONS = 100_000
+
 
 class ApiUser(BaseModel):
     """
-    Usuario identificado por chave de API pessoal. Somente o hash SHA-256 da chave e
-    configurado; a chave em si fica com o usuario (gerada por scripts/create_api_user.py).
+    Usuario identificado por chave de API pessoal ("<user_id>:<segredo>"). So o hash
+    PBKDF2-HMAC-SHA256 do segredo, com sal proprio, e configurado; a chave fica com o
+    usuario (gerada por scripts/create_api_user.py).
     """
 
     user_id: str = Field(pattern=r"^[a-z0-9._-]{3,64}$")
     role: UserRole
-    key_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    # Formato: pbkdf2_sha256$<iteracoes>$<sal hex 32>$<hash hex 64>
+    key_hash: str = Field(pattern=r"^pbkdf2_sha256\$[0-9]{6,7}\$[0-9a-f]{32}\$[0-9a-f]{64}$")
+
+    @field_validator("key_hash")
+    @classmethod
+    def reject_weak_iterations(cls, value: str) -> str:
+        if int(value.split("$")[1]) < MIN_API_KEY_HASH_ITERATIONS:
+            raise ValueError(
+                f"key_hash com menos de {MIN_API_KEY_HASH_ITERATIONS} iteracoes PBKDF2."
+            )
+        return value
 
 
 def _with_explicit_postgres_driver(url: str) -> str:
@@ -61,8 +75,8 @@ class Settings(BaseSettings):
     def reject_duplicate_api_users(cls, users: List[ApiUser]) -> List[ApiUser]:
         if len({u.user_id for u in users}) != len(users):
             raise ValueError("API_USERS contem user_id duplicado.")
-        if len({u.key_sha256 for u in users}) != len(users):
-            raise ValueError("API_USERS contem a mesma chave para mais de um usuario.")
+        if len({u.key_hash for u in users}) != len(users):
+            raise ValueError("API_USERS contem o mesmo key_hash para mais de um usuario.")
         return users
 
     # CORS
