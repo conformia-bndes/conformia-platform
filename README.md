@@ -117,9 +117,7 @@ conformia-platform/
 │   │   ├── services/             # Motor de regras deterministicas e hibridas
 │   │   └── main.py               # Ponto de entrada FastAPI com CORS e middleware
 │   ├── tests/                    # Suite de testes automatizados com pytest
-│   ├── pyproject.toml            # Configuracoes de empacotamento, black e pytest
-│   ├── requirements.txt          # Dependencias pinadas do backend
-│   └── requirements.lock         # Lockfile deterministico exportado com hashes
+│   └── pyproject.toml            # Dependencias, empacotamento, black e pytest (versoes no uv.lock da raiz)
 ├── docs/                         # Documentacao tecnica completa (MkDocs Material)
 │   ├── index.md                  # Pagina inicial da documentacao
 │   ├── architecture/             # Visao geral de arquitetura e registros ADR

@@ -1,11 +1,17 @@
-# Area "Backend", em estagios:  Lint -> Build -> Test (Test, Evals, Fuzz em paralelo).
-# O Security corre em paralelo ao Lint. O deploy (imagem no GHCR) fica no cd.yml, so em release.
+# Area "Backend": Lint, Security, Build, Test, Evals e Fuzz comecam juntos (sem `needs` entre
+# eles): os testes operam sobre o codigo-fonte e nao dependem do build da imagem, entao esperar
+# so alongaria o caminho critico. Os estagios sao logicos; o deploy (imagem no GHCR) e o cd.yml.
 # Workflow reutilizavel, chamado pelo ci.yml. Gera os artefatos "relatorio-*" que o docs.yml
 # publica na documentacao.
 name: CI - Backend
 
 on:
   workflow_call:
+    inputs:
+      full_matrix:
+        description: "Testar tambem o Python 3.12 (push em main/dev e mudanca de dependencias)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -19,9 +25,6 @@ env:
   MINIO_ENDPOINT: 127.0.0.1:9
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Estagio 1: lint (e auditoria, em paralelo)
-  # ---------------------------------------------------------------------------
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -78,13 +81,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  # ---------------------------------------------------------------------------
-  # Estagio 2: build da imagem de producao (valida o Dockerfile e aquece o cache de camadas
-  # que o smoke e o cd.yml reutilizam)
-  # ---------------------------------------------------------------------------
   build:
     name: Build
-    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -122,20 +120,18 @@ jobs:
             aquasec/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c \
             image --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 scan/backend:ci
 
-  # ---------------------------------------------------------------------------
-  # Estagio 3: testes (em paralelo)
-  # ---------------------------------------------------------------------------
   # Matriz: o produto roda em Python 3.11; a 3.12 antecipa a compatibilidade com o ambiente
   # de desenvolvimento. Cobertura e relatorios saem so da 3.11.
   test:
     name: Test (${{ matrix.python }})
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12"]
+        # Em PR so a versao do produto (3.11); a matriz completa roda em push e quando as
+        # dependencias mudam.
+        python: ${{ fromJSON(inputs.full_matrix && '["3.11","3.12"]' || '["3.11"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -185,7 +181,6 @@ jobs:
   # (evals/baseline.json): sem falso positivo, sem queda de acuracia e sem regressao pontual.
   evals:
     name: Evals
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -221,7 +216,6 @@ jobs:
 
   fuzz:
     name: Fuzz
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
