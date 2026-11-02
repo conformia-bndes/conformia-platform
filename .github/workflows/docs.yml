@@ -1,4 +1,4 @@
-name: Documentacao - publicacao no GitHub Pages
+name: Docs Deploy
 
 # Publica o site via artefato do GitHub Pages (Settings -> Pages: "GitHub Actions").
 # Nao usa "mkdocs gh-deploy": a branch gh-pages nao e necessaria nem mantida.

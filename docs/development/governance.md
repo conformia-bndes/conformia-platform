@@ -50,7 +50,7 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 | :-- | :-- | :-- |
 | **pre-commit** | Erros de formatação, segredos e YAML/JSON inválidos chegavam ao CI | `.pre-commit-config.yaml`, `make hooks` |
 | **Conventional Commits no título do PR** | Histórico sem padrão impedia CHANGELOG automático | `pr-title.yml` (`amannn/action-semantic-pull-request`) |
-| **actionlint** | Erros em workflows só apareciam ao executar | Job "Lint dos workflows" do `ci.yml` |
+| **actionlint** | Erros em workflows só apareciam ao executar | Job "Infra / Workflows" do CI |
 | **CodeQL** | Não havia análise estática de segurança (SAST) | `codeql.yml` |
 | **OpenSSF Scorecard** | Sem medição das práticas de segurança da cadeia de suprimentos | `scorecard.yml` |
 | **Dependabot agrupado em `dev`** | PRs de dependência isolados e direto em `main` | `.github/dependabot.yml` |
