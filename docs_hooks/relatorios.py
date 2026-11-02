@@ -142,12 +142,26 @@ def _coverage_section(path: Optional[Path]) -> str:
     )
 
 
+def _baseline_note(metrics: dict, baseline: Any) -> str:
+    """Frase sobre a comparacao com a linha de base versionada (evals/baseline.json)."""
+    if not isinstance(baseline, dict) or "accuracy" not in baseline:
+        return ""
+    current = float(metrics.get("accuracy", 0))
+    base = float(baseline["accuracy"])
+    state = "sem regressão" if current >= base else "**abaixo da linha de base**"
+    return (
+        f"Linha de base versionada: {str(base).replace('.', ',')}% de acurácia "
+        f"({baseline.get('total_checks')} verificações); esta execução está {state}."
+    )
+
+
 def _evals_section(path: Optional[Path]) -> str:
     title = "Benchmark de regras (evals)"
     data = _read_json(path)
     if not isinstance(data, dict) or "metrics" not in data:
         return _unavailable(title)
     m = data["metrics"]
+    baseline = _read_json(Path("evals") / "baseline.json")
     return (
         f"### {title}\n\n"
         f"| Resultado | Verificações | Corretas | Falsos positivos | Acurácia | Mínimo |\n"
@@ -157,6 +171,7 @@ def _evals_section(path: Optional[Path]) -> str:
         f"{str(m.get('accuracy')).replace('.', ',')}% | "
         f"{str(data.get('accuracy_threshold')).replace('.', ',')}% |\n\n"
         f"Hash do checklist: `{str(data.get('rules_sha256', ''))[:12]}`.\n"
+        f"{_baseline_note(m, baseline)}"
     )
 
 

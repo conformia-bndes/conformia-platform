@@ -29,62 +29,90 @@ em cada etapa e como voltar atrás quando algo falha.
 
 ## 2. Pipelines (GitHub Actions)
 
-O `ci.yml` é só o orquestrador. Cada área é um **workflow reutilizável** (`ci-repo.yml`,
-`ci-backend.yml`, `ci-frontend.yml`, `ci-infra.yml`). O critério de organização é simples: o que
-é barato fica junto num job (um só `uv sync` ou `npm ci`), e só o que é pesado ganha job próprio.
-São cerca de 10 jobs em vez de 21. O job **CI OK** consolida as áreas e é o único check
-obrigatório nos rulesets: área pulada (sem mudança) aprova; falha ou cancelamento bloqueia.
+O `ci.yml` é só o orquestrador. Cada área é um **workflow reutilizável** com estágios explícitos
+(`needs`), e as áreas são independentes entre si. Back e front seguem o mesmo roteiro:
+**lint → build → test → deploy**; o deploy não roda no CI de PR, só na release (seção abaixo).
+O job **CI OK** consolida as áreas e é o único check obrigatório nos rulesets: área pulada (sem
+mudança) aprova; falha ou cancelamento bloqueia o merge.
 
 ```mermaid
 flowchart LR
-    changes["Changes"] --> backend & frontend & infra & docs
+    changes["Changes"] --> Backend & Frontend & Infra & docs
     subgraph Repo
         rc["Checks<br/>higiene + gitleaks"]
     end
     subgraph Backend
-        direction TB
-        bq["Quality<br/>black, flake8, evals, pip-audit"]
-        bt["Tests (3.11 e 3.12)<br/>matriz"]
-        bf["Fuzz<br/>Atheris 60 s"]
+        direction LR
+        bl["Lint<br/>black, flake8"] --> bb["Build<br/>imagem Docker"]
+        bb --> bt["Test 3.11 e 3.12"]
+        bb --> be["Evals<br/>gate de regressão"]
+        bb --> bf["Fuzz"]
+        bs["Security<br/>pip-audit"]
     end
     subgraph Frontend
-        fq["Quality<br/>ESLint, Vitest, build, audit"]
+        direction LR
+        fl["Lint<br/>ESLint, tsc"] --> fb["Build<br/>Vite + imagem"]
+        fb --> ft["Test<br/>Vitest"]
+        fs["Security<br/>npm audit"]
     end
     subgraph Infra
-        direction TB
-        il["Lint<br/>actionlint + compose"]
-        im["Smoke<br/>Docker Compose"]
+        direction LR
+        il["Lint<br/>workflows, compose"] --> im["Smoke<br/>stack completa"]
     end
     Repo --> ok["CI OK"]
     Backend --> ok
     Frontend --> ok
     Infra --> ok
     docs["Docs<br/>build estrito"] --> ok
+    ok -.->|release criada| cd["CD: Deploy<br/>imagens no GHCR"]
 ```
 
-Nenhuma área espera a outra, então o tempo total é o do job mais lento (smoke em Docker, fuzzing
-ou testes, cerca de 2 minutos). O filtro por caminho (job `changes`) pula as áreas que o PR não
-toca; em push para `main`/`dev`, execução manual e na execução semanal (segunda, 06:00 UTC) tudo
-roda.
+Dentro de uma área, o que não depende do outro roda em paralelo (Security corre junto do Lint;
+Test, Evals e Fuzz correm juntos depois do Build). Áreas diferentes nunca esperam uma pela outra.
+O filtro por caminho (job `changes`) pula as áreas que o PR não toca; em push para `main`/`dev`,
+execução manual e na execução semanal (segunda, 06:00 UTC) tudo roda.
 
-| Área | Jobs | O que garante |
+| Área | Estágios | O que garante |
 | :-- | :-- | :-- |
 | Repo | Checks | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
-| Backend | Quality, Tests (matriz), Fuzz | black e flake8; benchmark de regras (0 falsos positivos); pip-audit; pytest com cobertura em Python 3.11 (produto) e 3.12 (compatibilidade); fuzzing Atheris de 60 s |
-| Frontend | Quality | ESLint; Vitest; typecheck e build de produção; `npm audit` |
-| Infra | Lint, Smoke | actionlint e validação do `docker-compose.yml`; stack completa em Docker Compose com imagens em cache (upload → fila → worker) |
+| Backend | Lint, Security → Build → Test (matriz), Evals, Fuzz | black e flake8; pip-audit; build da imagem de produção; pytest com cobertura em Python 3.11 (produto) e 3.12; benchmark de regras com gate de regressão; fuzzing Atheris de 60 s |
+| Frontend | Lint, Security → Build → Test | ESLint e typecheck; npm audit; build do bundle e da imagem de produção (nginx); Vitest |
+| Infra | Lint → Smoke | estrutura dos workflows, actionlint e `docker-compose.yml`; stack completa em Docker Compose (upload → fila → worker) |
 | Docs | Docs | `mkdocs build --strict` com a verificação do site |
+
+### Deploy (CD)
+
+O estágio de deploy é o `cd.yml`. Quando você mergeia o PR de release do release-please, o
+`release-please.yml` cria a tag `vX.Y.Z` e chama o CD, que constrói as imagens de produção do
+backend e do frontend **a partir da tag** e as publica no GitHub Container Registry:
+
+| Imagem | Tags |
+| :-- | :-- |
+| `ghcr.io/conformia-bndes/conformia-platform/backend` | `vX.Y.Z`, `latest` |
+| `ghcr.io/conformia-bndes/conformia-platform/frontend` | `vX.Y.Z`, `latest` |
+
+As imagens saem com provenance e SBOM anexados e com os rótulos OCI de origem, commit e versão.
+O CD também roda manualmente (Actions → CD → Run workflow) com `push` desligado por padrão, o
+que só constrói e valida a imagem de uma tag, sem publicar. A chamada vem do `release-please.yml`
+porque tags criadas com o `GITHUB_TOKEN` não disparam outros workflows.
 
 ### Relatórios de qualidade
 
 Cada área publica artefatos `relatorio-*` (retenção de 30 dias): resultados de testes (JUnit),
 cobertura (XML), benchmark de regras, estatísticas do fuzzing e auditorias de dependências. A
-cobertura também aparece no resumo de cada execução do CI.
+cobertura e o gate de regressão dos evals também aparecem no resumo de cada execução do CI.
 
 O `docs.yml` roda depois que o CI de `main` termina com sucesso, baixa esses artefatos e o
 hook `docs_hooks/relatorios.py` monta a página [Relatórios de Qualidade](../relatorios/index.md)
 do site. Localmente, `make reports` gera os mesmos arquivos em `reports/` e `make docs` os exibe.
 A publicação só acontece a partir de push em `main`, nunca de PR.
+
+### Evitar CI quebrado por erro de estrutura
+
+O job Infra / Lint roda `scripts/check_workflows.py` quando os workflows mudam. Ele confere o
+que derruba o CI inteiro sem criar nenhum job: YAML válido com `jobs`, `needs` apontando para
+jobs que existem, `uses` locais para arquivos com `workflow_call` e `with` compatível com os
+inputs declarados. O actionlint complementa com a análise de expressões e das actions.
 
 Outros workflows:
 
@@ -93,7 +121,8 @@ Outros workflows:
 | `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
-| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG |
+| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG; ao mergear o PR, cria a tag e chama o CD |
+| `cd.yml` | release criada ou manual | Build e publicação das imagens de produção no GHCR (ver Deploy) |
 | `docs.yml` | CI de `main` concluído | Publicação desta documentação, com os relatórios de qualidade, no GitHub Pages (artefato, sem branch `gh-pages`) |
 | `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
 

@@ -2,9 +2,9 @@
 # CI - Conform.IA BNDES Platform (orquestrador)
 #
 #   changes  -> detecta o que mudou no PR (backend, frontend, infra, docs, workflows)
-#   areas    -> Repo, Backend, Frontend, Infra: workflows reutilizaveis (ci-*.yml). Cada area
-#               agrupa o que e barato num job e separa so o que e pesado (testes, fuzz, smoke);
-#               areas sem mudanca relevante sao puladas. Sao ~10 jobs no total
+#   areas    -> Repo, Backend, Frontend, Infra: workflows reutilizaveis (ci-*.yml) com estagios
+#               lint -> build -> test; o deploy (imagens no GHCR) e o cd.yml, so em release.
+#               Areas sem mudanca relevante sao puladas
 #   docs     -> build estrito da documentacao
 #   CI OK    -> consolida o resultado das areas; check unico exigido nos rulesets de main e dev
 #               (area pulada por falta de mudanca aprova; falha ou cancelamento bloqueia)
