@@ -6,8 +6,9 @@ Este plano substitui hipóteses da análise preliminar por fatos verificados no 
 detalhado esta em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) e as evidências de
 execução em [VALIDATION_REPORT.md](VALIDATION_REPORT.md).
 
-> Divergência de prazo: `sprints-roadmap.md` fixa a entrega em **07/12/2026**; este plano usa
-> **05/12/2026** (data mais restritiva, definida para esta execução). Confirmar a data oficial.
+> Prazo confirmado em 01/11: entrega em **05/12/2026**. As apresentações são em 07 ou 09/12, e os
+> dias entre a entrega e a apresentação servem de folga para ensaio e correção de defeitos críticos.
+> O `sprints-roadmap.md` (07/12) é histórico.
 
 ---
 
@@ -121,8 +122,8 @@ sem segregação, com a restrição declarada no roteiro e aceita formalmente pe
 | ID | Decisão | Opções | Prazo |
 | :-- | :-- | :-- | :-- |
 | D1 | Como identificar analistas para revisão e segregação Maker-Checker humana | **Decidida em 29/10: (a) chaves de API pessoais mapeadas no servidor** (`API_USERS`). JWT/IdP fica fora do MVP. | - |
-| D2 | Documento de tipologia reconhecida sem uma palavra-chave obrigatória (ex.: OCR ilegível) | (a) `NON_COMPLIANT` (atual); (b) `MANUAL_REVIEW_REQUIRED` (o que o dataset `edge_cases` espera) | 04/11 |
-| D3 | Data oficial de entrega | 05/12 (este plano) ou 07/12 (`sprints-roadmap.md`) | 31/10 |
+| D2 | Documento de tipologia reconhecida sem uma palavra-chave obrigatória (ex.: OCR ilegível) | **Decidida em 01/11: (b) `MANUAL_REVIEW_REQUIRED`.** Sem termo obrigatório não há prova de irregularidade, só falta de leitura: o analista decide. Termos impeditivos e validade vencida continuam `NON_COMPLIANT`. Implementação: T04c | - |
+| D3 | Data oficial de entrega | **Decidida em 01/11: 05/12/2026.** As apresentações do projeto são em 07 ou 09/12; os dias entre a entrega e a apresentação ficam de folga para ensaio e correções críticas, sem funcionalidade nova. | - |
 
 ---
 
