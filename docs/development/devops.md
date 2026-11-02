@@ -30,58 +30,61 @@ em cada etapa e como voltar atrás quando algo falha.
 ## 2. Pipelines (GitHub Actions)
 
 O `ci.yml` é só o orquestrador. Cada área é um **workflow reutilizável** (`ci-repo.yml`,
-`ci-backend.yml`, `ci-frontend.yml`, `ci-infra.yml`) com jobs pequenos que rodam em paralelo, e
-cada área tem um gate "… Approved". O job **CI OK** consolida tudo e é o único check obrigatório
-nos rulesets: área pulada (sem mudança) aprova; falha ou cancelamento bloqueia o merge.
+`ci-backend.yml`, `ci-frontend.yml`, `ci-infra.yml`). O critério de organização é simples: o que
+é barato fica junto num job (um só `uv sync` ou `npm ci`), e só o que é pesado ganha job próprio.
+São cerca de 10 jobs em vez de 21. O job **CI OK** consolida as áreas e é o único check
+obrigatório nos rulesets: área pulada (sem mudança) aprova; falha ou cancelamento bloqueia.
 
 ```mermaid
 flowchart LR
     changes["Changes"] --> backend & frontend & infra & docs
     subgraph Repo
-        direction TB
-        hy["Hygiene"]
-        se["Secrets"]
+        rc["Checks<br/>higiene + gitleaks"]
     end
     subgraph Backend
         direction TB
-        bl["Lint"]
-        bt["Tests"]
-        be["Evals"]
-        bf["Fuzz"]
-        bs["Security"]
+        bq["Quality<br/>black, flake8, evals, pip-audit"]
+        bt["Tests (3.11 e 3.12)<br/>matriz"]
+        bf["Fuzz<br/>Atheris 60 s"]
     end
     subgraph Frontend
-        direction TB
-        fl["Lint"]
-        fu["Unit"]
-        fb["Build"]
-        fs["Security"]
+        fq["Quality<br/>ESLint, Vitest, build, audit"]
     end
     subgraph Infra
         direction TB
-        iw["Workflows"]
-        ic["Compose"]
-        im["Smoke"]
+        il["Lint<br/>actionlint + compose"]
+        im["Smoke<br/>Docker Compose"]
     end
-    Repo --> ra["Repo Approved"] --> ok["CI OK"]
-    Backend --> ba["Backend Approved"] --> ok
-    Frontend --> fa["Frontend Approved"] --> ok
-    Infra --> ia["Infra Approved"] --> ok
-    docs["Docs (build estrito)"] --> ok
+    Repo --> ok["CI OK"]
+    Backend --> ok
+    Frontend --> ok
+    Infra --> ok
+    docs["Docs<br/>build estrito"] --> ok
 ```
 
-Nenhuma área espera a outra, então o tempo total é o do job mais lento (hoje, o smoke em Docker
-ou o fuzzing, perto de 2 minutos). O filtro por caminho (job `changes`) pula as áreas que o PR não
+Nenhuma área espera a outra, então o tempo total é o do job mais lento (smoke em Docker, fuzzing
+ou testes, cerca de 2 minutos). O filtro por caminho (job `changes`) pula as áreas que o PR não
 toca; em push para `main`/`dev`, execução manual e na execução semanal (segunda, 06:00 UTC) tudo
 roda.
 
 | Área | Jobs | O que garante |
 | :-- | :-- | :-- |
-| Repo | Hygiene, Secrets | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
-| Backend | Lint, Tests, Evals, Fuzz, Security | black e flake8; pytest com cobertura; benchmark de regras (0 falsos positivos, relatório como artefato); fuzzing Atheris de 60 s; pip-audit sobre o `uv.lock` |
-| Frontend | Lint, Unit, Build, Security | ESLint; Vitest; typecheck e build de produção; `npm audit` |
-| Infra | Workflows, Compose, Smoke | actionlint; validação do `docker-compose.yml`; stack completa em Docker Compose com imagens em cache (upload → fila → worker) |
+| Repo | Checks | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
+| Backend | Quality, Tests (matriz), Fuzz | black e flake8; benchmark de regras (0 falsos positivos); pip-audit; pytest com cobertura em Python 3.11 (produto) e 3.12 (compatibilidade); fuzzing Atheris de 60 s |
+| Frontend | Quality | ESLint; Vitest; typecheck e build de produção; `npm audit` |
+| Infra | Lint, Smoke | actionlint e validação do `docker-compose.yml`; stack completa em Docker Compose com imagens em cache (upload → fila → worker) |
 | Docs | Docs | `mkdocs build --strict` com a verificação do site |
+
+### Relatórios de qualidade
+
+Cada área publica artefatos `relatorio-*` (retenção de 30 dias): resultados de testes (JUnit),
+cobertura (XML), benchmark de regras, estatísticas do fuzzing e auditorias de dependências. A
+cobertura também aparece no resumo de cada execução do CI.
+
+O `docs.yml` roda depois que o CI de `main` termina com sucesso, baixa esses artefatos e o
+hook `docs_hooks/relatorios.py` monta a página [Relatórios de Qualidade](../relatorios/index.md)
+do site. Localmente, `make reports` gera os mesmos arquivos em `reports/` e `make docs` os exibe.
+A publicação só acontece a partir de push em `main`, nunca de PR.
 
 Outros workflows:
 
@@ -91,7 +94,7 @@ Outros workflows:
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
 | `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG |
-| `docs.yml` | push em `main` | Publicação desta documentação no GitHub Pages (artefato, sem branch `gh-pages`) |
+| `docs.yml` | CI de `main` concluído | Publicação desta documentação, com os relatórios de qualidade, no GitHub Pages (artefato, sem branch `gh-pages`) |
 | `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
 
 **Cadeia de suprimentos.** Todas as actions são fixadas por SHA de commit (com a versão em

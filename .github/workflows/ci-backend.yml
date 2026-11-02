@@ -1,5 +1,6 @@
-# Area "Backend": estilo, testes, evals, fuzzing e auditoria de dependencias, em paralelo.
-# Workflow reutilizavel, chamado pelo ci.yml.
+# Area "Backend": qualidade, testes (matriz de versoes do Python) e fuzzing, em paralelo.
+# Workflow reutilizavel, chamado pelo ci.yml. Gera os relatorios de qualidade (artefatos
+# "relatorio-*") que o docs.yml publica na documentacao.
 name: CI - Backend
 
 on:
@@ -9,7 +10,6 @@ permissions:
   contents: read
 
 env:
-  PYTHON_VERSION: "3.11"
   UV_FROZEN: "1"
   # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
   ENVIRONMENT: test
@@ -18,10 +18,11 @@ env:
   MINIO_ENDPOINT: 127.0.0.1:9
 
 jobs:
-  lint:
-    name: Lint
+  # Verificacoes baratas juntas (um unico uv sync): estilo, benchmark de regras e auditoria.
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,11 +30,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: "3.11"
           enable-cache: true
           cache-dependency-glob: uv.lock
 
-      - name: Sincronizar ferramentas (versoes do uv.lock)
+      - name: Sincronizar dependencias
         run: uv sync --all-packages --all-extras
 
       - name: black
@@ -42,10 +43,37 @@ jobs:
       - name: flake8
         run: uv run flake8 backend/ --max-line-length=100
 
+      - name: Benchmark de regras (0 falsos positivos e acuracia minima)
+        run: |
+          mkdir -p reports
+          uv run python evals/eval_pipeline.py --json-report reports/eval_report.json
+
+      - name: Auditoria de dependencias Python (uv.lock completo)
+        run: |
+          uv export --all-packages --all-extras --no-emit-workspace --no-hashes \
+            --format requirements-txt -o /tmp/requirements-audit.txt
+          uvx pip-audit@2.9.0 -r /tmp/requirements-audit.txt --no-deps --disable-pip \
+            --progress-spinner off --format json --output reports/pip-audit.json
+
+      - name: Publicar relatorios
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-backend-quality
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  # Matriz: o produto roda em Python 3.11; a 3.12 antecipa a compatibilidade com o ambiente
+  # de desenvolvimento. Cobertura e relatorios saem so da 3.11.
   tests:
-    name: Tests
+    name: Tests (${{ matrix.python }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -53,7 +81,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python }}
           enable-cache: true
           cache-dependency-glob: uv.lock
 
@@ -68,44 +96,26 @@ jobs:
 
       - name: pytest com cobertura
         run: |
+          mkdir -p reports
           uv run pytest backend/tests/ -q --durations=10 \
-            --cov=backend/app --cov-report=term-missing:skip-covered
+            --junitxml=reports/junit-backend.xml \
+            --cov=backend/app --cov-report=term-missing:skip-covered \
+            --cov-report=xml:reports/coverage.xml
 
-  evals:
-    name: Evals
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-
-      - name: Instalar Tesseract (portugues) e Poppler
+      - name: Resumo da cobertura na execucao
+        if: matrix.python == '3.11' && always()
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends \
-            tesseract-ocr tesseract-ocr-por poppler-utils
+          {
+            echo "### Cobertura do backend"
+            uv run coverage report --format=markdown --skip-covered
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Sincronizar dependencias
-        run: uv sync --all-packages --all-extras
-
-      - name: Benchmark de regras (0 falsos positivos e acuracia minima)
-        run: |
-          mkdir -p evals/reports
-          uv run python evals/eval_pipeline.py --json-report evals/reports/eval_report.json
-
-      - name: Publicar relatorio de evals
-        if: always()
+      - name: Publicar relatorios
+        if: matrix.python == '3.11' && always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: eval-report
-          path: evals/reports/eval_report.json
+          name: relatorio-backend-tests
+          path: reports/
           if-no-files-found: warn
           retention-days: 30
 
@@ -132,27 +142,16 @@ jobs:
 
       - name: Fuzzing por 60 segundos (falha em excecao ou invariante violada)
         run: |
+          mkdir -p reports
+          set -o pipefail
           uv run --python "$FUZZ_PYTHON" python backend/fuzz/fuzz_regras.py \
-            -max_total_time=60 -rss_limit_mb=2048 -print_final_stats=1
+            -max_total_time=60 -rss_limit_mb=2048 -print_final_stats=1 2>&1 | tee reports/fuzz.txt
 
-  security:
-    name: Security
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publicar relatorios
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-
-      - name: pip-audit (uv.lock completo)
-        run: |
-          uv export --all-packages --all-extras --no-emit-workspace --no-hashes \
-            --format requirements-txt -o /tmp/requirements-audit.txt
-          uvx pip-audit@2.9.0 -r /tmp/requirements-audit.txt --no-deps --disable-pip \
-            --progress-spinner off
+          name: relatorio-backend-fuzz
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30

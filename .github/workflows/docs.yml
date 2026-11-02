@@ -2,15 +2,15 @@ name: Docs Deploy
 
 # Publica o site via artefato do GitHub Pages (Settings -> Pages: "GitHub Actions").
 # Nao usa "mkdocs gh-deploy": a branch gh-pages nao e necessaria nem mantida.
+#
+# Roda depois que o CI de main termina com sucesso e inclui na pagina "Relatorios de
+# Qualidade" os artefatos "relatorio-*" gerados por essa execucao (testes, cobertura, evals,
+# fuzzing e auditorias). Execucao manual usa a ultima execucao verde do CI em main.
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-    paths:
-      - "docs/**"
-      - "mkdocs.yml"
-      - "pyproject.toml"
-      - "uv.lock"
-      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -23,11 +23,41 @@ concurrency:
 jobs:
   build:
     name: Build do site
+    # So publica a partir de push em main (nunca de PR) e com o CI verde.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read # baixar os artefatos de relatorio da execucao do CI
     steps:
+      - name: Resolver a execucao do CI
+        id: ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            read -r RUN_ID RUN_SHA < <(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              --branch main --event push --status success --limit 1 \
+              --json databaseId,headSha --jq '.[0] | "\(.databaseId) \(.headSha)"')
+          fi
+          if [ -z "${RUN_ID:-}" ] || [ "$RUN_ID" = "null" ]; then
+            echo "::error::Nenhuma execucao verde do CI em main encontrada."
+            exit 1
+          fi
+          {
+            echo "run_id=$RUN_ID"
+            echo "sha=$RUN_SHA"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ steps.ci.outputs.sha }}
           fetch-depth: 0 # datas de revisao das paginas vem do historico git
           persist-credentials: false
 
@@ -37,8 +67,20 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
 
+      - name: Baixar os relatorios do CI
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: relatorio-*
+          path: reports
+          run-id: ${{ steps.ci.outputs.run_id }}
+          github-token: ${{ github.token }}
+
       - name: Build do MkDocs (dependencias fixadas no uv.lock)
-        run: uv run --frozen mkdocs build --strict
+        env:
+          REPORT_COMMIT: ${{ steps.ci.outputs.sha }}
+          REPORT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ steps.ci.outputs.run_id }}
+        run: |
+          REPORT_DATE="$(date -u +'%d/%m/%Y %H:%M UTC')" uv run --frozen mkdocs build --strict
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

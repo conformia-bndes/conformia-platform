@@ -2,11 +2,12 @@
 # CI - Conform.IA BNDES Platform (orquestrador)
 #
 #   changes  -> detecta o que mudou no PR (backend, frontend, infra, docs, workflows)
-#   areas    -> Repo, Backend, Frontend, Infra: workflows reutilizaveis (ci-*.yml), cada um com
-#               jobs pequenos que rodam em paralelo; areas sem mudanca relevante sao puladas
+#   areas    -> Repo, Backend, Frontend, Infra: workflows reutilizaveis (ci-*.yml). Cada area
+#               agrupa o que e barato num job e separa so o que e pesado (testes, fuzz, smoke);
+#               areas sem mudanca relevante sao puladas. Sao ~10 jobs no total
 #   docs     -> build estrito da documentacao
-#   gates    -> "<Area> Approved": resultado consolidado de cada area
-#   CI OK    -> check unico exigido nos rulesets de main e dev
+#   CI OK    -> consolida o resultado das areas; check unico exigido nos rulesets de main e dev
+#               (area pulada por falta de mudanca aprova; falha ou cancelamento bloqueia)
 #
 # Nenhuma area espera a outra: o caminho critico e o job mais lento (hoje, o smoke ou os
 # testes do backend). O titulo do PR e validado em pr-title.yml.
@@ -174,67 +175,12 @@ jobs:
         run: uv run mkdocs build --strict
 
   # ---------------------------------------------------------------------------
-  # Gates por area: sucesso ou area pulada (sem mudanca) aprovam; falha ou cancelamento nao
-  # ---------------------------------------------------------------------------
-  repo-approved:
-    name: Repo Approved
-    if: always()
-    needs: repo
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - env:
-          RESULT: ${{ needs.repo.result }}
-        run: |
-          echo "repo: $RESULT"
-          case "$RESULT" in success | skipped) ;; *) echo "::error::Area Repo: $RESULT"; exit 1 ;; esac
-
-  backend-approved:
-    name: Backend Approved
-    if: always()
-    needs: backend
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - env:
-          RESULT: ${{ needs.backend.result }}
-        run: |
-          echo "backend: $RESULT"
-          case "$RESULT" in success | skipped) ;; *) echo "::error::Area Backend: $RESULT"; exit 1 ;; esac
-
-  frontend-approved:
-    name: Frontend Approved
-    if: always()
-    needs: frontend
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - env:
-          RESULT: ${{ needs.frontend.result }}
-        run: |
-          echo "frontend: $RESULT"
-          case "$RESULT" in success | skipped) ;; *) echo "::error::Area Frontend: $RESULT"; exit 1 ;; esac
-
-  infra-approved:
-    name: Infra Approved
-    if: always()
-    needs: infra
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - env:
-          RESULT: ${{ needs.infra.result }}
-        run: |
-          echo "infra: $RESULT"
-          case "$RESULT" in success | skipped) ;; *) echo "::error::Area Infra: $RESULT"; exit 1 ;; esac
-
-  # ---------------------------------------------------------------------------
   # Check unico exigido nos rulesets
   # ---------------------------------------------------------------------------
   ci-ok:
     name: CI OK
     if: always()
-    needs: [changes, repo-approved, backend-approved, frontend-approved, infra-approved, docs]
+    needs: [changes, repo, backend, frontend, infra, docs]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
