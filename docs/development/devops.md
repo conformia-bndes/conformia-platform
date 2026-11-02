@@ -29,43 +29,78 @@ em cada etapa e como voltar atrás quando algo falha.
 
 ## 2. Pipelines (GitHub Actions)
 
-O `ci.yml` é organizado em estágios. Os jobs de cada estágio rodam em paralelo e só os afetados
-pela mudança são executados (filtro por caminho no job `changes`). O job **CI OK** agrega o
-resultado e é o único check obrigatório nos rulesets: um job pulado por não ter sido afetado não
-bloqueia o merge, um job com falha bloqueia.
+O `ci.yml` é só o orquestrador. Cada área é um **workflow reutilizável** (`ci-repo.yml`,
+`ci-backend.yml`, `ci-frontend.yml`, `ci-infra.yml`) com jobs pequenos que rodam em paralelo, e
+cada área tem um gate "… Approved". O job **CI OK** consolida tudo e é o único check obrigatório
+nos rulesets: área pulada (sem mudança) aprova; falha ou cancelamento bloqueia o merge.
 
 ```mermaid
 flowchart LR
-    changes["Detectar mudanças"] --> backend["Backend<br/>pytest + evals"]
-    changes --> fuzz["Fuzzing<br/>Atheris"]
-    changes --> frontend["Frontend<br/>ESLint, Vitest, build"]
-    changes --> docs["Documentação<br/>build estrito"]
-    lint["Lint<br/>pre-commit"] --> ok
-    actionlint["Lint dos workflows"] --> ok
-    security["Segurança<br/>gitleaks, pip-audit, npm audit"] --> ok
-    backend --> smoke["Smoke em<br/>Docker Compose"]
-    frontend --> smoke
-    backend --> ok["CI OK"]
-    fuzz --> ok
-    frontend --> ok
-    docs --> ok
-    smoke --> ok
+    changes["Changes"] --> backend & frontend & infra & docs
+    subgraph Repo
+        direction TB
+        hy["Hygiene"]
+        se["Secrets"]
+    end
+    subgraph Backend
+        direction TB
+        bl["Lint"]
+        bt["Tests"]
+        be["Evals"]
+        bf["Fuzz"]
+        bs["Security"]
+    end
+    subgraph Frontend
+        direction TB
+        fl["Lint"]
+        fu["Unit"]
+        fb["Build"]
+        fs["Security"]
+    end
+    subgraph Infra
+        direction TB
+        iw["Workflows"]
+        ic["Compose"]
+        im["Smoke"]
+    end
+    Repo --> ra["Repo Approved"] --> ok["CI OK"]
+    Backend --> ba["Backend Approved"] --> ok
+    Frontend --> fa["Frontend Approved"] --> ok
+    Infra --> ia["Infra Approved"] --> ok
+    docs["Docs (build estrito)"] --> ok
 ```
+
+Nenhuma área espera a outra, então o tempo total é o do job mais lento (hoje, o smoke em Docker
+ou o fuzzing, perto de 2 minutos). O filtro por caminho (job `changes`) pula as áreas que o PR não
+toca; em push para `main`/`dev`, execução manual e na execução semanal (segunda, 06:00 UTC) tudo
+roda.
+
+| Área | Jobs | O que garante |
+| :-- | :-- | :-- |
+| Repo | Hygiene, Secrets | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
+| Backend | Lint, Tests, Evals, Fuzz, Security | black e flake8; pytest com cobertura; benchmark de regras (0 falsos positivos, relatório como artefato); fuzzing Atheris de 60 s; pip-audit sobre o `uv.lock` |
+| Frontend | Lint, Unit, Build, Security | ESLint; Vitest; typecheck e build de produção; `npm audit` |
+| Infra | Workflows, Compose, Smoke | actionlint; validação do `docker-compose.yml`; stack completa em Docker Compose com imagens em cache (upload → fila → worker) |
+| Docs | Docs | `mkdocs build --strict` com a verificação do site |
+
+Outros workflows:
 
 | Workflow | Gatilho | O que garante |
 | :-- | :-- | :-- |
-| `ci.yml` | push e PR em `main` e `dev` | Lint (todos os hooks do pre-commit), actionlint, segurança (gitleaks, pip-audit sobre o `uv.lock`, npm audit), backend (pytest com cobertura e evals com relatório como artefato), fuzzing do motor de regras (Atheris, 60 s), frontend (ESLint, Vitest, build), documentação (build estrito) e smoke em Docker Compose com imagens em cache |
 | `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
 | `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG |
-| `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
 | `docs.yml` | push em `main` | Publicação desta documentação no GitHub Pages (artefato, sem branch `gh-pages`) |
+| `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
 
 **Cadeia de suprimentos.** Todas as actions são fixadas por SHA de commit (com a versão em
 comentário), as imagens Docker por digest e o binário do gitleaks por checksum. Cada workflow
 declara permissões mínimas (`contents: read` por padrão). O Dependabot atualiza SHAs, digests e
 o `uv.lock` em PRs agrupados para `dev`.
+
+**Acrescentar um check.** Crie o job no workflow da área (`ci-<área>.yml`); o gate da área e o
+**CI OK** já o consideram. Nenhuma regra de branch precisa ser alterada.
 
 !!! warning "Permissão necessária para o release-please"
     O release-please abre PRs com o `GITHUB_TOKEN`. Em **Settings → Actions → General**, a opção

@@ -1,4 +1,4 @@
-name: OpenSSF Scorecard - Seguranca da Cadeia de Suprimentos
+name: Scorecard
 
 on:
   push:

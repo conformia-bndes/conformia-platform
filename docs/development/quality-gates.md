@@ -35,7 +35,7 @@ make eval         # benchmark de regras: 0 falsos positivos e acurácia mínima 
 make docs-build   # documentação em modo estrito
 ```
 
-Verificações de segurança, equivalentes ao job "Segurança" do CI:
+Verificações de segurança, equivalentes aos jobs "Repo / Secrets", "Backend / Security" e "Frontend / Security" do CI:
 
 ```bash
 uvx pre-commit@4.7.0 run gitleaks --all-files

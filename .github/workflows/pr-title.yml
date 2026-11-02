@@ -1,4 +1,4 @@
-name: Titulo do PR
+name: PR Title
 
 # Separado do CI: roda tambem quando o PR e editado, sem disparar o pipeline inteiro.
 on:

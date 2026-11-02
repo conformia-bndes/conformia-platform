@@ -1,0 +1,158 @@
+# Area "Backend": estilo, testes, evals, fuzzing e auditoria de dependencias, em paralelo.
+# Workflow reutilizavel, chamado pelo ci.yml.
+name: CI - Backend
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  UV_FROZEN: "1"
+  # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
+  ENVIRONMENT: test
+  DATABASE_URL: sqlite:///./ci-backend.db
+  REDIS_URL: redis://127.0.0.1:6379/0
+  MINIO_ENDPOINT: 127.0.0.1:9
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar ferramentas (versoes do uv.lock)
+        run: uv sync --all-packages --all-extras
+
+      - name: black
+        run: uv run black --check backend/
+
+      - name: flake8
+        run: uv run flake8 backend/ --max-line-length=100
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Instalar Tesseract (portugues) e Poppler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            tesseract-ocr tesseract-ocr-por poppler-utils
+
+      - name: Sincronizar dependencias
+        run: uv sync --all-packages --all-extras
+
+      - name: pytest com cobertura
+        run: |
+          uv run pytest backend/tests/ -q --durations=10 \
+            --cov=backend/app --cov-report=term-missing:skip-covered
+
+  evals:
+    name: Evals
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Instalar Tesseract (portugues) e Poppler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            tesseract-ocr tesseract-ocr-por poppler-utils
+
+      - name: Sincronizar dependencias
+        run: uv sync --all-packages --all-extras
+
+      - name: Benchmark de regras (0 falsos positivos e acuracia minima)
+        run: |
+          mkdir -p evals/reports
+          uv run python evals/eval_pipeline.py --json-report evals/reports/eval_report.json
+
+      - name: Publicar relatorio de evals
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: eval-report
+          path: evals/reports/eval_report.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  fuzz:
+    name: Fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # O Atheris so publica wheels para Linux com Python 3.12+ (extra `fuzz` do backend).
+      FUZZ_PYTHON: "3.12"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.FUZZ_PYTHON }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar dependencias do backend com o extra de fuzzing
+        run: uv sync --package conformia-backend --extra fuzz --python "$FUZZ_PYTHON"
+
+      - name: Fuzzing por 60 segundos (falha em excecao ou invariante violada)
+        run: |
+          uv run --python "$FUZZ_PYTHON" python backend/fuzz/fuzz_regras.py \
+            -max_total_time=60 -rss_limit_mb=2048 -print_final_stats=1
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: pip-audit (uv.lock completo)
+        run: |
+          uv export --all-packages --all-extras --no-emit-workspace --no-hashes \
+            --format requirements-txt -o /tmp/requirements-audit.txt
+          uvx pip-audit@2.9.0 -r /tmp/requirements-audit.txt --no-deps --disable-pip \
+            --progress-spinner off
