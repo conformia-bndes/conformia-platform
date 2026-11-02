@@ -15,7 +15,7 @@ FLAKE8 := $(if $(UV),uv run flake8,flake8)
 ALEMBIC := $(if $(UV),uv run alembic,alembic)
 MKDOCS := $(if $(UV),uv run --frozen mkdocs,mkdocs)
 
-.PHONY: eval-baseline reports help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
+.PHONY: load resilience scan eval-baseline reports help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
 
 help:
 	@echo "Comandos disponiveis no Conform.IA BNDES:"
@@ -37,6 +37,9 @@ help:
 	@echo "  make hooks      - Instala os hooks pre-commit no clone local"
 	@echo "  make lint       - Executa verificacoes de linter (Flake8, Black e ESLint)"
 	@echo "  make format     - Formata o codigo do backend com Black"
+	@echo "  make load       - Teste de carga (k6) contra a stack no ar"
+	@echo "  make resilience - Derruba Redis, MinIO e Postgres e confere degradacao e recuperacao"
+	@echo "  make scan       - Constroi as imagens de producao e roda o Trivy (HIGH/CRITICAL)"
 	@echo "  make eval-baseline - Aceita o resultado atual dos evals como nova linha de base"
 	@echo "  make reports    - Gera testes, cobertura e evals em reports/ (exibidos por make docs)"
 	@echo "  make docs       - Inicia servidor local de documentacao MkDocs"
@@ -115,6 +118,17 @@ lint:
 
 format:
 	$(BLACK) backend/
+
+load:
+	docker run --rm -i -e BASE_URL=http://host.docker.internal:8000 --add-host host.docker.internal:host-gateway grafana/k6 run --quiet - < tests/load/api.js
+
+resilience:
+	bash scripts/resilience_test.sh
+
+scan:
+	docker build -q -f infra/Dockerfile.backend --target runtime -t scan/backend:local .
+	docker build -q -f infra/Dockerfile.frontend --target production -t scan/frontend:local .
+	for image in scan/backend:local scan/frontend:local; do docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 $$image; done
 
 eval-baseline:
 	mkdir -p reports

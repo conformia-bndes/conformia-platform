@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime
+from functools import lru_cache
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -11,6 +12,14 @@ from app.db.session import get_db
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+@lru_cache(maxsize=1)
+def _redis_client():
+    """Cliente do Redis reaproveitado entre chamadas (pool interno de conexoes)."""
+    import redis
+
+    return redis.from_url(settings.REDIS_URL, socket_connect_timeout=2, socket_timeout=2)
 
 
 @router.get("", summary="Verificação de Saúde da API e Dependências")
@@ -28,10 +37,7 @@ def get_health(db: Session = Depends(get_db)):
 
     redis_status = "healthy"
     try:
-        import redis
-
-        r = redis.from_url(settings.REDIS_URL, socket_connect_timeout=2)
-        r.ping()
+        _redis_client().ping()
     except Exception as e:
         logger.warning(f"Redis health check failed: {e}")
         redis_status = "degraded"

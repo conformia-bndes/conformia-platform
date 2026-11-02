@@ -3,10 +3,21 @@
 import io
 import logging
 from typing import Optional
+
+import urllib3
 from minio import Minio
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+# Timeouts e tentativas curtos: com o MinIO fora do ar, a politica padrao de reintentos do
+# cliente prende a requisicao (e o healthcheck) por dezenas de segundos. Falhar rapido deixa a
+# API responder 503 e o orquestrador decidir.
+OPERATION_TIMEOUT = urllib3.Timeout(connect=2.0, read=15.0)
+OPERATION_RETRIES = urllib3.Retry(
+    total=2, backoff_factor=0.2, status_forcelist=(500, 502, 503, 504)
+)
+PING_TIMEOUT = urllib3.Timeout(connect=1.0, read=2.0)
 
 
 class StorageService:
@@ -19,17 +30,22 @@ class StorageService:
         self.bucket_name = settings.MINIO_BUCKET_NAME
         self.secure = settings.MINIO_USE_SSL
         self._client: Optional[Minio] = None
+        self._ping_client: Optional[Minio] = None
         self._bucket_ready = False
+
+    def _build_client(self, timeout: urllib3.Timeout, retries) -> Minio:
+        return Minio(
+            endpoint=self.endpoint,
+            access_key=self.access_key,
+            secret_key=self.secret_key,
+            secure=self.secure,
+            http_client=urllib3.PoolManager(timeout=timeout, retries=retries),
+        )
 
     @property
     def client(self) -> Minio:
         if self._client is None:
-            self._client = Minio(
-                endpoint=self.endpoint,
-                access_key=self.access_key,
-                secret_key=self.secret_key,
-                secure=self.secure,
-            )
+            self._client = self._build_client(OPERATION_TIMEOUT, OPERATION_RETRIES)
         if not self._bucket_ready:
             self._ensure_bucket()
         return self._client
@@ -53,8 +69,10 @@ class StorageService:
     def ping(self) -> bool:
         """Retorna True se o MinIO responde e o bucket esta disponivel."""
         try:
-            self.client.bucket_exists(self.bucket_name)
-            return self._bucket_ready
+            # Cliente proprio, sem reintentos e com timeout curto: o healthcheck nao pode travar.
+            if self._ping_client is None:
+                self._ping_client = self._build_client(PING_TIMEOUT, False)
+            return bool(self._ping_client.bucket_exists(self.bucket_name))
         except Exception as exc:
             logger.warning(f"MinIO indisponivel: {str(exc)}")
             return False

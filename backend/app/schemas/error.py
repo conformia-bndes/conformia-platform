@@ -44,3 +44,9 @@ class ErrorResponse(BaseModel):
         ...,
         description="Estrutura de erro padronizada",
     )
+
+
+class HTTPErrorResponse(BaseModel):
+    """Corpo das respostas de erro HTTP da API (401, 403, 404, 409...): `{"detail": "..."}`."""
+
+    detail: str = Field(..., description="Mensagem de erro para o cliente")
