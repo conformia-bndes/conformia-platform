@@ -145,7 +145,10 @@ def test_summarize_statuses_ignores_not_applicable():
 def test_missing_required_keyword_goes_to_manual_review():
     """Decisao D2: termo obrigatorio ausente (ex.: OCR ilegivel) nao reprova, vai ao analista."""
     engine = RulesEngine()
-    text = "MINISTERIO DA FAZENDA\nCERTIDAO NEGATIVA\nCARIMBO SOBREPOSTO ILEGIVEL\nValida ate: 31/12/2099"
+    text = (
+        "MINISTERIO DA FAZENDA\nCERTIDAO NEGATIVA\n"
+        "CARIMBO SOBREPOSTO ILEGIVEL\nValida ate: 31/12/2099"
+    )
     result = engine.evaluate({"full_text": text}, document_type="CND_FEDERAL")
     cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
     assert cnd_check["status"] == "MANUAL_REVIEW_REQUIRED"
