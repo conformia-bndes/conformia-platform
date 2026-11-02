@@ -19,7 +19,9 @@ central do produto: **nenhuma certidão irregular é aprovada**.
 | Dataset sintético de PDFs | `evals/sintetico/` | Gerado de forma determinística por `gerar_dataset.py`; gabarito em Git |
 | Prompts do Maker e do Checker | `backend/app/ai/llm_client.py` | Git; mudanças exigem `make llm-eval` |
 | Modelo LLM | `LLM_MODEL` no `.env` | Registrado como parâmetro em cada execução |
-| Resultados de avaliação | Artefato `eval-report` do CI e MLflow local | Retenção de 30 dias no CI |
+| Linha de base dos evals | `evals/baseline.json` | Git; só muda por PR revisado (`make eval-baseline`) |
+| Versão do conjunto de avaliação | Hash `datasets_sha256` e `rules_sha256` no relatório | Calculado a cada execução |
+| Resultados de avaliação | Artefato `relatorio-backend-evals` do CI e MLflow local | Retenção de 30 dias no CI |
 
 ---
 
@@ -27,7 +29,7 @@ central do produto: **nenhuma certidão irregular é aprovada**.
 
 | Camada | Comando | Mede | Bloqueia merge? |
 | :-- | :-- | :-- | :-- |
-| Regras determinísticas | `make eval` | Status por regra no caminho do produto (parser + tipologia) | Sim: 0 falsos positivos e acurácia mínima de 90% |
+| Regras determinísticas | `make eval` | Status por regra no caminho do produto (parser + tipologia) | Sim: 0 falsos positivos, acurácia mínima de 90% e gate de regressão (seção 3) |
 | Extração e OCR (sintético) | `uv run python evals/sintetico/avaliar.py` | Tipo, CNPJ, validade e pendência por PDF | Não (linha de base) |
 | Comportamento do LLM | `make llm-eval` | Maker-Checker contra alucinação e injeção de instruções | Não; manual, exige `OPENAI_API_KEY` |
 | Testes unitários do harness | `pytest backend/tests/test_maker_checker.py` | Fail-closed sem rede, com cliente simulado | Sim |
@@ -42,7 +44,32 @@ esperado era revisão manual.
 
 ---
 
-## 3. Rastreio de experimentos (MLflow)
+## 3. Gate de regressão dos evals
+
+O job **Backend / Evals** do CI compara cada execução com a linha de base versionada
+(`evals/baseline.json`, o último resultado aceito) por meio de `evals/compare_baseline.py`.
+O gate reprova quando:
+
+1. há **qualquer falso positivo** (tolerância zero);
+2. a **acurácia cai** abaixo da linha de base;
+3. uma verificação que **passava passa a falhar**, mesmo que a acurácia geral se mantenha por
+   compensação com casos novos (regressão pontual).
+
+Casos novos e mudanças no checklist ou no dataset não reprovam por si só; o resumo da execução
+indica quando a linha de base deve ser atualizada. Para aceitar um novo resultado de forma
+intencional:
+
+```bash
+make eval-baseline   # roda os evals e grava evals/baseline.json
+git add evals/baseline.json   # revisado no PR pelo time ai-evals
+```
+
+A linha de base nunca aceita falsos positivos. O resumo do gate aparece na execução do CI e os
+números atuais na página [Relatórios de Qualidade](../relatorios/index.md).
+
+---
+
+## 4. Rastreio de experimentos (MLflow)
 
 Cada execução dos evals pode ser registrada no MLflow sem adicioná-lo às dependências do projeto:
 
@@ -65,7 +92,7 @@ Para um servidor compartilhado, defina `MLFLOW_TRACKING_URI`.
 
 ---
 
-## 4. Governança do LLM
+## 5. Governança do LLM
 
 1. **Contexto delimitado:** o Maker recebe apenas a regra e até 3.000 caracteres do documento.
 2. **Citação obrigatória:** a aprovação exige que o trecho citado pelo Maker exista literalmente
@@ -78,11 +105,13 @@ Para um servidor compartilhado, defina `MLFLOW_TRACKING_URI`.
 
 ---
 
-## 5. Ciclo de mudança em componentes de IA
+## 6. Ciclo de mudança em componentes de IA
 
 ```text
 issue -> branch -> alteração (regra, prompt, modelo ou parser)
       -> make eval  (0 falsos positivos)          -> bloqueante no CI
+      -> gate de regressão contra evals/baseline.json -> bloqueante no CI
+      -> make eval-baseline (se o resultado mudou de forma intencional)
       -> make llm-eval (se prompt/modelo mudou)   -> resultado anexado ao PR
       -> make eval-mlflow (comparação com a execução anterior)
       -> revisão do time ai-evals (CODEOWNERS)
@@ -91,7 +120,7 @@ issue -> branch -> alteração (regra, prompt, modelo ou parser)
 
 ---
 
-## 6. Monitoramento em produção (planejado)
+## 7. Monitoramento em produção (planejado)
 
 Ainda não implementado. Itens propostos para depois do MVP:
 

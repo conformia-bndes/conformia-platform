@@ -1,6 +1,7 @@
-# Area "Backend": qualidade, testes (matriz de versoes do Python) e fuzzing, em paralelo.
-# Workflow reutilizavel, chamado pelo ci.yml. Gera os relatorios de qualidade (artefatos
-# "relatorio-*") que o docs.yml publica na documentacao.
+# Area "Backend", em estagios:  Lint -> Build -> Test (Test, Evals, Fuzz em paralelo).
+# O Security corre em paralelo ao Lint. O deploy (imagem no GHCR) fica no cd.yml, so em release.
+# Workflow reutilizavel, chamado pelo ci.yml. Gera os artefatos "relatorio-*" que o docs.yml
+# publica na documentacao.
 name: CI - Backend
 
 on:
@@ -18,11 +19,13 @@ env:
   MINIO_ENDPOINT: 127.0.0.1:9
 
 jobs:
-  # Verificacoes baratas juntas (um unico uv sync): estilo, benchmark de regras e auditoria.
-  quality:
-    name: Quality
+  # ---------------------------------------------------------------------------
+  # Estagio 1: lint (e auditoria, em paralelo)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,22 +37,33 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
 
-      - name: Sincronizar dependencias
+      - name: Sincronizar ferramentas (versoes do uv.lock)
         run: uv sync --all-packages --all-extras
 
       - name: black
-        run: uv run black --check backend/
+        run: uv run black --check backend/ docs_hooks/ evals/compare_baseline.py
 
       - name: flake8
-        run: uv run flake8 backend/ --max-line-length=100
+        run: uv run flake8 backend/ docs_hooks/ evals/compare_baseline.py --max-line-length=100
 
-      - name: Benchmark de regras (0 falsos positivos e acuracia minima)
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: pip-audit (uv.lock completo)
         run: |
           mkdir -p reports
-          uv run python evals/eval_pipeline.py --json-report reports/eval_report.json
-
-      - name: Auditoria de dependencias Python (uv.lock completo)
-        run: |
           uv export --all-packages --all-extras --no-emit-workspace --no-hashes \
             --format requirements-txt -o /tmp/requirements-audit.txt
           uvx pip-audit@2.9.0 -r /tmp/requirements-audit.txt --no-deps --disable-pip \
@@ -59,15 +73,45 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: relatorio-backend-quality
+          name: relatorio-backend-security
           path: reports/
           if-no-files-found: warn
           retention-days: 30
 
+  # ---------------------------------------------------------------------------
+  # Estagio 2: build da imagem de producao (valida o Dockerfile e aquece o cache de camadas
+  # que o smoke e o cd.yml reutilizam)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build da imagem do backend (sem publicar)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/Dockerfile.backend
+          target: runtime
+          push: false
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Estagio 3: testes (em paralelo)
+  # ---------------------------------------------------------------------------
   # Matriz: o produto roda em Python 3.11; a 3.12 antecipa a compatibilidade com o ambiente
   # de desenvolvimento. Cobertura e relatorios saem so da 3.11.
-  tests:
-    name: Tests (${{ matrix.python }})
+  test:
+    name: Test (${{ matrix.python }})
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -119,8 +163,47 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  # MLOps: benchmark de regras com gate de regressao contra a linha de base versionada
+  # (evals/baseline.json): sem falso positivo, sem queda de acuracia e sem regressao pontual.
+  evals:
+    name: Evals
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar dependencias
+        run: uv sync --all-packages --all-extras
+
+      - name: Benchmark de regras (0 falsos positivos e acuracia minima)
+        run: |
+          mkdir -p reports
+          uv run python evals/eval_pipeline.py --json-report reports/eval_report.json
+
+      - name: Gate de regressao contra a linha de base
+        run: uv run python evals/compare_baseline.py reports/eval_report.json
+
+      - name: Publicar relatorios
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-backend-evals
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30
+
   fuzz:
     name: Fuzz
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

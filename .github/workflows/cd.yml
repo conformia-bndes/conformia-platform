@@ -1,0 +1,132 @@
+# CD - Conform.IA BNDES Platform: estagio "Deploy" do backend e do frontend.
+#
+# Constroi as imagens de producao a partir da tag de release e as publica no GitHub Container
+# Registry (ghcr.io/<owner>/<repo>/backend e /frontend), com a tag da versao e "latest", e com
+# provenance e SBOM anexados a imagem. E chamado pelo release-please.yml quando um PR de
+# release e mergeado (o GITHUB_TOKEN nao dispara workflows por push de tag, por isso a chamada
+# e explicita). Tambem roda manualmente: com `push: false` (padrao) apenas constroi e valida,
+# sem publicar nada.
+name: CD
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag de release a publicar (ex.: v0.3.0)"
+        type: string
+        required: true
+      push:
+        description: "Publicar as imagens no GHCR"
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de release a construir (ex.: v0.2.0)"
+        type: string
+        required: true
+      push:
+        description: "Publicar as imagens no GHCR (falso = so construir e validar)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write # publicar no GHCR com o GITHUB_TOKEN
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            dockerfile: infra/Dockerfile.backend
+            target: runtime
+          - service: frontend
+            dockerfile: infra/Dockerfile.frontend
+            target: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Definir nome e tags da imagem
+        id: image
+        env:
+          TAG: ${{ inputs.tag }}
+          SERVICE: ${{ matrix.service }}
+        run: |
+          case "$TAG" in
+            v[0-9]*) ;;
+            *) echo "::error::Tag invalida: $TAG (esperado vX.Y.Z)"; exit 1 ;;
+          esac
+          repo="${GITHUB_REPOSITORY,,}"
+          name="ghcr.io/${repo}/${SERVICE}"
+          {
+            echo "name=$name"
+            echo "tags<<EOF"
+            echo "$name:$TAG"
+            echo "$name:latest"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Entrar no GHCR
+        if: inputs.push
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build${{ inputs.push && ' e publicacao' || ' (sem publicar)' }} da imagem
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: ${{ inputs.push }}
+          tags: ${{ steps.image.outputs.tags }}
+          provenance: mode=max
+          sbom: true
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ inputs.tag }}
+            org.opencontainers.image.title=conformia-${{ matrix.service }}
+          cache-from: type=gha,scope=${{ matrix.service }}${{ matrix.service == 'frontend' && '-production' || '' }}
+          cache-to: type=gha,scope=${{ matrix.service }}${{ matrix.service == 'frontend' && '-production' || '' }},mode=max
+
+      - name: Resumo
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          TAG: ${{ inputs.tag }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          PUSHED: ${{ inputs.push }}
+        run: |
+          {
+            echo "### Deploy: ${IMAGE##*/}"
+            echo ""
+            if [ "$PUSHED" = "true" ]; then
+              echo "Imagem publicada: \`$IMAGE:$TAG\` (digest \`$DIGEST\`)."
+              echo ""
+              echo "\`\`\`bash"
+              echo "docker pull $IMAGE:$TAG"
+              echo "\`\`\`"
+            else
+              echo "Execucao de validacao: a imagem foi construida e **nao** foi publicada."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

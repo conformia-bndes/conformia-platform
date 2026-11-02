@@ -1,11 +1,24 @@
-# Area "Infra": lint (workflows e compose) e smoke da stack completa, em paralelo.
+# Area "Infra", em estagios:  Lint -> Smoke (build das imagens e stack completa em Compose).
 # Workflow reutilizavel, chamado pelo ci.yml. Cada grupo de jobs tem seu proprio escopo.
 name: CI - Infra
 
 on:
   workflow_call:
     inputs:
-      # Verificacoes baratas juntas: lint dos workflows e validacao do compose.
+      workflows:
+        description: "Rodar o lint dos workflows"
+        type: boolean
+        default: true
+      stack:
+        description: "Validar o compose e rodar o smoke da stack"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Verificacoes baratas juntas: lint dos workflows e validacao do compose.
   lint:
     name: Lint
     if: inputs.workflows || inputs.stack
@@ -15,6 +28,17 @@ on:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        if: inputs.workflows
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Estrutura dos workflows (needs, uses e inputs)
+        if: inputs.workflows
+        run: uv run --frozen python scripts/check_workflows.py
 
       - name: actionlint (workflows)
         if: inputs.workflows
@@ -30,6 +54,7 @@ on:
 
   smoke:
     name: Smoke
+    needs: lint
     if: inputs.stack
     runs-on: ubuntu-latest
     timeout-minutes: 20
