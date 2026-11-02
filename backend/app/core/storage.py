@@ -72,7 +72,12 @@ class StorageService:
             # Cliente proprio, sem reintentos e com timeout curto: o healthcheck nao pode travar.
             if self._ping_client is None:
                 self._ping_client = self._build_client(PING_TIMEOUT, False)
-            return bool(self._ping_client.bucket_exists(self.bucket_name))
+            if not self._ping_client.bucket_exists(self.bucket_name):
+                # MinIO novo: o bucket so existe depois da primeira criacao.
+                self._ping_client.make_bucket(self.bucket_name)
+                logger.info(f"Bucket MinIO '{self.bucket_name}' criado com sucesso.")
+            self._bucket_ready = True
+            return True
         except Exception as exc:
             logger.warning(f"MinIO indisponivel: {str(exc)}")
             return False

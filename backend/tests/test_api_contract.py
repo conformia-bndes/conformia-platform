@@ -108,3 +108,26 @@ def test_storage_ping_fails_fast_when_minio_is_down(monkeypatch):
     started = time.monotonic()
     assert service.ping() is False
     assert time.monotonic() - started < 5
+
+
+def test_storage_ping_creates_missing_bucket(monkeypatch):
+    """MinIO novo (sem bucket) e saudavel: o ping cria o bucket em vez de ficar degradado."""
+    from app.core.storage import StorageService
+
+    class FakeMinio:
+        def __init__(self):
+            self.created = []
+
+        def bucket_exists(self, name):
+            return name in self.created
+
+        def make_bucket(self, name):
+            self.created.append(name)
+
+    fake = FakeMinio()
+    service = StorageService()
+    monkeypatch.setattr(service, "_build_client", lambda *args, **kwargs: fake)
+    assert service.ping() is True
+    assert fake.created == [service.bucket_name]
+    assert service.ping() is True  # segunda chamada: bucket ja existe, nada a criar
+    assert fake.created == [service.bucket_name]
