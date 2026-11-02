@@ -22,7 +22,7 @@ help:
 	@echo "  make env        - Gera .env com segredos aleatorios (nao sobrescreve o existente)"
 	@echo "  make setup      - Gera .env e sincroniza dependencias (uv ou pip/npm)"
 	@echo "  make uv-sync    - Sincroniza ambiente virtual do workspace via uv"
-	@echo "  make uv-lock    - Gera uv.lock e exporta backend/requirements.lock"
+	@echo "  make uv-lock    - Atualiza o uv.lock (fonte unica de versoes)"
 	@echo "  make up         - Constroi, sobe os servicos e espera ficarem saudaveis"
 	@echo "  make smoke      - Teste de fumaca: upload -> fila -> worker -> estado da tarefa"
 	@echo "  make down       - Encerra e remove todos os conteineres da stack"
@@ -59,7 +59,6 @@ uv-sync:
 
 uv-lock:
 	uv lock
-	uv export --frozen --no-dev --no-emit-project --package conformia-backend --format requirements-txt -o backend/requirements.lock
 
 up: env
 	$(DOCKER_COMPOSE) up --build -d --wait --wait-timeout 300

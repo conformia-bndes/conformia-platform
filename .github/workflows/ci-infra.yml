@@ -1,5 +1,5 @@
-# Area "Infra", em estagios:  Lint -> Stack (imagens e stack completa em Compose: smoke, contrato
-# da API, carga e resiliencia).
+# Area "Infra": Lint (workflows, compose, hadolint) e Stack (imagens e stack completa em Compose:
+# smoke, contrato da API, carga e resiliencia) comecam juntos.
 # Workflow reutilizavel, chamado pelo ci.yml. Cada grupo de jobs tem seu proprio escopo.
 name: CI - Infra
 
@@ -64,7 +64,6 @@ jobs:
 
   smoke:
     name: Stack
-    needs: lint
     if: inputs.stack
     runs-on: ubuntu-latest
     timeout-minutes: 20

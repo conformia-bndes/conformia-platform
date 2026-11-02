@@ -31,7 +31,10 @@ em cada etapa e como voltar atrás quando algo falha.
 
 O `ci.yml` é só o orquestrador. Cada área é um **workflow reutilizável** com estágios explícitos
 (`needs`), e as áreas são independentes entre si. Back e front seguem o mesmo roteiro:
-**lint → build → test → deploy**; o deploy não roda no CI de PR, só na release (seção abaixo).
+**lint, build, test e deploy**; o deploy não roda no CI de PR, só na release (seção abaixo).
+Os jobs de uma área **não esperam uns pelos outros**: os testes operam sobre o código-fonte e não
+dependem do build da imagem, então encadear só alongaria o caminho crítico. Os estágios são
+lógicos (o que cada job verifica), e o tempo total é o do job mais lento.
 O job **CI OK** consolida as áreas e é o único check obrigatório nos rulesets: área pulada (sem
 mudança) aprova; falha ou cancelamento bloqueia o merge.
 
@@ -43,21 +46,24 @@ flowchart LR
     end
     subgraph Backend
         direction LR
-        bl["Lint<br/>black, flake8"] --> bb["Build<br/>imagem Docker"]
-        bb --> bt["Test 3.11 e 3.12"]
-        bb --> be["Evals<br/>gate de regressão"]
-        bb --> bf["Fuzz"]
+        bl["Lint<br/>black, flake8"]
+        bb["Build<br/>imagem + Trivy"]
+        bt["Test<br/>3.11 (+3.12 em push)"]
+        be["Evals<br/>gate de regressão"]
+        bf["Fuzz"]
         bs["Security<br/>pip-audit"]
     end
     subgraph Frontend
         direction LR
-        fl["Lint<br/>ESLint, tsc"] --> fb["Build<br/>Vite + imagem"]
-        fb --> ft["Test<br/>Vitest"]
+        fl["Lint<br/>ESLint, tsc"]
+        fb["Build<br/>Vite + imagem + Trivy"]
+        ft["Test<br/>Vitest"]
         fs["Security<br/>npm audit"]
     end
     subgraph Infra
         direction LR
-        il["Lint<br/>workflows, compose, hadolint"] --> im["Stack<br/>smoke, contrato, carga, resiliência"]
+        il["Lint<br/>workflows, compose, hadolint"]
+        im["Stack<br/>smoke, contrato, carga, resiliência"]
     end
     Repo --> ok["CI OK"]
     Backend --> ok
@@ -67,17 +73,18 @@ flowchart LR
     ok -.->|release criada| cd["CD: Deploy<br/>imagens no GHCR"]
 ```
 
-Dentro de uma área, o que não depende do outro roda em paralelo (Security corre junto do Lint;
-Test, Evals e Fuzz correm juntos depois do Build). Áreas diferentes nunca esperam uma pela outra.
+Dentro de uma área e entre áreas, tudo roda em paralelo; só o CI OK espera por todas.
+**Matriz de Python:** em PR roda só o 3.11 (o do produto); o 3.12 entra em push para `main`/`dev`,
+na execução semanal e quando mudam `pyproject.toml`, `uv.lock` ou os workflows.
 O filtro por caminho (job `changes`) pula as áreas que o PR não toca; em push para `main`/`dev`,
 execução manual e na execução semanal (segunda, 06:00 UTC) tudo roda.
 
 | Área | Estágios | O que garante |
 | :-- | :-- | :-- |
 | Repo | Checks | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
-| Backend | Lint, Security → Build → Test (matriz), Evals, Fuzz | black e flake8; pip-audit; build da imagem de produção com scan do Trivy; pytest com cobertura em Python 3.11 (produto) e 3.12; benchmark de regras com gate de regressão; fuzzing Atheris de 60 s |
-| Frontend | Lint, Security → Build → Test | ESLint e typecheck; npm audit; build do bundle e da imagem de produção (nginx) com scan do Trivy; Vitest |
-| Infra | Lint → Stack | estrutura dos workflows, actionlint, hadolint e `docker-compose.yml`; stack completa em Docker Compose com smoke (upload → fila → worker), fuzz de contrato da API, carga e resiliência |
+| Backend | Lint, Security, Build, Test (matriz), Evals, Fuzz | black e flake8; pip-audit; build da imagem de produção com scan do Trivy; pytest com cobertura em Python 3.11 (produto) e 3.12; benchmark de regras com gate de regressão; fuzzing Atheris de 60 s |
+| Frontend | Lint, Security, Build, Test | ESLint e typecheck; npm audit; build do bundle e da imagem de produção (nginx) com scan do Trivy; Vitest |
+| Infra | Lint, Stack | estrutura dos workflows, actionlint, hadolint e `docker-compose.yml`; stack completa em Docker Compose com smoke (upload → fila → worker), fuzz de contrato da API, carga e resiliência |
 | Docs | Docs | `mkdocs build --strict` com a verificação do site |
 
 ### Deploy (CD)

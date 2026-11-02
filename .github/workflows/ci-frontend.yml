@@ -1,5 +1,6 @@
-# Area "Frontend", em estagios:  Lint -> Build -> Test.  O Security corre em paralelo ao Lint.
-# O deploy (imagem no GHCR) fica no cd.yml, so em release.
+# Area "Frontend": Lint, Security, Build e Test comecam juntos (sem `needs` entre eles): cada um
+# prepara o proprio ambiente em poucos segundos e nenhum depende do resultado do outro. Os
+# estagios sao logicos; o deploy (imagem no GHCR) e o cd.yml, so em release.
 # Workflow reutilizavel, chamado pelo ci.yml. Gera os artefatos "relatorio-frontend-*".
 name: CI - Frontend
 
@@ -13,9 +14,6 @@ env:
   NODE_VERSION: "22"
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Estagio 1: lint (e auditoria, em paralelo)
-  # ---------------------------------------------------------------------------
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -72,12 +70,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  # ---------------------------------------------------------------------------
-  # Estagio 2: build do bundle de producao e da imagem (nginx), sem publicar
-  # ---------------------------------------------------------------------------
   build:
     name: Build
-    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -127,12 +121,8 @@ jobs:
             aquasec/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c \
             image --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 scan/frontend:ci
 
-  # ---------------------------------------------------------------------------
-  # Estagio 3: testes
-  # ---------------------------------------------------------------------------
   test:
     name: Test
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
