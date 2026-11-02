@@ -276,7 +276,9 @@ class RulesEngine:
                 "rule_id": rule["id"],
                 "rule_title": rule["title"],
                 "category": rule["category"],
-                "status": "NON_COMPLIANT",
+                # Decisao D2: a falta de um termo obrigatorio (ex.: OCR ilegivel) nao prova
+                # irregularidade; o analista decide. Termos impeditivos seguem NON_COMPLIANT.
+                "status": "MANUAL_REVIEW_REQUIRED",
                 "findings": rule.get("failure_message", "Criterios minimos nao encontrados."),
                 "confidence_score": 0.9,
                 "checker_type": "DETERMINISTIC",
