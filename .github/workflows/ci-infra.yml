@@ -5,7 +5,20 @@ name: CI - Infra
 on:
   workflow_call:
     inputs:
-      # Verificacoes baratas juntas: lint dos workflows e validacao do compose.
+      workflows:
+        description: "Rodar o lint dos workflows"
+        type: boolean
+        default: true
+      stack:
+        description: "Validar o compose e rodar o smoke da stack"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Verificacoes baratas juntas: lint dos workflows e validacao do compose.
   lint:
     name: Lint
     if: inputs.workflows || inputs.stack
