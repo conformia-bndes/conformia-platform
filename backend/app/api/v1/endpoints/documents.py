@@ -28,7 +28,8 @@ from app.schemas.document import (
     DocumentUploadResponse,
 )
 from app.schemas.enums import ProcessingStatus
-from app.schemas.error import ErrorResponse
+from app.api.v1.pagination import LimitParam, SkipParam
+from app.schemas.error import HTTPErrorResponse
 from app.schemas.processing import ProcessingStatusResponse
 
 router = APIRouter()
@@ -358,7 +359,7 @@ def get_task_status(task_id: str):
     summary="Listar Documentos Ingeridos",
 )
 def list_documents(
-    skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
+    skip: SkipParam = 0, limit: LimitParam = 50, db: Session = Depends(get_db)
 ) -> DocumentListResponse:
     """Retorna lista paginada de documentos processados."""
     docs = db.query(Document).order_by(Document.created_at.desc()).offset(skip).limit(limit).all()
@@ -430,7 +431,7 @@ def get_document(document_id: str, db: Session = Depends(get_db)) -> DocumentDet
         },
         404: {
             "description": "Documento nao encontrado.",
-            "model": ErrorResponse,
+            "model": HTTPErrorResponse,
         },
     },
 )

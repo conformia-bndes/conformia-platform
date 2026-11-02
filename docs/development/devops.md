@@ -57,7 +57,7 @@ flowchart LR
     end
     subgraph Infra
         direction LR
-        il["Lint<br/>workflows, compose"] --> im["Smoke<br/>stack completa"]
+        il["Lint<br/>workflows, compose, hadolint"] --> im["Stack<br/>smoke, contrato, carga, resiliência"]
     end
     Repo --> ok["CI OK"]
     Backend --> ok
@@ -75,9 +75,9 @@ execução manual e na execução semanal (segunda, 06:00 UTC) tudo roda.
 | Área | Estágios | O que garante |
 | :-- | :-- | :-- |
 | Repo | Checks | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
-| Backend | Lint, Security → Build → Test (matriz), Evals, Fuzz | black e flake8; pip-audit; build da imagem de produção; pytest com cobertura em Python 3.11 (produto) e 3.12; benchmark de regras com gate de regressão; fuzzing Atheris de 60 s |
-| Frontend | Lint, Security → Build → Test | ESLint e typecheck; npm audit; build do bundle e da imagem de produção (nginx); Vitest |
-| Infra | Lint → Smoke | estrutura dos workflows, actionlint e `docker-compose.yml`; stack completa em Docker Compose (upload → fila → worker) |
+| Backend | Lint, Security → Build → Test (matriz), Evals, Fuzz | black e flake8; pip-audit; build da imagem de produção com scan do Trivy; pytest com cobertura em Python 3.11 (produto) e 3.12; benchmark de regras com gate de regressão; fuzzing Atheris de 60 s |
+| Frontend | Lint, Security → Build → Test | ESLint e typecheck; npm audit; build do bundle e da imagem de produção (nginx) com scan do Trivy; Vitest |
+| Infra | Lint → Stack | estrutura dos workflows, actionlint, hadolint e `docker-compose.yml`; stack completa em Docker Compose com smoke (upload → fila → worker), fuzz de contrato da API, carga e resiliência |
 | Docs | Docs | `mkdocs build --strict` com a verificação do site |
 
 ### Deploy (CD)
@@ -108,6 +108,9 @@ do site. Localmente, `make reports` gera os mesmos arquivos em `reports/` e `mak
 A publicação só acontece a partir de push em `main`, nunca de PR.
 
 ### Evitar CI quebrado por erro de estrutura
+
+Os métodos de teste, o que cada um já encontrou e os números de desempenho estão em
+[Testes e Robustez](../engineering/testing.md).
 
 O job Infra / Lint roda `scripts/check_workflows.py` quando os workflows mudam. Ele confere o
 que derruba o CI inteiro sem criar nenhum job: YAML válido com `jobs`, `needs` apontando para

@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.api.v1.pagination import LimitParam, SkipParam
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db.models.document import Document
@@ -98,7 +100,7 @@ def get_compliance_results(document_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/audit-trail", summary="Consultar Trilha de Auditoria Imutável")
-def get_audit_trail(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+def get_audit_trail(skip: SkipParam = 0, limit: LimitParam = 50, db: Session = Depends(get_db)):
     """Retorna registros de auditoria em ordem cronológica reversa."""
     logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).offset(skip).limit(limit).all()
     total = db.query(AuditLog).count()

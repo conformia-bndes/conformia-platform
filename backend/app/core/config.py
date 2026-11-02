@@ -108,6 +108,12 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str = "conformia_db"
     DATABASE_URL: Union[str, None] = None
+    # Pool de conexoes POR PROCESSO. O total de conexoes e
+    # (workers do uvicorn + processos do Celery) x (DB_POOL_SIZE + DB_MAX_OVERFLOW) e precisa
+    # ficar abaixo do max_connections do Postgres (100 por padrao).
+    DB_POOL_SIZE: int = Field(default=5, ge=1, le=50)
+    DB_MAX_OVERFLOW: int = Field(default=5, ge=0, le=50)
+    DB_POOL_TIMEOUT: int = Field(default=5, ge=1, le=60)
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

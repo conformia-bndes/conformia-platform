@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import InterfaceError, OperationalError
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.db.session import engine, Base
@@ -57,6 +58,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Banco de dados indisponivel (conexao recusada, timeout, conexao perdida): e uma falha
+# temporaria de dependencia, nao um defeito da API. Responde 503 para o cliente tentar de novo.
+@app.exception_handler(OperationalError)
+@app.exception_handler(InterfaceError)
+async def database_unavailable_handler(request: Request, exc: Exception):
+    logger.error("Banco de dados indisponivel em %s: %s", request.url.path, type(exc).__name__)
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": "Servico temporariamente indisponivel. Tente novamente em instantes."},
+        headers={"Retry-After": "5"},
+    )
 
 
 # Tratamento Global de Exceções

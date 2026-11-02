@@ -99,6 +99,7 @@ nav:
       - Motor de Regras: engineering/rules-engine.md
       - Maker-Checker e Guardrails: engineering/maker-checker.md
       - Avaliação Contínua (Evals): engineering/harness-evals.md
+      - Testes e Robustez: engineering/testing.md
       - MLOps: engineering/mlops.md
   - Operação:
       - DevOps e CI/CD: development/devops.md

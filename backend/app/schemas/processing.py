@@ -1,7 +1,7 @@
 """Pydantic schemas for processing status and extraction query endpoints."""
 
-from datetime import datetime
 from typing import Optional
+from app.schemas.types import UTCDateTime
 from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.enums import ProcessingStatus
 from app.schemas.error import ErrorDetail
@@ -50,11 +50,11 @@ class ProcessingStatusResponse(BaseModel):
         default=None,
         description="Detalhes estruturados do erro (presente quando FAILED ou EXTRACTION_FAILED)",
     )
-    created_at: datetime = Field(
+    created_at: UTCDateTime = Field(
         ...,
         description="Timestamp de criacao do documento",
     )
-    updated_at: datetime = Field(
+    updated_at: UTCDateTime = Field(
         ...,
         description="Timestamp da ultima atualizacao do processamento",
     )
