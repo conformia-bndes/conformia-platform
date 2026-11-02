@@ -169,13 +169,14 @@ def upload_document(
             detail="Apenas arquivos no formato PDF sao suportados pelo Conform.IA BNDES.",
         )
 
-    # Validacao de tamanho e assinatura binaria (magic bytes)
+    # Leitura limitada: nunca mais que MAX_FILE_SIZE + 1 bytes em memoria
     try:
-        content = file.file.read()
-    except Exception as e:
+        content = file.file.read(MAX_FILE_SIZE + 1)
+    except Exception:
+        logger.exception("Falha ao ler conteudo do upload")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Falha ao ler conteudo do arquivo: {str(e)}",
+            detail="Nao foi possivel ler o arquivo enviado.",
         )
 
     if len(content) > MAX_FILE_SIZE:
@@ -199,10 +200,11 @@ def upload_document(
         with open(destination_path, "wb") as buffer:
             buffer.write(content)
         file_size = len(content)
-    except Exception as e:
+    except Exception:
+        logger.exception("Falha ao gravar upload em disco (doc_id=%s)", doc_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Falha ao gravar arquivo em disco: {str(e)}",
+            detail="Falha ao processar o upload.",
         )
 
     # Upload para o MinIO / S3 com fallback para armazenamento local
