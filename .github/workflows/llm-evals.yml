@@ -1,4 +1,4 @@
-name: LLM Evals - Maker-Checker (promptfoo)
+name: LLM Evals
 
 # Execucao manual: consome creditos do provedor de LLM e exige o segredo OPENAI_API_KEY.
 on:

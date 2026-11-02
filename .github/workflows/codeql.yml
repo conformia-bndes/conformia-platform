@@ -1,4 +1,4 @@
-name: CodeQL - Analise Estatica de Seguranca
+name: CodeQL
 
 on:
   push:

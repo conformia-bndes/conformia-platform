@@ -1,8 +1,8 @@
-name: Release - versionamento semantico e CHANGELOG
+name: Release
 
 # A cada push em main, o release-please abre (ou atualiza) um PR de release com a proxima
 # versao calculada pelos Conventional Commits e o CHANGELOG. Ao fazer merge desse PR, a tag
-# vX.Y.Z e o GitHub Release sao criados.
+# vX.Y.Z e o GitHub Release sao criados e o estagio de deploy (cd.yml) publica as imagens.
 on:
   push:
     branches: [main]
@@ -19,8 +19,25 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Estagio de deploy: so quando o merge do PR de release criou uma versao nova.
+  deploy:
+    name: Deploy
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/cd.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+      push: true

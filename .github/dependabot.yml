@@ -57,4 +57,8 @@ updates:
       # nao tem suporte de longo prazo, como a 25 proposta no PR #69).
       - dependency-name: "node"
         update-types: ["version-update:semver-major"]
+      # O produto roda em Python 3.11 (requires-python do backend); a troca de versao do
+      # interpretador e uma decisao de projeto, nao uma atualizacao automatica (PR #85).
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     open-pull-requests-limit: 3

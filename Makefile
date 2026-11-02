@@ -15,14 +15,14 @@ FLAKE8 := $(if $(UV),uv run flake8,flake8)
 ALEMBIC := $(if $(UV),uv run alembic,alembic)
 MKDOCS := $(if $(UV),uv run --frozen mkdocs,mkdocs)
 
-.PHONY: help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
+.PHONY: load resilience scan eval-baseline reports help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
 
 help:
 	@echo "Comandos disponiveis no Conform.IA BNDES:"
 	@echo "  make env        - Gera .env com segredos aleatorios (nao sobrescreve o existente)"
 	@echo "  make setup      - Gera .env e sincroniza dependencias (uv ou pip/npm)"
 	@echo "  make uv-sync    - Sincroniza ambiente virtual do workspace via uv"
-	@echo "  make uv-lock    - Gera uv.lock e exporta backend/requirements.lock"
+	@echo "  make uv-lock    - Atualiza o uv.lock (fonte unica de versoes)"
 	@echo "  make up         - Constroi, sobe os servicos e espera ficarem saudaveis"
 	@echo "  make smoke      - Teste de fumaca: upload -> fila -> worker -> estado da tarefa"
 	@echo "  make down       - Encerra e remove todos os conteineres da stack"
@@ -37,6 +37,11 @@ help:
 	@echo "  make hooks      - Instala os hooks pre-commit no clone local"
 	@echo "  make lint       - Executa verificacoes de linter (Flake8, Black e ESLint)"
 	@echo "  make format     - Formata o codigo do backend com Black"
+	@echo "  make load       - Teste de carga (k6) contra a stack no ar"
+	@echo "  make resilience - Derruba Redis, MinIO e Postgres e confere degradacao e recuperacao"
+	@echo "  make scan       - Constroi as imagens de producao e roda o Trivy (HIGH/CRITICAL)"
+	@echo "  make eval-baseline - Aceita o resultado atual dos evals como nova linha de base"
+	@echo "  make reports    - Gera testes, cobertura e evals em reports/ (exibidos por make docs)"
 	@echo "  make docs       - Inicia servidor local de documentacao MkDocs"
 	@echo "  make docs-build - Compila documentacao estatica MkDocs"
 	@echo "  make clean      - Limpa arquivos temporarios, caches e volumes locais"
@@ -54,7 +59,6 @@ uv-sync:
 
 uv-lock:
 	uv lock
-	uv export --frozen --no-dev --no-emit-project --package conformia-backend --format requirements-txt -o backend/requirements.lock
 
 up: env
 	$(DOCKER_COMPOSE) up --build -d --wait --wait-timeout 300
@@ -113,6 +117,27 @@ lint:
 
 format:
 	$(BLACK) backend/
+
+load:
+	docker run --rm -i -e BASE_URL=http://host.docker.internal:8000 --add-host host.docker.internal:host-gateway grafana/k6 run --quiet - < tests/load/api.js
+
+resilience:
+	bash scripts/resilience_test.sh
+
+scan:
+	docker build -q -f infra/Dockerfile.backend --target runtime -t scan/backend:local .
+	docker build -q -f infra/Dockerfile.frontend --target production -t scan/frontend:local .
+	for image in scan/backend:local scan/frontend:local; do docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 $$image; done
+
+eval-baseline:
+	mkdir -p reports
+	$(PYTHON) evals/eval_pipeline.py --json-report reports/eval_report.json
+	$(PYTHON) evals/compare_baseline.py reports/eval_report.json --update
+
+reports:
+	mkdir -p reports/relatorio-backend-tests reports/relatorio-backend-quality
+	$(PYTEST) backend/tests/ -q --junitxml=reports/relatorio-backend-tests/junit-backend.xml 		--cov=backend/app --cov-report=xml:reports/relatorio-backend-tests/coverage.xml
+	$(PYTHON) evals/eval_pipeline.py --json-report reports/relatorio-backend-quality/eval_report.json
 
 docs:
 	$(MKDOCS) serve -a 127.0.0.1:8001

@@ -255,6 +255,7 @@ def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) 
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "git_commit": _git_commit(),
         "rules_sha256": _sha256_of(RULES_FILE),
+        "datasets_sha256": _datasets_sha256(),
         "reference_date": REFERENCE_DATE.isoformat(),
         "accuracy_threshold": ACCURACY_THRESHOLD,
         "metrics": {
@@ -279,6 +280,16 @@ def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) 
 
     print("[PASS] Todos os criterios de Evals foram aprovados sem regressoes.")
     return True
+
+
+def _datasets_sha256() -> str:
+    """Hash unico dos casos de evals/datasets/*/*.json (versao do conjunto de avaliacao)."""
+    digest = hashlib.sha256()
+    for path in sorted(glob.glob(os.path.join(EVALS_DIR, "datasets", "*", "*.json"))):
+        digest.update(os.path.relpath(path, EVALS_DIR).replace(os.sep, "/").encode("utf-8"))
+        with open(path, "rb") as f:
+            digest.update(f.read().replace(b"\r\n", b"\n"))
+    return digest.hexdigest()
 
 
 def _sha256_of(path: str) -> str:

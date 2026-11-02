@@ -20,6 +20,26 @@ celery.conf.update(
     enable_utc=True,
     task_track_started=True,
     task_time_limit=600,  # 10 minutos máximo por documento
+    # Com o Redis fora do ar, o publicador reconectava indefinidamente e o upload travava por
+    # minutos. Falhar rapido deixa a API responder 503; o worker continua reconectando ao
+    # broker por conta propria.
+    broker_connection_timeout=2,
+    broker_connection_retry_on_startup=True,
+    broker_transport_options={"socket_connect_timeout": 2},
+    # O backend de resultados (tambem Redis) tem politica de reconexao propria.
+    redis_socket_connect_timeout=2,
+    redis_socket_timeout=5,
+    result_backend_always_retry=False,
+    result_backend_transport_options={
+        "retry_policy": {"max_retries": 1, "interval_start": 0, "interval_step": 0.2}
+    },
+    task_publish_retry=True,
+    task_publish_retry_policy={
+        "max_retries": 1,
+        "interval_start": 0,
+        "interval_step": 0.2,
+        "interval_max": 0.5,
+    },
 )
 
 

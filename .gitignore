@@ -98,3 +98,6 @@ evals/sintetico/resultados/
 
 # Chaves pessoais geradas por backend/scripts/create_api_user.py
 *.key
+
+# Relatorios de qualidade gerados por make reports (publicados pelo CI)
+reports/

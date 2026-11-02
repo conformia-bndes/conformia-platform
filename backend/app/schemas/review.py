@@ -1,7 +1,7 @@
 """Pydantic schemas for human Maker-Checker review of compliance reports."""
 
-from datetime import datetime
 from typing import Annotated, List, Literal, Optional
+from app.schemas.types import UTCDateTime
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 ReviewDecision = Literal["APPROVE", "REJECT", "EXCEPTION"]
@@ -44,7 +44,7 @@ class ReviewEventResponse(BaseModel):
     report_status: Optional[str] = None
     actor_id: str
     actor_role: str
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class ReviewStateResponse(BaseModel):

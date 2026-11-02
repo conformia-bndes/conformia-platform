@@ -31,11 +31,18 @@ FROM python:3.11-slim@sha256:673719e071ecf27434fd2635bbd8d00f49f4fdd81f243143438
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
-    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata/
+    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata/ \
+    WEB_CONCURRENCY=2
+
+# WEB_CONCURRENCY: processos do uvicorn (lido pelo proprio uvicorn). Ajuste por replica conforme
+# a CPU; conexoes totais com o banco = workers x (DB_POOL_SIZE + DB_MAX_OVERFLOW).
 
 WORKDIR /app
 
-# Instalação de utilitários de sistema essenciais para processamento documental (OCR / PDF)
+# Instalação de utilitários de sistema essenciais para processamento documental (OCR / PDF).
+# Versoes dos pacotes apt nao sao fixadas de proposito: o Debian so mantem a versao corrente de
+# cada pacote, e fixar impediria receber correcoes de seguranca.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-por \
@@ -45,6 +52,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# O app roda no venv copiado abaixo; pip, setuptools e wheel do Python do sistema nao sao
+# usados em runtime. Remove-los elimina CVEs de pacotes embutidos (jaraco.context e wheel
+# vendorizados no setuptools) e reduz a superficie de ataque.
+RUN python -m pip uninstall -y setuptools wheel pip \
+    && rm -rf /root/.cache
 
 # Copia ambiente virtual pré-compilado do builder
 COPY --from=builder /opt/venv /opt/venv
@@ -60,7 +73,7 @@ COPY --chown=conformia:conformia ./backend /app
 EXPOSE 8000
 
 # Execução com usuário não-root
-USER conformia
+USER 1000
 
 # Execução padrão (sobrescrita no docker-compose para hot-reload e workers)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

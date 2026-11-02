@@ -1,16 +1,18 @@
 # ==============================================================================
-# CI - Conform.IA BNDES Platform
+# CI - Conform.IA BNDES Platform (orquestrador)
 #
-# Estagios (cada um so roda quando o anterior permite):
-#   0. changes   - detecta o que mudou no PR (backend, frontend, infra, docs, workflows)
-#   1. paralelo  - lint (pre-commit), actionlint, seguranca, backend, frontend e docs;
-#                  jobs sem mudanca relevante sao pulados
-#   2. smoke     - stack completa em Docker Compose, so depois de backend e frontend verdes
-#   3. CI OK     - agrega o resultado; check exigido nas regras de branch
+#   changes  -> detecta o que mudou no PR (backend, frontend, infra, docs, workflows)
+#   areas    -> Repo, Backend, Frontend, Infra: workflows reutilizaveis (ci-*.yml) com estagios
+#               com os jobs de cada area em paralelo (lint, build, test); o deploy (imagens no
+#               GHCR) e o cd.yml, so em release. Areas sem mudanca relevante sao puladas
+#   docs     -> build estrito da documentacao
+#   CI OK    -> consolida o resultado das areas; check unico exigido nos rulesets de main e dev
+#               (area pulada por falta de mudanca aprova; falha ou cancelamento bloqueia)
 #
-# O titulo do PR e validado em pr-title.yml, que tambem roda quando o PR e editado.
+# Nenhuma area espera a outra: o caminho critico e o job mais lento (hoje, o smoke ou os
+# testes do backend). O titulo do PR e validado em pr-title.yml.
 #
-# Em push para main/dev (e execucao manual) tudo roda, sem filtro de caminho.
+# Em push para main/dev, execucao manual e agendada tudo roda, sem filtro de caminho.
 # Actions de terceiros e oficiais fixadas por SHA; o Dependabot mantem as versoes.
 # ==============================================================================
 name: CI
@@ -21,6 +23,9 @@ on:
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
+  schedule:
+    # Segunda 06:00 UTC: roda tudo em main para pegar avisos novos de seguranca nas dependencias.
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -32,15 +37,14 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.11"
-  NODE_VERSION: "22"
   UV_FROZEN: "1"
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Estagio 0
+  # Escopo
   # ---------------------------------------------------------------------------
   changes:
-    name: Detectar mudancas
+    name: Changes
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -50,7 +54,10 @@ jobs:
       backend: ${{ steps.scope.outputs.backend }}
       frontend: ${{ steps.scope.outputs.frontend }}
       docs: ${{ steps.scope.outputs.docs }}
-      smoke: ${{ steps.scope.outputs.smoke }}
+      stack: ${{ steps.scope.outputs.stack }}
+      workflows: ${{ steps.scope.outputs.workflows }}
+      infra: ${{ steps.scope.outputs.infra }}
+      full_matrix: ${{ steps.scope.outputs.full_matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'pull_request'
@@ -77,12 +84,17 @@ jobs:
               - ".env.example"
             docs:
               - "docs/**"
+              - "docs_hooks/**"
               - "mkdocs.yml"
               - "README.md"
               - "pyproject.toml"
               - "uv.lock"
             workflows:
               - ".github/workflows/**"
+            deps:
+              - "pyproject.toml"
+              - "backend/pyproject.toml"
+              - "uv.lock"
 
       - name: Definir escopo
         id: scope
@@ -93,6 +105,7 @@ jobs:
           INFRA: ${{ steps.filter.outputs.infra }}
           DOCS: ${{ steps.filter.outputs.docs }}
           WORKFLOWS: ${{ steps.filter.outputs.workflows }}
+          DEPS: ${{ steps.filter.outputs.deps }}
         run: |
           # Fora de PR, ou se os proprios workflows mudaram, tudo roda.
           all=false
@@ -102,215 +115,60 @@ jobs:
           if [ "$BACKEND" = "true" ] || [ "$FRONTEND" = "true" ] || [ "$INFRA" = "true" ]; then
             stack=true
           fi
+          workflows=false
+          if [ "$EVENT" != "pull_request" ] || [ "$WORKFLOWS" = "true" ]; then workflows=true; fi
           {
             echo "backend=$(pick "$BACKEND")"
             echo "frontend=$(pick "$FRONTEND")"
             echo "docs=$(pick "$DOCS")"
-            echo "smoke=$(pick "$stack")"
+            echo "stack=$(pick "$stack")"
+            echo "workflows=$workflows"
+            # Matriz completa de Python so em push/agendado, mudanca de dependencias ou de workflows.
+            if [ "$EVENT" != "pull_request" ] || [ "$DEPS" = "true" ] || [ "$WORKFLOWS" = "true" ]; then
+              echo "full_matrix=true"
+            else
+              echo "full_matrix=false"
+            fi
+            # A area Infra roda se houver mudanca em workflows ou na stack.
+            if [ "$workflows" = "true" ] || [ "$(pick "$stack")" = "true" ]; then
+              echo "infra=true"
+            else
+              echo "infra=false"
+            fi
           } | tee -a "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
-  # Estagio 1 (paralelo)
+  # Areas (workflows reutilizaveis, em paralelo)
   # ---------------------------------------------------------------------------
-  lint:
-    name: Lint (pre-commit)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-
-      - name: Cache dos ambientes do pre-commit
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Sincronizar ferramentas (black e flake8 do uv.lock)
-        run: uv sync --all-packages --all-extras
-
-      - name: Executar hooks
-        run: uvx pre-commit@4.7.0 run --all-files --show-diff-on-failure
-
-  actionlint:
-    name: Lint dos workflows
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Executar actionlint
-        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
-        with:
-          args: -color
-
-  security:
-    name: Seguranca (segredos e dependencias)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      GITLEAKS_VERSION: "8.30.1"
-      GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # historico completo para o gitleaks
-          persist-credentials: false
-
-      - name: Instalar Gitleaks (checksum verificado)
-        run: |
-          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -sSfL -o "/tmp/$archive" \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
-          echo "${GITLEAKS_SHA256}  /tmp/$archive" | sha256sum -c -
-          tar -xzf "/tmp/$archive" -C /tmp gitleaks
-          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
-
-      - name: Varredura de segredos no historico (Gitleaks)
-        run: gitleaks git . --config .gitleaks.toml --redact --verbose
-
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-
-      - name: Auditoria de dependencias Python (uv.lock completo)
-        run: |
-          uv export --all-packages --all-extras --no-emit-workspace --no-hashes \
-            --format requirements-txt -o /tmp/requirements-audit.txt
-          uvx pip-audit@2.9.0 -r /tmp/requirements-audit.txt --no-deps --disable-pip \
-            --progress-spinner off
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Auditoria de dependencias do frontend
-        working-directory: frontend
-        run: npm audit --audit-level=high
+  repo:
+    name: Repo
+    uses: ./.github/workflows/ci-repo.yml
 
   backend:
-    name: Backend (testes e evals)
+    name: Backend
     needs: changes
     if: needs.changes.outputs.backend == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
-      ENVIRONMENT: test
-      DATABASE_URL: sqlite:///./ci-backend.db
-      REDIS_URL: redis://127.0.0.1:6379/0
-      MINIO_ENDPOINT: 127.0.0.1:9
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-
-      - name: Instalar Tesseract (portugues) e Poppler
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends \
-            tesseract-ocr tesseract-ocr-por poppler-utils
-
-      - name: Sincronizar dependencias
-        run: uv sync --all-packages --all-extras
-
-      - name: Testes com cobertura
-        run: |
-          uv run pytest backend/tests/ -q --durations=10 \
-            --cov=backend/app --cov-report=term-missing:skip-covered
-
-      - name: Benchmark de regras (evals)
-        run: |
-          mkdir -p evals/reports
-          uv run python evals/eval_pipeline.py --json-report evals/reports/eval_report.json
-
-      - name: Publicar relatorio de evals
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: eval-report
-          path: evals/reports/eval_report.json
-          if-no-files-found: warn
-          retention-days: 30
-
-  fuzz:
-    name: Fuzzing do motor de regras (Atheris)
-    needs: changes
-    if: needs.changes.outputs.backend == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      # O Atheris so publica wheels para Linux com Python 3.12+ (extra `fuzz` do backend).
-      FUZZ_PYTHON: "3.12"
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          python-version: ${{ env.FUZZ_PYTHON }}
-          enable-cache: true
-          cache-dependency-glob: uv.lock
-
-      - name: Sincronizar dependencias do backend com o extra de fuzzing
-        run: uv sync --package conformia-backend --extra fuzz --python "$FUZZ_PYTHON"
-
-      - name: Fuzzing por 60 segundos (falha em excecao ou invariante violada)
-        run: |
-          uv run --python "$FUZZ_PYTHON" python backend/fuzz/fuzz_regras.py \
-            -max_total_time=60 -rss_limit_mb=2048 -print_final_stats=1
+    uses: ./.github/workflows/ci-backend.yml
+    with:
+      full_matrix: ${{ needs.changes.outputs.full_matrix == 'true' }}
 
   frontend:
-    name: Frontend (lint, testes e build)
+    name: Frontend
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+    uses: ./.github/workflows/ci-frontend.yml
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Instalar dependencias
-        run: npm ci --no-audit --no-fund
-
-      - name: ESLint
-        run: npm run lint
-
-      - name: Vitest
-        run: npm test
-
-      - name: Build de producao
-        run: npm run build
+  infra:
+    name: Infra
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    uses: ./.github/workflows/ci-infra.yml
+    with:
+      workflows: ${{ needs.changes.outputs.workflows == 'true' }}
+      stack: ${{ needs.changes.outputs.stack == 'true' }}
 
   docs:
-    name: Documentacao (build estrito)
+    name: Docs
     needs: changes
     if: needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
@@ -327,81 +185,16 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
 
-      - name: Build do MkDocs em modo estrito
+      - name: Build do MkDocs em modo estrito (inclui a verificacao do site)
         run: uv run mkdocs build --strict
 
   # ---------------------------------------------------------------------------
-  # Estagio 2
-  # ---------------------------------------------------------------------------
-  smoke:
-    name: Smoke em Docker Compose (upload -> fila -> worker)
-    needs: [changes, backend, frontend]
-    if: >-
-      always() && needs.changes.outputs.smoke == 'true' &&
-      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-
-      # Imagens construidas com cache de camadas do GitHub Actions e carregadas no Docker;
-      # o compose usa essas imagens (nomes fixos em docker-compose.yml) sem novo build.
-      - name: Build da imagem do backend (com cache)
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: infra/Dockerfile.backend
-          target: runtime
-          tags: conformia/backend:local
-          load: true
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,scope=backend,mode=max
-
-      - name: Build da imagem do frontend (com cache)
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: infra/Dockerfile.frontend
-          target: development
-          tags: conformia/frontend:local
-          load: true
-          cache-from: type=gha,scope=frontend
-          cache-to: type=gha,scope=frontend,mode=max
-
-      - name: Gerar .env efemero (segredos aleatorios)
-        run: bash scripts/setup-env.sh
-
-      - name: Subir a stack e aguardar saude
-        run: |
-          docker compose --env-file .env -f infra/docker-compose.yml \
-            up -d --no-build --wait --wait-timeout 240
-
-      - name: Smoke test
-        run: |
-          docker compose --env-file .env -f infra/docker-compose.yml \
-            exec -T backend python scripts/smoke_test.py
-
-      - name: Estado e logs em caso de falha
-        if: failure()
-        run: |
-          docker compose --env-file .env -f infra/docker-compose.yml ps -a
-          docker compose --env-file .env -f infra/docker-compose.yml logs --tail=200
-
-      - name: Encerrar a stack
-        if: always()
-        run: docker compose --env-file .env -f infra/docker-compose.yml down -v --remove-orphans
-
-  # ---------------------------------------------------------------------------
-  # Estagio 3
+  # Check unico exigido nos rulesets
   # ---------------------------------------------------------------------------
   ci-ok:
     name: CI OK
     if: always()
-    needs: [changes, lint, actionlint, security, backend, fuzz, frontend, docs, smoke]
+    needs: [changes, repo, backend, frontend, infra, docs]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -411,6 +204,6 @@ jobs:
         run: |
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
           if echo "$RESULTS" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' > /dev/null; then
-            echo "::error::Ha jobs com falha ou cancelados."
+            echo "::error::Ha areas com falha ou canceladas."
             exit 1
           fi

@@ -8,7 +8,7 @@ papéis diferentes:
 | Benchmark de regras | `make eval` | Status por regra no caminho do produto (parser, tipologia e motor) | Sim |
 | Dataset sintético de PDFs | `uv run python evals/sintetico/avaliar.py` | Extração, OCR e classificação de 22 certidões fictícias | Não (linha de base) |
 | Comportamento do LLM | `make llm-eval` | Maker-Checker contra alucinação e injeção de instruções (promptfoo) | Não; manual e pago |
-| Fuzzing | Job "Fuzzing do motor de regras" do CI | Invariantes de segurança com textos arbitrários (Atheris) | Sim |
+| Fuzzing | Job "Backend / Fuzz" do CI | Invariantes de segurança com textos arbitrários (Atheris) | Sim |
 
 O versionamento dos resultados e a comparação entre execuções estão em [MLOps](mlops.md).
 
@@ -23,9 +23,9 @@ caminho do produto e compara o status de cada verificação com o esperado.
 mínima de 90%. O job de backend do CI falha se qualquer um dos dois não for atendido e publica
 o relatório JSON (`--json-report`) como artefato.
 
-**Última execução local (29/10/2026):** 14 verificações, 13 corretas, **0 falsos positivos**,
-acurácia de 92,86%. A divergência restante é conservadora: uma certidão ilegível esperada como
-`MANUAL_REVIEW_REQUIRED` saiu `NON_COMPLIANT`.
+**Última execução local (02/11/2026):** 14 verificações, 14 corretas, **0 falsos positivos**,
+acurácia de 100%. A divergência anterior (certidão ilegível reprovada em vez de ir para revisão
+manual) foi resolvida pela decisão D2.
 
 !!! note "Alcance"
     O benchmark tem poucos casos e todos são sintéticos. Ele protege contra regressões nas

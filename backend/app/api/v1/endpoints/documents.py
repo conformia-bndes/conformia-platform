@@ -28,7 +28,8 @@ from app.schemas.document import (
     DocumentUploadResponse,
 )
 from app.schemas.enums import ProcessingStatus
-from app.schemas.error import ErrorResponse
+from app.api.v1.pagination import LimitParam, SkipParam
+from app.schemas.error import HTTPErrorResponse
 from app.schemas.processing import ProcessingStatusResponse
 
 router = APIRouter()
@@ -169,13 +170,14 @@ def upload_document(
             detail="Apenas arquivos no formato PDF sao suportados pelo Conform.IA BNDES.",
         )
 
-    # Validacao de tamanho e assinatura binaria (magic bytes)
+    # Leitura limitada: nunca mais que MAX_FILE_SIZE + 1 bytes em memoria
     try:
-        content = file.file.read()
-    except Exception as e:
+        content = file.file.read(MAX_FILE_SIZE + 1)
+    except Exception:
+        logger.exception("Falha ao ler conteudo do upload")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Falha ao ler conteudo do arquivo: {str(e)}",
+            detail="Nao foi possivel ler o arquivo enviado.",
         )
 
     if len(content) > MAX_FILE_SIZE:
@@ -199,10 +201,11 @@ def upload_document(
         with open(destination_path, "wb") as buffer:
             buffer.write(content)
         file_size = len(content)
-    except Exception as e:
+    except Exception:
+        logger.exception("Falha ao gravar upload em disco (doc_id=%s)", doc_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Falha ao gravar arquivo em disco: {str(e)}",
+            detail="Falha ao processar o upload.",
         )
 
     # Upload para o MinIO / S3 com fallback para armazenamento local
@@ -356,7 +359,7 @@ def get_task_status(task_id: str):
     summary="Listar Documentos Ingeridos",
 )
 def list_documents(
-    skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
+    skip: SkipParam = 0, limit: LimitParam = 50, db: Session = Depends(get_db)
 ) -> DocumentListResponse:
     """Retorna lista paginada de documentos processados."""
     docs = db.query(Document).order_by(Document.created_at.desc()).offset(skip).limit(limit).all()
@@ -428,7 +431,7 @@ def get_document(document_id: str, db: Session = Depends(get_db)) -> DocumentDet
         },
         404: {
             "description": "Documento nao encontrado.",
-            "model": ErrorResponse,
+            "model": HTTPErrorResponse,
         },
     },
 )

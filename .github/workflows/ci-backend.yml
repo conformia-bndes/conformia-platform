@@ -1,0 +1,252 @@
+# Area "Backend": Lint, Security, Build, Test, Evals e Fuzz comecam juntos (sem `needs` entre
+# eles): os testes operam sobre o codigo-fonte e nao dependem do build da imagem, entao esperar
+# so alongaria o caminho critico. Os estagios sao logicos; o deploy (imagem no GHCR) e o cd.yml.
+# Workflow reutilizavel, chamado pelo ci.yml. Gera os artefatos "relatorio-*" que o docs.yml
+# publica na documentacao.
+name: CI - Backend
+
+on:
+  workflow_call:
+    inputs:
+      full_matrix:
+        description: "Testar tambem o Python 3.12 (push em main/dev e mudanca de dependencias)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  UV_FROZEN: "1"
+  # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
+  ENVIRONMENT: test
+  DATABASE_URL: sqlite:///./ci-backend.db
+  REDIS_URL: redis://127.0.0.1:6379/0
+  MINIO_ENDPOINT: 127.0.0.1:9
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar ferramentas (versoes do uv.lock)
+        run: uv sync --all-packages --all-extras
+
+      - name: black
+        run: uv run black --check backend/ docs_hooks/ evals/compare_baseline.py
+
+      - name: flake8
+        run: uv run flake8 backend/ docs_hooks/ evals/compare_baseline.py --max-line-length=100
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: pip-audit (uv.lock completo)
+        run: |
+          mkdir -p reports
+          uv export --all-packages --all-extras --no-emit-workspace --no-hashes \
+            --format requirements-txt -o /tmp/requirements-audit.txt
+          uvx pip-audit@2.9.0 -r /tmp/requirements-audit.txt --no-deps --disable-pip \
+            --progress-spinner off --format json --output reports/pip-audit.json
+
+      - name: Publicar relatorios
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-backend-security
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build da imagem do backend (sem publicar)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/Dockerfile.backend
+          target: runtime
+          push: false
+          load: true
+          tags: scan/backend:ci
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Cache do banco de vulnerabilidades do Trivy
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      # HIGH e CRITICAL com correcao disponivel reprovam. A execucao semanal do CI pega CVEs
+      # publicados depois do ultimo build.
+      - name: Scan de vulnerabilidades da imagem (Trivy)
+        run: |
+          mkdir -p ~/.cache/trivy
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v ~/.cache/trivy:/root/.cache/trivy \
+            aquasec/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c \
+            image --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 scan/backend:ci
+
+  # Matriz: o produto roda em Python 3.11; a 3.12 antecipa a compatibilidade com o ambiente
+  # de desenvolvimento. Cobertura e relatorios saem so da 3.11.
+  test:
+    name: Test (${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Em PR so a versao do produto (3.11); a matriz completa roda em push e quando as
+        # dependencias mudam.
+        python: ${{ fromJSON(inputs.full_matrix && '["3.11","3.12"]' || '["3.11"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Instalar Tesseract (portugues) e Poppler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            tesseract-ocr tesseract-ocr-por poppler-utils
+
+      - name: Sincronizar dependencias
+        run: uv sync --all-packages --all-extras
+
+      - name: pytest com cobertura
+        run: |
+          mkdir -p reports
+          uv run pytest backend/tests/ -q --durations=10 \
+            --junitxml=reports/junit-backend.xml \
+            --cov=backend/app --cov-report=term-missing:skip-covered \
+            --cov-report=xml:reports/coverage.xml
+
+      - name: Resumo da cobertura na execucao
+        if: matrix.python == '3.11' && always()
+        run: |
+          {
+            echo "### Cobertura do backend"
+            uv run coverage report --format=markdown --skip-covered
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar relatorios
+        if: matrix.python == '3.11' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-backend-tests
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  # MLOps: benchmark de regras com gate de regressao contra a linha de base versionada
+  # (evals/baseline.json): sem falso positivo, sem queda de acuracia e sem regressao pontual.
+  evals:
+    name: Evals
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar dependencias
+        run: uv sync --all-packages --all-extras
+
+      - name: Benchmark de regras (0 falsos positivos e acuracia minima)
+        run: |
+          mkdir -p reports
+          uv run python evals/eval_pipeline.py --json-report reports/eval_report.json
+
+      - name: Gate de regressao contra a linha de base
+        run: uv run python evals/compare_baseline.py reports/eval_report.json
+
+      - name: Publicar relatorios
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-backend-evals
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  fuzz:
+    name: Fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # O Atheris so publica wheels para Linux com Python 3.12+ (extra `fuzz` do backend).
+      FUZZ_PYTHON: "3.12"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ env.FUZZ_PYTHON }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Sincronizar dependencias do backend com o extra de fuzzing
+        run: uv sync --package conformia-backend --extra fuzz --python "$FUZZ_PYTHON"
+
+      - name: Fuzzing por 60 segundos (falha em excecao ou invariante violada)
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          uv run --python "$FUZZ_PYTHON" python backend/fuzz/fuzz_regras.py \
+            -max_total_time=60 -rss_limit_mb=2048 -print_final_stats=1 2>&1 | tee reports/fuzz.txt
+
+      - name: Publicar relatorios
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-backend-fuzz
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30

@@ -29,43 +29,120 @@ em cada etapa e como voltar atrás quando algo falha.
 
 ## 2. Pipelines (GitHub Actions)
 
-O `ci.yml` é organizado em estágios. Os jobs de cada estágio rodam em paralelo e só os afetados
-pela mudança são executados (filtro por caminho no job `changes`). O job **CI OK** agrega o
-resultado e é o único check obrigatório nos rulesets: um job pulado por não ter sido afetado não
-bloqueia o merge, um job com falha bloqueia.
+O `ci.yml` é só o orquestrador. Cada área é um **workflow reutilizável** com estágios explícitos
+(`needs`), e as áreas são independentes entre si. Back e front seguem o mesmo roteiro:
+**lint, build, test e deploy**; o deploy não roda no CI de PR, só na release (seção abaixo).
+Os jobs de uma área **não esperam uns pelos outros**: os testes operam sobre o código-fonte e não
+dependem do build da imagem, então encadear só alongaria o caminho crítico. Os estágios são
+lógicos (o que cada job verifica), e o tempo total é o do job mais lento.
+O job **CI OK** consolida as áreas e é o único check obrigatório nos rulesets: área pulada (sem
+mudança) aprova; falha ou cancelamento bloqueia o merge.
 
 ```mermaid
 flowchart LR
-    changes["Detectar mudanças"] --> backend["Backend<br/>pytest + evals"]
-    changes --> fuzz["Fuzzing<br/>Atheris"]
-    changes --> frontend["Frontend<br/>ESLint, Vitest, build"]
-    changes --> docs["Documentação<br/>build estrito"]
-    lint["Lint<br/>pre-commit"] --> ok
-    actionlint["Lint dos workflows"] --> ok
-    security["Segurança<br/>gitleaks, pip-audit, npm audit"] --> ok
-    backend --> smoke["Smoke em<br/>Docker Compose"]
-    frontend --> smoke
-    backend --> ok["CI OK"]
-    fuzz --> ok
-    frontend --> ok
-    docs --> ok
-    smoke --> ok
+    changes["Changes"] --> Backend & Frontend & Infra & docs
+    subgraph Repo
+        rc["Checks<br/>higiene + gitleaks"]
+    end
+    subgraph Backend
+        direction LR
+        bl["Lint<br/>black, flake8"]
+        bb["Build<br/>imagem + Trivy"]
+        bt["Test<br/>3.11 (+3.12 em push)"]
+        be["Evals<br/>gate de regressão"]
+        bf["Fuzz"]
+        bs["Security<br/>pip-audit"]
+    end
+    subgraph Frontend
+        direction LR
+        fl["Lint<br/>ESLint, tsc"]
+        fb["Build<br/>Vite + imagem + Trivy"]
+        ft["Test<br/>Vitest"]
+        fs["Security<br/>npm audit"]
+    end
+    subgraph Infra
+        direction LR
+        il["Lint<br/>workflows, compose, hadolint"]
+        im["Stack<br/>smoke, contrato, carga, resiliência"]
+    end
+    Repo --> ok["CI OK"]
+    Backend --> ok
+    Frontend --> ok
+    Infra --> ok
+    docs["Docs<br/>build estrito"] --> ok
+    ok -.->|release criada| cd["CD: Deploy<br/>imagens no GHCR"]
 ```
+
+Dentro de uma área e entre áreas, tudo roda em paralelo; só o CI OK espera por todas.
+**Matriz de Python:** em PR roda só o 3.11 (o do produto); o 3.12 entra em push para `main`/`dev`,
+na execução semanal e quando mudam `pyproject.toml`, `uv.lock` ou os workflows.
+O filtro por caminho (job `changes`) pula as áreas que o PR não toca; em push para `main`/`dev`,
+execução manual e na execução semanal (segunda, 06:00 UTC) tudo roda.
+
+| Área | Estágios | O que garante |
+| :-- | :-- | :-- |
+| Repo | Checks | Hooks de higiene do pre-commit (YAML, JSON, chaves privadas, espaços) e gitleaks no histórico completo |
+| Backend | Lint, Security, Build, Test (matriz), Evals, Fuzz | black e flake8; pip-audit; build da imagem de produção com scan do Trivy; pytest com cobertura em Python 3.11 (produto) e 3.12; benchmark de regras com gate de regressão; fuzzing Atheris de 60 s |
+| Frontend | Lint, Security, Build, Test | ESLint e typecheck; npm audit; build do bundle e da imagem de produção (nginx) com scan do Trivy; Vitest |
+| Infra | Lint, Stack | estrutura dos workflows, actionlint, hadolint e `docker-compose.yml`; stack completa em Docker Compose com smoke (upload → fila → worker), fuzz de contrato da API, carga e resiliência |
+| Docs | Docs | `mkdocs build --strict` com a verificação do site |
+
+### Deploy (CD)
+
+O estágio de deploy é o `cd.yml`. Quando você mergeia o PR de release do release-please, o
+`release-please.yml` cria a tag `vX.Y.Z` e chama o CD, que constrói as imagens de produção do
+backend e do frontend **a partir da tag** e as publica no GitHub Container Registry:
+
+| Imagem | Tags |
+| :-- | :-- |
+| `ghcr.io/conformia-bndes/conformia-platform/backend` | `vX.Y.Z`, `latest` |
+| `ghcr.io/conformia-bndes/conformia-platform/frontend` | `vX.Y.Z`, `latest` |
+
+As imagens saem com provenance e SBOM anexados e com os rótulos OCI de origem, commit e versão.
+O CD também roda manualmente (Actions → CD → Run workflow) com `push` desligado por padrão, o
+que só constrói e valida a imagem de uma tag, sem publicar. A chamada vem do `release-please.yml`
+porque tags criadas com o `GITHUB_TOKEN` não disparam outros workflows.
+
+### Relatórios de qualidade
+
+Cada área publica artefatos `relatorio-*` (retenção de 30 dias): resultados de testes (JUnit),
+cobertura (XML), benchmark de regras, estatísticas do fuzzing e auditorias de dependências. A
+cobertura e o gate de regressão dos evals também aparecem no resumo de cada execução do CI.
+
+O `docs.yml` roda depois que o CI de `main` termina com sucesso, baixa esses artefatos e o
+hook `docs_hooks/relatorios.py` monta a página [Relatórios de Qualidade](../relatorios/index.md)
+do site. Localmente, `make reports` gera os mesmos arquivos em `reports/` e `make docs` os exibe.
+A publicação só acontece a partir de push em `main`, nunca de PR.
+
+### Evitar CI quebrado por erro de estrutura
+
+Os métodos de teste, o que cada um já encontrou e os números de desempenho estão em
+[Testes e Robustez](../engineering/testing.md).
+
+O job Infra / Lint roda `scripts/check_workflows.py` quando os workflows mudam. Ele confere o
+que derruba o CI inteiro sem criar nenhum job: YAML válido com `jobs`, `needs` apontando para
+jobs que existem, `uses` locais para arquivos com `workflow_call` e `with` compatível com os
+inputs declarados. O actionlint complementa com a análise de expressões e das actions.
+
+Outros workflows:
 
 | Workflow | Gatilho | O que garante |
 | :-- | :-- | :-- |
-| `ci.yml` | push e PR em `main` e `dev` | Lint (todos os hooks do pre-commit), actionlint, segurança (gitleaks, pip-audit sobre o `uv.lock`, npm audit), backend (pytest com cobertura e evals com relatório como artefato), fuzzing do motor de regras (Atheris, 60 s), frontend (ESLint, Vitest, build), documentação (build estrito) e smoke em Docker Compose com imagens em cache |
 | `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
-| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG |
+| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG; ao mergear o PR, cria a tag e chama o CD |
+| `cd.yml` | release criada ou manual | Build e publicação das imagens de produção no GHCR (ver Deploy) |
+| `docs.yml` | CI de `main` concluído | Publicação desta documentação, com os relatórios de qualidade, no GitHub Pages (artefato, sem branch `gh-pages`) |
 | `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
-| `docs.yml` | push em `main` | Publicação desta documentação no GitHub Pages (artefato, sem branch `gh-pages`) |
 
 **Cadeia de suprimentos.** Todas as actions são fixadas por SHA de commit (com a versão em
 comentário), as imagens Docker por digest e o binário do gitleaks por checksum. Cada workflow
 declara permissões mínimas (`contents: read` por padrão). O Dependabot atualiza SHAs, digests e
 o `uv.lock` em PRs agrupados para `dev`.
+
+**Acrescentar um check.** Crie o job no workflow da área (`ci-<área>.yml`); o gate da área e o
+**CI OK** já o consideram. Nenhuma regra de branch precisa ser alterada.
 
 !!! warning "Permissão necessária para o release-please"
     O release-please abre PRs com o `GITHUB_TOKEN`. Em **Settings → Actions → General**, a opção

@@ -33,7 +33,7 @@ Campos de cada regra:
 | `anti_keywords` | Termos impeditivos: a presença de qualquer um reprova a regra |
 | `regex_patterns` | Padrões registrados como evidência quando encontrados; não reprovam a regra |
 | `requires_validity` | Exige data de validade legível. Ausente, vale `true` para FISCAL e TRABALHISTA |
-| `failure_message` | Mensagem do laudo quando os termos obrigatórios não são encontrados |
+| `failure_message` | Mensagem do laudo quando os termos obrigatórios não são encontrados (laudo em revisão manual) |
 
 ---
 
@@ -58,7 +58,7 @@ primeira que decide encerra a avaliação.
 flowchart TD
     A["Termo impeditivo presente?"] -->|sim| NC1["NON_COMPLIANT"]
     A -->|não| B["Todos os termos obrigatórios presentes?"]
-    B -->|não| NC2["NON_COMPLIANT<br/>(failure_message)"]
+    B -->|não| MR0["MANUAL_REVIEW_REQUIRED<br/>(failure_message)"]
     B -->|sim| C["Data de validade legível?"]
     C -->|"sim, vencida"| NC3["NON_COMPLIANT<br/>(certidão expirada)"]
     C -->|"não, e a regra exige validade"| MR["MANUAL_REVIEW_REQUIRED"]
@@ -79,11 +79,15 @@ citar um trecho que não existe no documento, o resultado é `MANUAL_REVIEW_REQU
 
 ## 4. Estados e consolidação do laudo
 
+A falta de um termo obrigatório vai para revisão manual (decisão D2): ela indica um documento
+ilegível ou incompleto, não uma irregularidade comprovada. Só termos impeditivos e validade vencida
+reprovam de forma definitiva.
+
 | Status | Significado |
 | :-- | :-- |
 | `COMPLIANT` | Todos os critérios da regra foram atendidos |
-| `NON_COMPLIANT` | Termo impeditivo, termo obrigatório ausente ou certidão vencida |
-| `MANUAL_REVIEW_REQUIRED` | Validade ilegível, tipologia não identificada ou avaliação semântica não confirmada |
+| `NON_COMPLIANT` | Termo impeditivo ou certidão vencida |
+| `MANUAL_REVIEW_REQUIRED` | Termo obrigatório ausente (ex.: OCR ilegível), validade ilegível, tipologia não identificada ou avaliação semântica não confirmada |
 | `NOT_APPLICABLE` | A regra não se aplica à tipologia do documento |
 
 A função `summarize_statuses` consolida o laudo **ignorando as regras `NOT_APPLICABLE`**:

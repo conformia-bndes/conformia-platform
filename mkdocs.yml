@@ -46,6 +46,7 @@ extra_css:
   - stylesheets/extra.css
 
 hooks:
+  - docs_hooks/relatorios.py
   - docs_hooks/check_site.py
 
 plugins:
@@ -98,6 +99,7 @@ nav:
       - Motor de Regras: engineering/rules-engine.md
       - Maker-Checker e Guardrails: engineering/maker-checker.md
       - Avaliação Contínua (Evals): engineering/harness-evals.md
+      - Testes e Robustez: engineering/testing.md
       - MLOps: engineering/mlops.md
   - Operação:
       - DevOps e CI/CD: development/devops.md
@@ -108,6 +110,7 @@ nav:
       - Referência da API REST: development/api-reference.md
       - Quality Gates e Testes: development/quality-gates.md
   - Gestão:
+      - Relatórios de Qualidade: relatorios/index.md
       - Plano de Entrega (05/12/2026): planning/DELIVERY_PLAN_2026_12_05.md
       - Backlog de Implementação: planning/IMPLEMENTATION_BACKLOG.md
       - Relatório de Validação: planning/VALIDATION_REPORT.md

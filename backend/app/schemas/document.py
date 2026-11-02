@@ -1,7 +1,7 @@
 """Pydantic schemas for Document entities and ingestion responses."""
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
+from app.schemas.types import UTCDateTime
 from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.enums import ProcessingStatus
 
@@ -34,7 +34,7 @@ class DocumentUploadResponse(BaseModel):
         default=None, description="Hash SHA-256 do arquivo recebido (registrado na auditoria)"
     )
     total_pages: Optional[int] = Field(default=0, description="Total de paginas detectadas")
-    created_at: datetime = Field(..., description="Timestamp de criacao do registro")
+    created_at: UTCDateTime = Field(..., description="Timestamp de criacao do registro")
 
 
 class DocumentListItem(BaseModel):
@@ -46,7 +46,7 @@ class DocumentListItem(BaseModel):
     original_filename: str = Field(..., description="Nome original do arquivo")
     status: ProcessingStatus = Field(..., description="Estado do documento")
     file_size: int = Field(..., ge=0, description="Tamanho em bytes")
-    created_at: Optional[datetime] = Field(default=None, description="Data/hora de envio")
+    created_at: Optional[UTCDateTime] = Field(default=None, description="Data/hora de envio")
     total_pages: Optional[int] = Field(default=0, description="Total de paginas")
 
 
@@ -71,7 +71,7 @@ class DocumentDetailResponse(BaseModel):
     status: ProcessingStatus = Field(..., description="Estado atual do processamento")
     file_size: int = Field(..., ge=0, description="Tamanho em bytes")
     storage_path: str = Field(..., description="Caminho ou URI de armazenamento")
-    created_at: Optional[datetime] = Field(default=None, description="Data/hora de criacao")
+    created_at: Optional[UTCDateTime] = Field(default=None, description="Data/hora de criacao")
     metadata: Optional[Dict[str, Any]] = Field(
         default=None, description="Metadados de extracao e documento"
     )

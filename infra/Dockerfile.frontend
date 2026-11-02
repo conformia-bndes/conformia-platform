@@ -32,11 +32,26 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 3: Production (Nginx)
-FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10 AS production
+FROM nginx:1.31-alpine@sha256:785835ea65db4bba6f021acc0f3be91b0fef76a53fe41f8588c6698d2aed0606 AS production
+
+# Aplica as correcoes de seguranca do Alpine publicadas depois do digest fixado acima
+# (a base e atualizada pelo Dependabot, mas as bibliotecas do sistema costumam receber
+# patches antes disso).
+RUN apk upgrade --no-cache
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY infra/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+# Roda como usuario sem privilegio: o nginx so precisa escrever em cache, logs e no pid.
+RUN chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d \
+    && touch /var/run/nginx.pid \
+    && chown nginx:nginx /var/run/nginx.pid
+USER 101
+
+# Porta acima de 1024 (usuario sem privilegio nao abre a 80).
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["wget", "-q", "--spider", "http://127.0.0.1:8080/"]
 
 CMD ["nginx", "-g", "daemon off;"]
