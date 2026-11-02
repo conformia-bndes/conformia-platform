@@ -15,7 +15,7 @@ FLAKE8 := $(if $(UV),uv run flake8,flake8)
 ALEMBIC := $(if $(UV),uv run alembic,alembic)
 MKDOCS := $(if $(UV),uv run --frozen mkdocs,mkdocs)
 
-.PHONY: help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
+.PHONY: reports help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
 
 help:
 	@echo "Comandos disponiveis no Conform.IA BNDES:"
@@ -37,6 +37,7 @@ help:
 	@echo "  make hooks      - Instala os hooks pre-commit no clone local"
 	@echo "  make lint       - Executa verificacoes de linter (Flake8, Black e ESLint)"
 	@echo "  make format     - Formata o codigo do backend com Black"
+	@echo "  make reports    - Gera testes, cobertura e evals em reports/ (exibidos por make docs)"
 	@echo "  make docs       - Inicia servidor local de documentacao MkDocs"
 	@echo "  make docs-build - Compila documentacao estatica MkDocs"
 	@echo "  make clean      - Limpa arquivos temporarios, caches e volumes locais"
@@ -113,6 +114,11 @@ lint:
 
 format:
 	$(BLACK) backend/
+
+reports:
+	mkdir -p reports/relatorio-backend-tests reports/relatorio-backend-quality
+	$(PYTEST) backend/tests/ -q --junitxml=reports/relatorio-backend-tests/junit-backend.xml 		--cov=backend/app --cov-report=xml:reports/relatorio-backend-tests/coverage.xml
+	$(PYTHON) evals/eval_pipeline.py --json-report reports/relatorio-backend-quality/eval_report.json
 
 docs:
 	$(MKDOCS) serve -a 127.0.0.1:8001

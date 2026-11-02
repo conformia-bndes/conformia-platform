@@ -1,50 +1,32 @@
-# Area "Infra": lint dos workflows, validacao do compose e smoke da stack completa.
+# Area "Infra": lint (workflows e compose) e smoke da stack completa, em paralelo.
 # Workflow reutilizavel, chamado pelo ci.yml. Cada grupo de jobs tem seu proprio escopo.
 name: CI - Infra
 
 on:
   workflow_call:
     inputs:
-      workflows:
-        description: "Rodar o lint dos workflows"
-        type: boolean
-        default: true
-      stack:
-        description: "Validar o compose e rodar o smoke da stack"
-        type: boolean
-        default: true
-
-permissions:
-  contents: read
-
-jobs:
-  workflows:
-    name: Workflows
-    if: inputs.workflows
+      # Verificacoes baratas juntas: lint dos workflows e validacao do compose.
+  lint:
+    name: Lint
+    if: inputs.workflows || inputs.stack
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: actionlint
+
+      - name: actionlint (workflows)
+        if: inputs.workflows
         uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
         with:
           args: -color
 
-  compose:
-    name: Compose
-    if: inputs.stack
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Gerar .env efemero
-        run: bash scripts/setup-env.sh
       - name: Validar o docker-compose.yml
-        run: docker compose --env-file .env -f infra/docker-compose.yml config --quiet
+        if: inputs.stack
+        run: |
+          bash scripts/setup-env.sh
+          docker compose --env-file .env -f infra/docker-compose.yml config --quiet
 
   smoke:
     name: Smoke
