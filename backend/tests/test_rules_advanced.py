@@ -140,3 +140,26 @@ def test_summarize_statuses_ignores_not_applicable():
     )
     assert summarize_statuses(["NOT_APPLICABLE"]) == ("MANUAL_REVIEW_REQUIRED", 0.0)
     assert summarize_statuses([]) == ("MANUAL_REVIEW_REQUIRED", 0.0)
+
+
+def test_missing_required_keyword_goes_to_manual_review():
+    """Decisao D2: termo obrigatorio ausente (ex.: OCR ilegivel) nao reprova, vai ao analista."""
+    engine = RulesEngine()
+    text = (
+        "MINISTERIO DA FAZENDA\nCERTIDAO NEGATIVA\n"
+        "CARIMBO SOBREPOSTO ILEGIVEL\nValida ate: 31/12/2099"
+    )
+    result = engine.evaluate({"full_text": text}, document_type="CND_FEDERAL")
+    cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
+    assert cnd_check["status"] == "MANUAL_REVIEW_REQUIRED"
+    assert cnd_check["evidence"]["missing_keywords"]
+    assert result["overall_status"] == "MANUAL_REVIEW_REQUIRED"
+
+
+def test_anti_keyword_still_non_compliant_even_when_text_is_incomplete():
+    """Termo impeditivo continua reprovando, independentemente da decisao D2."""
+    engine = RulesEngine()
+    text = "CERTIDAO POSITIVA\nCONSTA PENDENCIA\nValida ate: 31/12/2099"
+    result = engine.evaluate({"full_text": text}, document_type="CND_FEDERAL")
+    cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
+    assert cnd_check["status"] == "NON_COMPLIANT"
