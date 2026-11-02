@@ -5,6 +5,23 @@ Todas as mudancas notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semantico](https://semver.org/lang/pt-BR/).
 
+## [0.2.1](https://github.com/conformia-bndes/conformia-platform/compare/v0.2.0...v0.2.1) (2026-11-02)
+
+
+### Corrigido
+
+* **rules:** termo obrigatorio ausente vai para revisao manual (D2) ([95d08f9](https://github.com/conformia-bndes/conformia-platform/commit/95d08f9bced085131f0ed0e9a5c6ecd155cab72c))
+* **rules:** termo obrigatorio ausente vai para revisao manual (D2) ([8129aa2](https://github.com/conformia-bndes/conformia-platform/commit/8129aa2149e5fadb06accd121c897b1a8d7e47f2)), closes [#91](https://github.com/conformia-bndes/conformia-platform/issues/91)
+* **storage:** ping do MinIO cria o bucket ausente ([cfd3f13](https://github.com/conformia-bndes/conformia-platform/commit/cfd3f13ccd3811cb17353d4ff9c88f18d4b68f55))
+* **upload:** leitura limitada do arquivo e erros sem detalhes internos ([7a937f8](https://github.com/conformia-bndes/conformia-platform/commit/7a937f8ac1c0b4e43263ca12d9bca09ca455b2a6))
+* **upload:** limita leitura a MAX_FILE_SIZE+1 e torna genericas as mensagens de erro 400/500 ([844ff48](https://github.com/conformia-bndes/conformia-platform/commit/844ff488e1e05f6df37202a9b7a7fab98c1aced2))
+
+
+### Documentacao
+
+* registrar as decisoes D2 e D3 ([6b94449](https://github.com/conformia-bndes/conformia-platform/commit/6b94449701e9ed7c7e5bc6bbe7145b8a3464c8c2))
+* registrar as decisoes D2 e D3 e fixar o Python 3.11 no Dependabot ([418f7bd](https://github.com/conformia-bndes/conformia-platform/commit/418f7bd4838304e20ca583eaa2a948fd3dc30bc0))
+
 ## [0.2.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.1.0...v0.2.0) (2026-10-29)
 
 
