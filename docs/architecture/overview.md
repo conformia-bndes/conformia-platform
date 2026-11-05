@@ -99,7 +99,7 @@ Nenhum caminho de falha produz `COMPLIANT`: ausência de dado ou de avaliação 
 | `audit_logs` | Ação, entidade, executor e detalhes, com data e hora |
 | `review_events` | Propostas e confirmações da revisão humana, com perfil e justificativa |
 
-O esquema evolui por migrations do Alembic (`backend/alembic/`).
+O esquema evolui somente por migrations do Alembic (`backend/alembic/`); a aplicação não cria tabelas ao iniciar. No compose, o serviço `migrate` executa `python -m app.db.migrate` antes da API e do worker (fora do Docker: `make migrate`). Bancos criados antes das migrations (por `create_all`) são carimbados na revisão equivalente e recebem apenas o que falta.
 
 ---
 

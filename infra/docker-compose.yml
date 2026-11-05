@@ -41,6 +41,9 @@ x-backend: &backend
     # dele e verificada pelo /api/v1/health do backend, que testa o bucket de verdade.
     minio:
       condition: service_started
+    # Esquema do banco: so a etapa "migrate" cria/atualiza tabelas (Alembic).
+    migrate:
+      condition: service_completed_successfully
   networks:
     - conformia-net
 
@@ -112,6 +115,20 @@ services:
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
     networks:
       - conformia-net
+
+  # ============================================================================
+  # Migrations - Alembic (etapa unica antes da API e do worker)
+  # Aplica `alembic upgrade head`; em bancos criados antes das migrations (create_all),
+  # carimba o esquema existente e aplica so o que falta. Falha => backend/worker nao sobem.
+  # ============================================================================
+  migrate:
+    <<: *backend
+    container_name: conformia-migrate
+    command: ["python", "-m", "app.db.migrate"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # ============================================================================
   # Backend API - FastAPI

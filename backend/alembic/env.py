@@ -16,7 +16,8 @@ from app.db.models import Document, ComplianceCheck, AuditLog, ReviewEvent  # no
 
 config = context.config
 
-if config.config_file_name is not None:
+# Uso programatico (app.db.migrate) nao deve reconfigurar nem desativar o logging do processo.
+if config.config_file_name is not None and config.attributes.get("connection") is None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
@@ -40,6 +41,14 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    # Conexao fornecida por quem chama (app.db.migrate): mesma transacao para stamp e upgrade.
+    provided = config.attributes.get("connection")
+    if provided is not None:
+        context.configure(connection=provided, target_metadata=target_metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+        return
+
     configuration = config.get_section(config.config_ini_section)
     if configuration is None:
         configuration = {}
