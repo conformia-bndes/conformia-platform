@@ -253,6 +253,7 @@ def test_personal_key_passes_router_auth_in_production(client, db_session, monke
     """Em producao a chave pessoal precisa ser aceita tambem pela autenticacao do roteador."""
     doc_id = _evaluated_document(client, db_session)
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_ACCESS", False)
 
     assert client.get(f"/api/v1/compliance/reviews/{doc_id}").status_code == 401
     assert (

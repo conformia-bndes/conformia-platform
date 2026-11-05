@@ -56,6 +56,65 @@ def test_settings_requires_secrets_without_defaults(monkeypatch):
         Settings(_env_file=None)
 
 
+SECURITY_VARS = ("ENVIRONMENT", "DEBUG", "ALLOW_ANONYMOUS_ACCESS")
+
+
+@pytest.fixture
+def clean_security_env(monkeypatch):
+    """O conftest fixa ENVIRONMENT=test; estes testes precisam enxergar os padroes do codigo."""
+    for name in SECURITY_VARS:
+        monkeypatch.delenv(name, raising=False)
+
+
+def test_security_defaults_are_production_without_debug_or_anonymous(clean_security_env):
+    cfg = Settings(_env_file=None, **VALID)
+    assert cfg.ENVIRONMENT == "production"
+    assert cfg.DEBUG is False
+    assert cfg.ALLOW_ANONYMOUS_ACCESS is False
+
+
+def test_anonymous_access_requires_explicit_opt_in(clean_security_env):
+    cfg = Settings(_env_file=None, ENVIRONMENT="development", ALLOW_ANONYMOUS_ACCESS=True, **VALID)
+    assert cfg.ALLOW_ANONYMOUS_ACCESS is True
+    # Mudar so o ambiente nao liga o acesso anonimo.
+    assert (
+        Settings(_env_file=None, ENVIRONMENT="development", **VALID).ALLOW_ANONYMOUS_ACCESS is False
+    )
+
+
+def test_production_rejects_anonymous_access(clean_security_env):
+    with pytest.raises(ValidationError) as exc:
+        Settings(_env_file=None, ENVIRONMENT="production", ALLOW_ANONYMOUS_ACCESS=True, **VALID)
+    assert "ALLOW_ANONYMOUS_ACCESS" in str(exc.value)
+
+
+def test_production_rejects_debug(clean_security_env):
+    with pytest.raises(ValidationError) as exc:
+        Settings(_env_file=None, ENVIRONMENT="production", DEBUG=True, **VALID)
+    assert "DEBUG" in str(exc.value)
+
+
+def test_debug_is_allowed_outside_production(clean_security_env):
+    assert Settings(_env_file=None, ENVIRONMENT="development", DEBUG=True, **VALID).DEBUG is True
+
+
+@pytest.mark.parametrize("value", ["prod", "staging", "Production", ""])
+def test_unknown_environment_is_rejected(clean_security_env, value):
+    """Um erro de digitacao nao pode virar um ambiente sem as protecoes de producao."""
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, ENVIRONMENT=value, **VALID)
+
+
+def test_env_example_is_the_explicit_local_opt_in():
+    """O modelo do .env e o opt-in local; o padrao do codigo continua seguro."""
+    from pathlib import Path
+
+    text = (Path(__file__).resolve().parents[2] / ".env.example").read_text(encoding="utf-8")
+    lines = {line.strip() for line in text.splitlines()}
+    assert "ENVIRONMENT=development" in lines
+    assert "ALLOW_ANONYMOUS_ACCESS=true" in lines
+
+
 VALID_HASH = "pbkdf2_sha256$200000$" + "a" * 32 + "$" + "b" * 64
 OTHER_HASH = "pbkdf2_sha256$200000$" + "c" * 32 + "$" + "d" * 64
 WEAK_HASH = "pbkdf2_sha256$099999$" + "a" * 32 + "$" + "b" * 64

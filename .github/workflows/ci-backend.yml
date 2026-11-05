@@ -20,6 +20,7 @@ env:
   UV_FROZEN: "1"
   # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
   ENVIRONMENT: test
+  ALLOW_ANONYMOUS_ACCESS: "true"
   DATABASE_URL: sqlite:///./ci-backend.db
   REDIS_URL: redis://127.0.0.1:6379/0
   MINIO_ENDPOINT: 127.0.0.1:9
