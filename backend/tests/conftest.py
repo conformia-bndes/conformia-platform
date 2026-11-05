@@ -10,6 +10,11 @@ os.environ.setdefault("POSTGRES_PASSWORD", "test-postgres-password")
 os.environ.setdefault("MINIO_ROOT_USER", "test-minio-user")
 os.environ.setdefault("MINIO_ROOT_PASSWORD", "test-minio-password")
 os.environ.setdefault("ENVIRONMENT", "test")
+# Testes nao dependem de rede: força o engine da aplicacao a ser SQLite em memoria,
+# para que o lifespan nao tente conectar ao Postgres (evita ~4 s por TestClient).
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+
+from types import SimpleNamespace  # noqa: E402
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -29,6 +34,39 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+@pytest.fixture(autouse=True, scope="function")
+def _no_network(monkeypatch):
+    """Desliga chamadas de rede reais (MinIO, Redis, Postgres) em todos os testes.
+
+    Nenhum teste unitario depende de servicos externos. Assim o health endpoint e os
+    uploads nao esperam timeouts de MinIO/Redis e o lifespan nao tenta conectar ao
+    Postgres (DATABASE_URL aponta para SQLite em memoria, definido acima).
+    """
+    from app.core import storage as storage_module
+    from app.api.v1.endpoints import health as health_module
+
+    bucket = storage_module.storage_service.bucket_name
+
+    monkeypatch.setattr(storage_module.storage_service, "ping", lambda: True)
+    monkeypatch.setattr(
+        storage_module.storage_service,
+        "upload_file",
+        lambda file_data, object_name, content_type="application/pdf": (
+            f"s3://{bucket}/{object_name}"
+        ),
+    )
+    monkeypatch.setattr(
+        storage_module.storage_service,
+        "download_file",
+        lambda object_name, destination_path: None,
+    )
+    monkeypatch.setattr(
+        health_module,
+        "_redis_client",
+        lambda: SimpleNamespace(ping=lambda: True),
+    )
 
 
 @pytest.fixture(scope="function")
