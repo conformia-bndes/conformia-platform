@@ -29,9 +29,13 @@ jobs:
       # variavel RELEASE_APP_ID e segredo RELEASE_APP_PRIVATE_KEY. Alternativa: segredo
       # RELEASE_PLEASE_TOKEN (PAT fine-grained). Sem nenhum deles, cai no token padrao e o
       # comportamento anterior e mantido. Permissoes do App: Contents e Pull requests (escrita).
+      # continue-on-error: se o App estiver mal configurado (por exemplo, chave privada invalida),
+      # o release nao deve parar; cai no RELEASE_PLEASE_TOKEN ou no token padrao, e o erro aparece
+      # como anotacao neste passo para ser corrigido.
       - name: Gerar token do GitHub App
         id: app-token
         if: vars.RELEASE_APP_ID != ''
+        continue-on-error: true
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
