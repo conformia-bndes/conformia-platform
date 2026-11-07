@@ -1,49 +1,49 @@
-# Politica de Seguranca da Informacao - Conform.IA BNDES
+# Política de Segurança da Informação - Conform.IA BNDES
 
-A seguranca da informacao e a integridade de dados sao pilares criticos do Conform.IA BNDES. Por atuar na esteira de verificacao de conformidade para concessoes de credito e investimentos com recursos publicos federais, vulnerabilidades sao tratadas com a mais alta prioridade tecnica e institucional.
+A segurança da informação e a integridade de dados são pilares críticos do Conform.IA BNDES. Por atuar na esteira de verificação de conformidade para concessões de crédito e investimentos com recursos públicos federais, vulnerabilidades são tratadas com a mais alta prioridade técnica e institucional.
 
 ---
 
-## 1. Versoes Suportadas
+## 1. Versões Suportadas
 
-Atualizacoes e patches de seguranca sao fornecidos para as seguintes versoes:
+Atualizações e patches de segurança são fornecidos para as seguintes versões:
 
-| Versao | Status de Suporte |
+| Versão | Status de Suporte |
 | :--- | :--- |
 | >= 0.1.x | Suportada |
-| < 0.1.0 | Nao suportada |
+| < 0.1.0 | Não suportada |
 
 ---
 
-## 2. Como Reportar uma Vulnerabilidade de Seguranca
+## 2. Como Reportar uma Vulnerabilidade de Segurança
 
-Nao registre Issues publicas no GitHub para reportar vulnerabilidades de seguranca. A divulgacao prematura pode expor a plataforma a riscos antes da disponibilizacao de mitigacoes ou correcoes.
+Não registre Issues públicas no GitHub para reportar vulnerabilidades de segurança. A divulgação prematura pode expor a plataforma a riscos antes da disponibilização de mitigações ou correções.
 
 Para reportar uma vulnerabilidade:
 1. Utilize o canal oficial de [Reporte Privado de Vulnerabilidades do GitHub](https://github.com/conformia-bndes/conformia-platform/security/advisories/new).
-2. Forneca uma descricao detalhada contendo:
+2. Forneca uma descrição detalhada contendo:
    - Componente afetado (ex: Pipeline IDP, Motor de Regras, Armazenamento MinIO, Trilha de Auditoria).
    - Passos reprodutiveis ou prova de conceito (PoC).
-   - Avaliacao de impacto e sugestao de mitigacao tecnica, quando aplicavel.
+   - Avaliação de impacto e sugestao de mitigação técnica, quando aplicável.
 
 ---
 
-## 3. Prazos e Niveis de Servico (SLA) de Resposta
+## 3. Prazos e Niveis de Serviço (SLA) de Resposta
 
 | Etapa do Processo | Prazo Limite |
 | :--- | :--- |
-| Confirmacao de recebimento do reporte | Ate 24 horas uteis |
-| Triagem tecnica e classificacao CVSS | Ate 3 dias uteis |
-| Desenvolvimento e homologacao de patch | Variavel conforme severidade (Critica: ate 48h) |
-| Publicacao coordenada de seguranca | Apos deploy da correcao em producao |
+| Confirmação de recebimento do reporte | Ate 24 horas uteis |
+| Triagem técnica e classificação CVSS | Ate 3 dias uteis |
+| Desenvolvimento e homologação de patch | Variável conforme severidade (Crítica: ate 48h) |
+| Publicação coordenada de segurança | Apos deploy da correção em produção |
 
 ---
 
-## 4. Escopo de Seguranca do Projeto
+## 4. Escopo de Segurança do Projeto
 
-Estao formalmente dentro do escopo desta politica:
-- Protecao contra execucao remota de codigo e exploracoes em parsers de PDF/OCR (Poppler, Tesseract).
-- Prevencao de Path Traversal e injecao de arquivos no upload documental.
+Estão formalmente dentro do escopo desta política:
+- Proteção contra execução remota de código e explorações em parsers de PDF/OCR (Poppler, Tesseract).
+- Prevenção de Path Traversal e injeção de arquivos no upload documental.
 - Integridade e inviolabilidade dos registros da trilha de auditoria (`audit_logs`).
-- Prevencao de vazamento de Dados Pessoais Sensiveis (LGPD / PII) em logs e traces.
-- Resiliencia do validador Maker-Checker contra tecnicas de injecao de prompt (Prompt Injection) voltadas a aprovar certidoes fraudulentas.
+- Prevenção de vazamento de Dados Pessoais Sensíveis (LGPD / PII) em logs e traces.
+- Resiliência do validador Maker-Checker contra técnicas de injeção de prompt (Prompt Injection) voltadas a aprovar certidões fraudulentas.
