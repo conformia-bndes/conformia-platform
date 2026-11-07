@@ -109,7 +109,9 @@ Cada área publica artefatos `relatorio-*` (retenção de 30 dias): resultados d
 cobertura (XML), benchmark de regras, estatísticas do fuzzing e auditorias de dependências. A
 cobertura e o gate de regressão dos evals também aparecem no resumo de cada execução do CI.
 
-O `docs.yml` roda depois que o CI de `main` termina com sucesso, baixa esses artefatos e o
+O `docs.yml` é chamado pelo `ci.yml` (estágio de publicação) em push para `main`, depois do
+`CI OK` verde e na mesma execução: o checkout é o do próprio commit e os artefatos são os desta
+execução, sem checkout de SHA vindo de outro workflow. Ele baixa esses artefatos e o
 hook `docs_hooks/relatorios.py` monta a página [Relatórios de Qualidade](../relatorios/index.md)
 do site. Localmente, `make reports` gera os mesmos arquivos em `reports/` e `make docs` os exibe.
 A publicação só acontece a partir de push em `main`, nunca de PR.
@@ -131,9 +133,9 @@ Outros workflows:
 | `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
-| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG; ao mergear o PR, cria a tag e chama o CD |
+| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG; ao mergear o PR, cria a tag e chama o CD. Para o PR de release também disparar CI e CodeQL, cadastre o segredo `RELEASE_PLEASE_TOKEN` (PAT ou token de GitHub App); sem ele usa o token padrão, que não dispara outros workflows |
 | `cd.yml` | release criada ou manual | Build e publicação das imagens de produção no GHCR (ver Deploy) |
-| `docs.yml` | CI de `main` concluído | Publicação desta documentação, com os relatórios de qualidade, no GitHub Pages (artefato, sem branch `gh-pages`) |
+| `docs.yml` | chamado pelo CI em push para `main`, ou manual em `main` | Publicação desta documentação, com os relatórios de qualidade, no GitHub Pages (artefato, sem branch `gh-pages`) |
 | `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
 
 **Cadeia de suprimentos.** Todas as actions são fixadas por SHA de commit (com a versão em

@@ -23,9 +23,15 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      # PRs abertos com o GITHUB_TOKEN padrao NAO disparam outros workflows (regra do GitHub contra
+      # loops), entao o PR de release ficaria sem CI, CodeQL e testes (Scorecard: SAST e CI-Tests).
+      # Para que disparem, cadastre o segredo RELEASE_PLEASE_TOKEN (PAT fine-grained ou token de
+      # GitHub App com Contents e Pull requests em leitura/escrita). Sem o segredo, cai no token
+      # padrao e o comportamento atual e mantido.
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
