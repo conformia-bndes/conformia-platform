@@ -88,7 +88,7 @@ hide:
     <div>
       <span class="apple-nav-category">Estratégia</span>
       <h4 class="apple-nav-title">Planejamento e Requisitos</h4>
-      <p class="apple-nav-text">Entendimento do edital, requisitos RF01 a RF15 e rastreabilidade com os testes.</p>
+      <p class="apple-nav-text">Entendimento do edital, requisitos RF01 a RF15, com rastreabilidade de testes para os RF01 a RF10 priorizados no MVP.</p>
     </div>
     <span class="apple-nav-arrow">&rarr;</span>
   </a>

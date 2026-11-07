@@ -1,24 +1,24 @@
-# Framework de Avaliacao Continua (Evals) - Conform.IA BNDES
+# Framework de Avaliação Contínua (Evals) - Conform.IA BNDES
 
-Este diretorio contem os componentes de Evals (Avaliacao Continua) para o pipeline de Processamento Inteligente de Documentos (IDP) e o motor de conformidade regulatoria do BNDES (Consulta Publica no 01/2025).
+Este diretório contém os componentes de Evals (Avaliação Contínua) para o pipeline de Processamento Inteligente de Documentos (IDP) e o motor de conformidade regulatória do BNDES (Consulta Pública nº 01/2025).
 
 ---
 
-## Objetivos de Harness e Metricas Chave
+## Objetivos de Harness e Métricas Chave
 
-Em sistemas criticos de conformidade de credito publico, alucinacoes ou falsos negativos em certidoes sao inaceitaveis. O framework de Evals mensura e protege contra regressoes atraves das seguintes metricas:
+Em sistemas críticos de conformidade de crédito público, alucinações ou falsos negativos em certidões são inaceitáveis. O framework de Evals mensura e protege contra regressões através das seguintes métricas:
 
-| Metrica | Meta Minima | Descricao |
+| Métrica | Meta Mínima | Descrição |
 | :--- | :--- | :--- |
-| **Extraction Recall (Entidades)** | $\ge 98.5\%$ | Percentual de dados obrigatorios (CNPJ, datas de validade, codigos de controle) extraidos corretamente. |
+| **Extraction Recall (Entidades)** | $\ge 98.5\%$ | Percentual de dados obrigatórios (CNPJ, datas de validade, códigos de controle) extraídos corretamente. |
 | **CER (Character Error Rate)** | $\le 1.5\%$ | Taxa de erro de caracteres no OCR em documentos digitalizados (scanned). |
-| **Falsos Positivos de Conformidade** | **$0.0\%$** (Zero Tolerancia) | Nunca classificar como `COMPLIANT` uma certidao com pendencias ou debitos ativos. |
-| **Maker-Checker Agreement Rate** | $\ge 95.0\%$ | Taxa de concordancia entre a hipotese do agente Maker e a critica do agente Checker. |
-| **Hallucination Detection Rate** | $\ge 99.0\%$ | Capacidade do Checker de interceptar e invalidar assercoes que nao constem no texto original. |
+| **Falsos Positivos de Conformidade** | **$0.0\%$** (Zero Tolerância) | Nunca classificar como `COMPLIANT` uma certidão com pendências ou débitos ativos. |
+| **Maker-Checker Agreement Rate** | $\ge 95.0\%$ | Taxa de concordância entre a hipótese do agente Maker e a crítica do agente Checker. |
+| **Hallucination Detection Rate** | $\ge 99.0\%$ | Capacidade do Checker de interceptar e invalidar asserções que não constem no texto original. |
 
 ---
 
-## Estrutura de Testes de Regressao
+## Estrutura de Testes de Regressão
 
 ```text
 evals/
@@ -32,9 +32,9 @@ evals/
 
 ---
 
-## Execucao dos Evals
+## Execução dos Evals
 
-Para rodar a bateria de testes de avaliacao de regressao:
+Para rodar a bateria de testes de avaliação de regressão:
 
 ```bash
 # A partir da raiz do monorepo:
@@ -44,4 +44,4 @@ python evals/eval_pipeline.py
 make eval
 ```
 
-O script reportara a matriz de confusao, acuracia por regra do checklist BNDES e tempo medio de inferencia por pagina.
+O script reportara a matriz de confusao, acurácia por regra do checklist BNDES e tempo médio de inferência por página.

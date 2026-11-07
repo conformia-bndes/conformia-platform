@@ -49,16 +49,16 @@ O edital disponibilizado não fornece amostras reais de documentos confidenciais
 
 ## 2. Edital de Referência e Entendimento do Desafio
 
-A referência primária deste planejamento e a **CONSULTA PUBLICA BNDES No 01/2025**, cujo objeto e verificar a adequação de soluções voltadas a interpretação automatizada de documentos não estruturados e a aplicação de regras de negócio para verificação de conformidade. O edital explicita que a conferência deve relacionar informações dos documentos a normativos internos e dados de bases e sistemas de TI, buscando eficiência, rastreabilidade e segurança na tomada de decisão institucional.
+A referência primária deste planejamento é a **CONSULTA PÚBLICA BNDES Nº 01/2025**, cujo objeto é verificar a adequação de soluções voltadas a interpretação automatizada de documentos não estruturados e a aplicação de regras de negócio para verificação de conformidade. O edital explicita que a conferência deve relacionar informações dos documentos a normativos internos e dados de bases e sistemas de TI, buscando eficiência, rastreabilidade e segurança na tomada de decisão institucional.
 
 - **Documento de Referência**: Consulta Pública BNDES no 01/2025 (Errata de 17/09/2025).
 - **Plataforma Indicada**: WorldLabs — Consulta BNDES Checklist de Conformidade.
 
 ### 2.1 Contexto Apresentado pelo BNDES
 
-Segundo o edital, o BNDES atua em operações de concessão de crédito, investimento e desinvestimento, ofertas publicas, seleção e contratação de fundos FIP/FIDC, alterações de condições financeiras, renegociações de crédito e estruturação de projetos. As verificações de conformidade são realizadas por meio de checklists compostos por critérios definidos em normativos internos e aplicados principalmente a documentos em formato PDF.
+Segundo o edital, o BNDES atua em operações de concessão de crédito, investimento e desinvestimento, ofertas públicas, seleção e contratação de fundos FIP/FIDC, alterações de condições financeiras, renegociações de crédito e estruturação de projetos. As verificações de conformidade são realizadas por meio de checklists compostos por critérios definidos em normativos internos e aplicados principalmente a documentos em formato PDF.
 
-O problema operacional e especialmente crítico porque a verificação manual exige esforço intensivo, consultas a múltiplos sistemas e fontes de informação heterogeneas, acarretando riscos de inconsistências, divergências interpretativas e deficiências na rastreabilidade histórica. O edital aponta como direção desejada a automação de etapas criticas, comparação com fontes estruturadas e não estruturadas, orientação contextual, tratamento de exceções e geração de relatórios auditáveis.
+O problema operacional e especialmente crítico porque a verificação manual exige esforço intensivo, consultas a múltiplos sistemas e fontes de informação heterogeneas, acarretando riscos de inconsistências, divergências interpretativas e deficiências na rastreabilidade histórica. O edital aponta como direção desejada a automação de etapas críticas, comparação com fontes estruturadas e não estruturadas, orientação contextual, tratamento de exceções e geração de relatórios auditáveis.
 
 ### 2.2 Necessidade de Negócio Traduzida para o Projeto
 
@@ -71,9 +71,9 @@ O problema operacional e especialmente crítico porque a verificação manual ex
 | **Orientar o analista de crédito**          | Painel operacional com evidências literais destacadas, explicabilidade e referências legais.         |
 | **Tratar inconsistências e exceções**       | Estados formais (`COMPLIANT`, `NON_COMPLIANT`, `MANUAL_REVIEW_REQUIRED`) e fluxo de revisão humana.  |
 | **Garantir rastreabilidade integral**       | Trilha de auditoria append-only imutável, versionamento de regras e histórico temporal de análises.  |
-| **Controlar performance e acurácia**        | Pipeline de Harness Evals, métricas técnicas e benchmark de regressão continuo.                      |
+| **Controlar performance e acurácia**        | Pipeline de Harness Evals, métricas técnicas e benchmark de regressão contínuo.                      |
 | **Operar em modelo SaaS**                   | Arquitetura conteinerizada em Docker Compose, multi-tenant e preparada para nuvem nacional.          |
-| **LGPD e governança publica**               | Controle de acesso baseado em papeis (RBAC), criptografia em repouso e trânsito, minimização de PII. |
+| **LGPD e governança pública**               | Controle de acesso baseado em papéis (RBAC), criptografia em repouso e trânsito, minimização de PII. |
 
 ---
 
@@ -103,8 +103,8 @@ A utilização de Inteligência Artificial em processos que envolvem recursos p�
 | Risco Identificado                                  | Impacto    | Estratégia de Mitigação no Projeto                                                                            |
 | :-------------------------------------------------- | :--------- | :------------------------------------------------------------------------------------------------------------ |
 | **Alucinação ou extração incorreta de dados**       | Alto       | Citação literal compulsória de evidência, validação Pydantic, padrão Maker-Checker e Human-in-the-Loop.       |
-| **Documentos digitalizados com OCR degradado**      | Medio/Alto | Pre-processamento de imagem, binarização, OCR Tesseract calibrado para português e índice de confiança.       |
-| **Regra de negócio ou editalicia ambigua**          | Alto       | Esquemas de regras versionados em JSON, suite de testes unitários de regressão e aprovação técnica.           |
+| **Documentos digitalizados com OCR degradado**      | Médio/Alto | Pré-processamento de imagem, binarização, OCR Tesseract calibrado para português e índice de confiança.       |
+| **Regra de negócio ou editalicia ambigua**          | Alto       | Esquemas de regras versionados em JSON, suíte de testes unitários de regressão e aprovação técnica.           |
 | **Exposição inadvertida de dados sensíveis (LGPD)** | Muito Alto | Uso estrito de dados sintéticos no ambiente de desenvolvimento, mascaramento de PII e políticas de retenção.  |
 | **Dependência de fornecedor específico de LLM**     | Médio      | Camada de abstração de provedores de IA (`LLMClient`), suportando modelos proprietários e locais open-source. |
 | **Indisponibilidade de APIs externas no MVP**       | Médio      | Camada de mocks desacoplada com contratos de interface rigidos compatíveis com futuras integrações reais.     |
@@ -123,16 +123,16 @@ A utilização de Inteligência Artificial em processos que envolvem recursos p�
 | Elemento                   | Diretriz Visual                                                                                                                                                                                                             |
 | :------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Simbolo**                | Prisma documental integrado a elemento de checagem precisa (documento + extração + conformidade).                                                                                                                           |
-| **Paleta de Cores**        | Azul institucional profundo (`#0f172a`, `#1e293b`) para solidez e autoridade; azul tecnologico (`#2563eb`, `#38bdf8`) para inovação; neutros técnicos (`#f8fafc`, `#64748b`) para dashboards de alta densidade informativa. |
+| **Paleta de Cores**        | Azul institucional profundo (`#0f172a`, `#1e293b`) para solidez e autoridade; azul tecnológico (`#2563eb`, `#38bdf8`) para inovação; neutros técnicos (`#f8fafc`, `#64748b`) para dashboards de alta densidade informativa. |
 | **Tipografia**             | Sans-serif contemporanea e limpa (Inter / system fonts), priorizando escaneabilidade visual em tabelas e laudos.                                                                                                            |
-| **Sinalização de Estados** | Diferenciação categorica entre `COMPLIANT` (verde corporativo), `NON_COMPLIANT` (vermelho) e `MANUAL_REVIEW_REQUIRED` (ambar), sempre combinando texto, tag e icone para garantia de acessibilidade.                        |
-| **Tom e Linguagem**        | Estritamente técnico, formal, sobrio e factual. Proibição absoluta de metaforas ludicas ou emojis.                                                                                                                          |
+| **Sinalização de Estados** | Diferenciação categórica entre `COMPLIANT` (verde corporativo), `NON_COMPLIANT` (vermelho) e `MANUAL_REVIEW_REQUIRED` (ambar), sempre combinando texto, tag e icone para garantia de acessibilidade.                        |
+| **Tom e Linguagem**        | Estritamente técnico, formal, sobrio e factual. Proibição absoluta de metaforas lúdicas ou emojis.                                                                                                                          |
 
 ---
 
 ## 5. Solução Proposta — Visão de Produto
 
-O Conform.IA BNDES e estruturado como uma plataforma web de alta produtividade voltada a analistas e gestores de conformidade documental.
+O Conform.IA BNDES é estruturado como uma plataforma web de alta produtividade voltada a analistas e gestores de conformidade documental.
 
 ```mermaid
 flowchart TD
@@ -150,7 +150,7 @@ flowchart TD
 1. **Autenticação**: O analista acessa a plataforma com credenciais autenticadas e perfil de acesso definido.
 2. **Seleção de Operação**: Vincula a análise a uma operação de crédito ou proponente específico.
 3. **Ingestão Documental**: Upload de arquivos PDF ou recuperação via conectores de armazenamento.
-4. **Pre-processamento e IDP**: Extração automática de texto nativo com chaveamento para OCR em páginas digitalizadas.
+4. **Pré-processamento e IDP**: Extração automática de texto nativo com chaveamento para OCR em páginas digitalizadas.
 5. **Estruturação de Entidades**: Reconhecimento de CNPJ, razões sociais, datas de emissão, datas de validade e certidões.
 6. **Seleção do Checklist**: O sistema carrega a versão normativa vigente aplicável a operação.
 7. **Execução Determinística**: Verificações matemáticas, temporais e lexicais executadas pelo motor de regras.
@@ -174,15 +174,15 @@ flowchart TD
 | **RF08** | Exibição de evidências literais e justificativas técnicas por critério.              | Alta        | Implementado           |
 | **RF09** | Interface para revisão humana, contestação e tratamento formal de exceções.          | Alta        | Implementado           |
 | **RF10** | Registro cronológico e imutável em trilha de auditoria (`audit_logs`).               | Alta        | Implementado           |
-| **RF11** | Geração de relatório consolidado de conformidade exportável.                         | Media       | Planejado (Sprint 6/8) |
-| **RF12** | Dashboard com métricas de acurácia, tempo de processamento e distribuição de status. | Media       | Implementado           |
-| **RF13** | Integração com fontes externas e governamentais via camada de conectores.            | Media       | Planejado (Sprint 7)   |
-| **RF14** | Sistema de alertas operacionais e notificação de certidões vencidas.                 | Baixa/Media | Backlog                |
-| **RF15** | Agendamento periodico e reprocessamento em lote de certidões recorrentes.            | Baixa       | Backlog                |
+| **RF11** | Geração de relatório consolidado de conformidade exportável.                         | Média       | Planejado (Sprint 6/8) |
+| **RF12** | Dashboard com métricas de acurácia, tempo de processamento e distribuição de status. | Média       | Implementado           |
+| **RF13** | Integração com fontes externas e governamentais via camada de conectores.            | Média       | Planejado (Sprint 7)   |
+| **RF14** | Sistema de alertas operacionais e notificação de certidões vencidas.                 | Baixa/Média | Backlog                |
+| **RF15** | Agendamento periódico e reprocessamento em lote de certidões recorrentes.            | Baixa       | Backlog                |
 
 ### 5.3 Requisitos Não Funcionais
 
-- **Segurança**: Autenticação centralizada, autorização baseada em papeis (RBAC), segredos isolados em variáveis de ambiente.
+- **Segurança**: Autenticação centralizada, autorização baseada em papéis (RBAC), segredos isolados em variáveis de ambiente.
 - **Rastreabilidade e Imutabilidade**: Toda decisão registra hash documental, versão de regra e identificador de sessão.
 - **Auditabilidade**: Laudos associam a citação exata da página e coordenada a cada conclusão técnica.
 - **Disponibilidade e Desempenho**: Processamento documental desacoplado em background workers via Celery e Redis.
@@ -190,7 +190,7 @@ flowchart TD
 - **Manutenibilidade**: Monorepo modular, contratos fortemente tipados (Pydantic / TypeScript) e isolamento de dependências.
 - **Observabilidade**: Logs estruturados, traces de execução e métricas de avaliação continua.
 - **Privacidade e LGPD**: Minimização de dados, ausência de logs com credenciais ou CPF e preparo para destruição segura.
-- **Testabilidade**: Suite automatizada de testes unitários, testes de integração e benchmark de regressão continuo.
+- **Testabilidade**: Suíte automatizada de testes unitários, testes de integração e benchmark de regressão contínuo.
 
 ---
 
@@ -225,21 +225,21 @@ A solução adota uma arquitetura em camadas orientada a serviços conteinerizad
 | **Frontend**                 | React 18 + Vite + TypeScript + Tailwind | Compilação estática ultrarrapida, zero overhead de servidor Node em produção, tipagem estrita e rica experiência operacional para o analista. |
 | **Backend API**              | Python 3.11/3.13 + FastAPI + Uvicorn    | Alto desempenho assíncrono (ASGI), integração nativa com bibliotecas de processamento de documentos e validação automática com Pydantic v2.   |
 | **Gerenciador de Pacotes**   | Astral `uv`                             | Resolução determinística em milissegundos, workspace monorepo unificado e integração otimizada em containers Docker.                          |
-| **Banco Relacional**         | PostgreSQL 16 Alpine                    | Persistência transacional robusta, suporte a integridade referencial, consultas analiticas e histórico de auditoria.                          |
+| **Banco Relacional**         | PostgreSQL 16 Alpine                    | Persistência transacional robusta, suporte a integridade referencial, consultas analíticas e histórico de auditoria.                          |
 | **Fila e Cache**             | Redis 7 Alpine                          | Fila de mensagens em memória de baixíssima latência para despacho assíncrono de tarefas pesadas.                                              |
 | **Processamento Assíncrono** | Celery 5                                | Isolamento do processamento intensivo de OCR e IA do ciclo de vida das requisições HTTP da API.                                               |
-| **Armazenamento de Objetos** | MinIO S3 Compatible                     | Compatibilidade estrita com a API AWS S3, permitindo execução local e migração transparente para nuvens publicas brasileiras.                 |
+| **Armazenamento de Objetos** | MinIO S3 Compatible                     | Compatibilidade estrita com a API AWS S3, permitindo execução local e migração transparente para nuvens públicas brasileiras.                 |
 | **Pipeline OCR**             | Tesseract OCR 5 + Poppler Utils         | Solução robusta, auditável e de execução local com suporte consolidado ao português brasileiro (`por`).                                       |
 | **Motor de Regras**          | Motor Híbrido Python + JSON Schema      | Regras declarativas, desacopladas do código-fonte da aplicação, fáceis de versionar e auditar.                                                |
 | **Padrão Maker-Checker**     | `LLMClient` Abstraido                   | Propositor formula hipótese; auditor algorítmico valida a existência textual exata antes da aprovação.                                        |
 | **Conteinerização**          | Docker Engine + Docker Compose          | Isolamento completo de dependências de sistema (Poppler, Tesseract) e portabilidade multiambiente.                                            |
-| **Integração Continua**      | GitHub Actions                          | Workflows com path-filtering inteligente, validação de linters, cobertura de testes e scans de segredos.                                      |
+| **Integração Contínua**      | GitHub Actions                          | Workflows com path-filtering inteligente, validação de linters, cobertura de testes e scans de segredos.                                      |
 
 ### 6.3 Separação Rigorosa entre Regras de Negócio e Modelos de IA
 
-Regras normativas e critérios determinísticos (prazos de validade de certidões, regularidade fiscal perante a Fazenda Nacional, situação cadastral do CNPJ) são avaliados de forma explicita por lógica booleana e expressões regulares auditáveis.
+Regras normativas e critérios determinísticos (prazos de validade de certidões, regularidade fiscal perante a Fazenda Nacional, situação cadastral do CNPJ) são avaliados de forma explícita por lógica booleana e expressões regulares auditáveis.
 
-Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise requer interpretação semântica ou compreensão contextual não estruturada. Essa segregação impede que alterações de prompts possam desestabilizar regras criticas de conformidade financeira ou mascarar certidões invalidas.
+Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise requer interpretação semântica ou compreensão contextual não estruturada. Essa segregação impede que alterações de prompts possam desestabilizar regras críticas de conformidade financeira ou mascarar certidões inválidas.
 
 ---
 
@@ -253,16 +253,16 @@ Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise reque
 | **VI**           | Explicabilidade e reprodutibilidade         | Gravação de evidências textuais, índices de confiança e laudos com rastreabilidade total.         |
 | **VII**          | Perfis de acesso e auditoria                | Trilha de auditoria append-only em `audit_logs` e preparo para perfis de acesso RBAC.             |
 | **VIII**         | Visualização de status operacional          | Dashboard operacional com visualização por documento, critério, status e métricas.                |
-| **IX**           | Metadados e regras extraidas                | Extração de metadados temporais, número de controle e órgão emissor.                              |
+| **IX**           | Metadados e regras extraídas                | Extração de metadados temporais, número de controle e órgão emissor.                              |
 | **X - XI**       | Integração com bases e sistemas             | Camada de conectores com suporte a adaptadores de APIs governamentais e bases corporativas.       |
-| **XII - XIII**   | Alertas e agendamento                       | Arquitetura preparada com Celery Beat para execução periodica de rotinas de checagem.             |
+| **XII - XIII**   | Alertas e agendamento                       | Arquitetura preparada com Celery Beat para execução periódica de rotinas de checagem.             |
 | **XIV**          | Logs detalhados de operação                 | Registro cronológico com timestamp UTC, identificador de ação e autor da decisão.                 |
 | **XV - XVI**     | Orientação contextual e normativos          | Interface do analista vincula diretamente a base normativa que fundamenta a exigência.            |
 | **XVII**         | Revisão detalhada por documento             | Tela de análise com confrontação de evidências e suporte a parecer humano de exceção.             |
 | **XVIII - XIX**  | Histórico e análise de desempenho           | Armazenamento de laudos históricos e métricas de recall e acurácia consolidada.                   |
 | **XXII - XXIII** | Nuvem e soberania territorial               | Arquitetura conteinerizada em padrão aberto, pronta para operação em data centers nacionais.      |
 | **XXIV**         | Conformidade com a LGPD                     | Minimização de dados, ausência de PII em traces/logs e criptografia de credenciais.               |
-| **XXV**          | Medição formal de acurácia                  | Suite automatizada de Harness Evals com tolerância zero a falsos positivos em certidões criticas. |
+| **XXV**          | Medição formal de acurácia                  | Suíte automatizada de Harness Evals com tolerância zero a falsos positivos em certidões críticas. |
 
 ---
 
@@ -279,7 +279,7 @@ Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise reque
 
 Toda análise consolidada armazena um snapshot contendo:
 
-- Hash criptografico (SHA-256) do documento original analisado.
+- Hash criptográfico (SHA-256) do documento original analisado.
 - Versão exata do checklist e das regras normativas aplicadas.
 - Citação textual literal que serviu como evidência da conclusão.
 - Timestamp UTC da avaliação e identificador do agente ou usuário executor.
@@ -289,9 +289,9 @@ Toda análise consolidada armazena um snapshot contendo:
 
 ## 9. Estratégia de IA, Avaliação e Controle de Performance
 
-### 9.1 Avaliação Continua (Harness Evals)
+### 9.1 Avaliação Contínua (Harness Evals)
 
-A confiabilidade da solução e atestada por meio de um pipeline determinístico de avaliação continua localizado em `evals/eval_pipeline.py`. Nenhuma alteração em prompts ou regras e promovida a produção sem a execução com sucesso da suite de benchmarks.
+A confiabilidade da solução e atestada por meio de um pipeline determinístico de avaliação continua localizado em `evals/eval_pipeline.py`. Nenhuma alteração em prompts ou regras e promovida a produção sem a execução com sucesso da suíte de benchmarks.
 
 ### 9.2 Métricas de Avaliação Adotadas
 
@@ -308,7 +308,7 @@ A confiabilidade da solução e atestada por meio de um pipeline determinístico
 
 ## 10. Planejamento de Sprints até 07/12/2026
 
-O cronograma do projeto e organizado em 8 sprints sequenciais com objetivos mensuráveis e critérios objetivos de entrega:
+O cronograma do projeto é organizado em 8 sprints sequenciais com objetivos mensuráveis e critérios objetivos de entrega:
 
 | Sprint       | Período       | Foco Estratégico            | Objetivos Principais                                                                                                              | Entrega Consolidada                                                   |
 | :----------- | :------------ | :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
@@ -323,10 +323,10 @@ O cronograma do projeto e organizado em 8 sprints sequenciais com objetivos mens
 
 ### 10.1 Definition of Done (DoD)
 
-Qualquer entrega ou pull request e considerado concluido apenas quando:
+Qualquer entrega ou pull request e considerado concluído apenas quando:
 
-1. O código esta integrado ao monorepo e revisado tecnicamente.
-2. A suite de testes automatizados (`pytest`, `vitest`) passa integralmente com cobertura adequada.
+1. O código está integrado ao monorepo e revisado tecnicamente.
+2. A suíte de testes automatizados (`pytest`, `vitest`) passa integralmente com cobertura adequada.
 3. O pipeline de Harness Evals e aprovado com 100% de precisão nos casos de referência e zero falsos positivos.
 4. Os linters e formatadores (`black`, `flake8`, `eslint`) passam com zero advertências.
 5. As varreduras de segredos (`gitleaks`) e dependências (`pip-audit`) concluem sem vulnerabilidades.
@@ -344,7 +344,7 @@ O desenvolvimento da plataforma Conform.IA BNDES adota os princípios de **Harne
 | **Context Engineering**    | Fornecimento de contexto estritamente delimitado aos modelos (trechos de documentos, normativos e schemas JSON formais). |
 | **Environment Control**    | Ambiente reproduzível via Docker Compose e gerenciamento veloz de dependências via Astral `uv`.                          |
 | **Explicit Tools**         | Ferramentas delimitadas e de mínimo privilégio para extração e consulta de dados.                                        |
-| **Verification Loop**      | Agentes submetem cada alteração a testes de regressão e suite de linters antes de qualquer consolidação.                 |
+| **Verification Loop**      | Agentes submetem cada alteração a testes de regressão e suíte de linters antes de qualquer consolidação.                 |
 | **Maker-Checker**          | Propositor formula hipótese de conformidade; auditor algorítmico confronta a evidência no texto original.                |
 | **Operational Guardrails** | Proibição de aprovação de certidões sem data legível ou com pendências (`MANUAL_REVIEW_REQUIRED`).                       |
 
@@ -352,7 +352,7 @@ O desenvolvimento da plataforma Conform.IA BNDES adota os princípios de **Harne
 
 ## 12. Backlog Inicial e Épicos
 
-| Epico                             | Descrição e Escopo                                                                             |
+| Épico                             | Descrição e Escopo                                                                             |
 | :-------------------------------- | :--------------------------------------------------------------------------------------------- |
 | **E1 — Gestão Documental**        | Ingestão, armazenamento em MinIO S3, catálogo de metadados e ciclo de vida de documentos.      |
 | **E2 — Pipeline IDP**             | Extração vetorial nativa de PDFs e fallback automático de OCR para documentos digitalizados.   |
@@ -361,8 +361,8 @@ O desenvolvimento da plataforma Conform.IA BNDES adota os princípios de **Harne
 | **E5 — Orquestração de IA**       | Maker-Checker para interpretação semântica, avaliação de cláusulas e explicabilidade.          |
 | **E6 — Conectores e Integrações** | Camada de adaptadores para integração com bases governamentais e APIs corporativas.            |
 | **E7 — Revisão Humana (HITL)**    | Interface interativa para análise de evidências, aprovação, reprovação e registro de exceções. |
-| **E8 — Trilha de Auditoria**      | Persistência cronologica imutável de todas as etapas de análise e pareceres técnicos.          |
-| **E9 — Analytics e Qualidade**    | Dashboard de monitoramento de performance, acurácia e controle estatistico de processamento.   |
+| **E8 — Trilha de Auditoria**      | Persistência cronológica imutável de todas as etapas de análise e pareceres técnicos.          |
+| **E9 — Analytics e Qualidade**    | Dashboard de monitoramento de performance, acurácia e controle estatístico de processamento.   |
 | **E10 — Segurança e Governança**  | RBAC, proteção de dados conforme a LGPD, segredos isolados e auditoria de acessos.             |
 
 ### 12.1 Escopo Mínimo de Demonstração (Cenário de Referência)
@@ -388,7 +388,7 @@ O cenário essencial a ser apresentado na conclusão do projeto abrange:
 - Extração estruturada demonstrada em conjunto de documentos sintéticos de teste.
 - Checklist normativo parametrizável e versionado sem necessidade de alteração de código central.
 - Todas as decisões de conformidade acompanhadas de evidências literais auditáveis.
-- Zero tolerância a falsos positivos em certidões criticas no benchmark de regressão.
+- Zero tolerância a falsos positivos em certidões críticas no benchmark de regressão.
 - Trilha de auditoria append-only completa com histórico temporal.
 - Conformidade integral com as diretrizes técnicas e de governança da Consulta Pública BNDES no 01/2025.
 
@@ -400,7 +400,7 @@ O cenário essencial a ser apresentado na conclusão do projeto abrange:
 4. Modelos de dados relacionais e contratos tipados de API OpenAPI/Swagger.
 5. Pipeline IDP com OCR Tesseract e extração vetorial.
 6. Motor de regras e schemas normativos do BNDES.
-7. Suite de avaliação continua (Harness Evals) com dataset de referência.
+7. Suíte de avaliação continua (Harness Evals) com dataset de referência.
 8. Dashboard do analista com tela de revisão e laudos detalhados.
 9. Trilha de auditoria transacional imutável.
 10. Relatório final e vídeo de demonstração técnica da solução.

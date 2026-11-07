@@ -40,7 +40,7 @@ Retorna o diagnóstico operacional de todos os serviços da infraestrutura.
 Recebe um arquivo PDF para ingestão, executa validação de magic bytes (`%PDF-`), grava no MinIO S3 e dispara extração textual vetorial/OCR.
 
 - **Content-Type**: `multipart/form-data`
-- **Parametros**:
+- **Parâmetros**:
   - `file`: Arquivo binário PDF (máximo 50 MB).
   - `async_process` (query param, boolean, default: `false`): Executar via Celery background worker.
 

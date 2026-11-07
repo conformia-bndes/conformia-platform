@@ -25,6 +25,6 @@ O processo de concessão de apoio financeiro pelo BNDES requer a estrita observ�
 
 ## 3. Política de Tolerância Zero e Classificação de Risco
 
-1. **Infrações Criticas**: Débitos tributários com a Fazenda Nacional ou inscrição ativa no CEIS/CNEP resultam em reprovação sumaria do dossie sem possibilidade de sobrestamento pelo motor de regras.
+1. **Infrações Críticas**: Débitos tributários com a Fazenda Nacional ou inscrição ativa no CEIS/CNEP resultam em reprovação sumária do dossie sem possibilidade de sobrestamento pelo motor de regras.
 2. **Casos Ambiguos e Baixa Qualidade de Imagem**: Documentos com carimbos ilegíveis ou corte de margem acionam o protocolo de degradação para revisão manual, impedindo a aprovação indevida por omissão de dados.
 3. **Imutabilidade do Laudo**: Todo parecer gerado pelo motor de regras e gravado com chave estrangeira para o documento original, registrando o estado das regras no instante da verificação.
