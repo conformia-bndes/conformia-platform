@@ -1,6 +1,8 @@
-# Area "Frontend": Lint, Security, Build e Test comecam juntos (sem `needs` entre eles): cada um
-# prepara o proprio ambiente em poucos segundos e nenhum depende do resultado do outro. Os
-# estagios sao logicos; o deploy (imagem no GHCR) e o cd.yml, so em release.
+# Area "Frontend", em estagios:
+#   1. Qualidade : Lint e Security (rapidos; falhar aqui evita gastar o resto)
+#   2. Validacao : Build da imagem + Trivy e Test, em paralelo
+#   3. Gate      : "Frontend OK" consolida a area
+# O deploy (imagem no GHCR) e o cd.yml, so em release.
 # Workflow reutilizavel, chamado pelo ci.yml. Gera os artefatos "relatorio-frontend-*".
 name: CI - Frontend
 
@@ -72,6 +74,7 @@ jobs:
 
   build:
     name: Build
+    needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -123,6 +126,7 @@ jobs:
 
   test:
     name: Test
+    needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -154,3 +158,29 @@ jobs:
           path: reports/
           if-no-files-found: warn
           retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Estagio final: consolida a area em um unico no do grafo
+  # ---------------------------------------------------------------------------
+  gate:
+    name: Frontend OK
+    if: always()
+    needs: [lint, security, build, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consolidar resultado da area
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          {
+            echo "### Frontend"
+            echo
+            echo "| Job | Resultado |"
+            echo "| :-- | :-- |"
+            echo "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if echo "$RESULTS" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' > /dev/null; then
+            echo "::error::Frontend: ha jobs com falha ou cancelados."
+            exit 1
+          fi

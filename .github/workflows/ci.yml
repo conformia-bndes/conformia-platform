@@ -1,16 +1,19 @@
 # ==============================================================================
 # CI - Conform.IA BNDES Platform (orquestrador)
 #
-#   changes  -> detecta o que mudou no PR (backend, frontend, infra, docs, workflows)
-#   areas    -> Repo, Backend, Frontend, Infra: workflows reutilizaveis (ci-*.yml) com estagios
-#               com os jobs de cada area em paralelo (lint, build, test); o deploy (imagens no
-#               GHCR) e o cd.yml, so em release. Areas sem mudanca relevante sao puladas
-#   docs     -> build estrito da documentacao
-#   CI OK    -> consolida o resultado das areas; check unico exigido nos rulesets de main e dev
-#               (area pulada por falta de mudanca aprova; falha ou cancelamento bloqueia)
+# Estagios (cada area e um workflow reutilizavel ci-*.yml, com seus proprios estagios internos:
+# Qualidade -> Validacao -> "<Area> OK"):
 #
-# Nenhuma area espera a outra: o caminho critico e o job mais lento (hoje, o smoke ou os
-# testes do backend). O titulo do PR e validado em pr-title.yml.
+#   1. Escopo      changes  -> detecta o que mudou no PR (backend, frontend, infra, docs, workflows)
+#   2. Areas       Repo, Backend, Frontend, Infra e Docs, em paralelo entre si; areas sem mudanca
+#                  relevante sao puladas
+#   3. Gate        CI OK    -> consolida as areas; check unico exigido nos rulesets de main e dev
+#                              (area pulada por falta de mudanca aprova; falha ou cancelamento
+#                              bloqueia)
+#   4. Publicacao  Publicar documentacao -> so em push para main, depois do CI OK verde
+#
+# O deploy das imagens (GHCR) e o cd.yml, so em release (release.yml). O titulo do PR e validado
+# em pr-title.yml.
 #
 # Em push para main/dev, execucao manual e agendada tudo roda, sem filtro de caminho.
 # Actions de terceiros e oficiais fixadas por SHA; o Dependabot mantem as versoes.
@@ -142,6 +145,7 @@ jobs:
   # ---------------------------------------------------------------------------
   repo:
     name: Repo
+    needs: changes
     uses: ./.github/workflows/ci-repo.yml
 
   backend:
@@ -202,8 +206,30 @@ jobs:
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: |
-          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          {
+            echo "### Resultado do CI"
+            echo
+            echo "| Estagio | Resultado |"
+            echo "| :-- | :-- |"
+            echo "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
           if echo "$RESULTS" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' > /dev/null; then
             echo "::error::Ha areas com falha ou canceladas."
             exit 1
           fi
+
+  # ---------------------------------------------------------------------------
+  # Publicacao da documentacao (so em push para main, com o CI verde)
+  # ---------------------------------------------------------------------------
+  docs-deploy:
+    name: Publicar documentacao
+    needs: ci-ok
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.ci-ok.result == 'success'
+    permissions:
+      contents: read
+      actions: read # baixar os artefatos de relatorio desta execucao
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
+    with:
+      use_current_run: true

@@ -1,5 +1,8 @@
-# Area "Infra": Lint (workflows, compose, hadolint) e Stack (imagens e stack completa em Compose:
-# smoke, contrato da API, carga e resiliencia) comecam juntos.
+# Area "Infra", em estagios:
+#   1. Qualidade : Lint (workflows, compose, hadolint)
+#   2. Validacao : Stack (imagens e stack completa em Compose: smoke, contrato da API, carga e
+#                  resiliencia)
+#   3. Gate      : "Infra OK" consolida a area
 # Workflow reutilizavel, chamado pelo ci.yml. Cada grupo de jobs tem seu proprio escopo.
 name: CI - Infra
 
@@ -64,6 +67,7 @@ jobs:
 
   smoke:
     name: Stack
+    needs: lint
     if: inputs.stack
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -146,3 +150,29 @@ jobs:
       - name: Encerrar a stack
         if: always()
         run: docker compose --env-file .env -f infra/docker-compose.yml down -v --remove-orphans
+
+  # ---------------------------------------------------------------------------
+  # Estagio final: consolida a area em um unico no do grafo
+  # ---------------------------------------------------------------------------
+  gate:
+    name: Infra OK
+    if: always()
+    needs: [lint, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consolidar resultado da area
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          {
+            echo "### Infra"
+            echo
+            echo "| Job | Resultado |"
+            echo "| :-- | :-- |"
+            echo "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if echo "$RESULTS" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' > /dev/null; then
+            echo "::error::Infra: ha jobs com falha ou cancelados."
+            exit 1
+          fi
