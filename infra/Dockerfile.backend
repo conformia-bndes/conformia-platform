@@ -42,6 +42,11 @@ WORKDIR /app
 # Instalação de utilitários de sistema essenciais para processamento documental (OCR / PDF).
 # Versoes dos pacotes apt nao sao fixadas de proposito: o Debian so mantem a versao corrente de
 # cada pacote, e fixar impediria receber correcoes de seguranca.
+# apt, libapt-pkg7.0 e zlib1g ja vem na base, mas a base fixada por digest ainda traz versoes com
+# CVEs HIGH apontados pelo Trivy (apt/libapt-pkg7.0 CVE-2026-109518, corrigido na 3.0.4; zlib1g
+# CVE-2026-76844 e CVE-2026-85091, corrigidos em 1.3.dfsg+really1.3.1-1+deb13u1). Lista-los aqui
+# faz o apt-get install atualiza-los para a versao corrente. Quando o digest da base ja incluir
+# as correcoes, estas tres linhas viram no-op e podem ser removidas.
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
@@ -51,6 +56,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libpq5 \
     curl \
+    apt \
+    libapt-pkg7.0 \
+    zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
 # O app roda no venv copiado abaixo; pip, setuptools e wheel do Python do sistema nao sao

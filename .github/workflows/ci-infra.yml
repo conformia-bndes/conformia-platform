@@ -114,12 +114,16 @@ jobs:
       # Contrato da API gerado a partir do OpenAPI: nenhuma resposta 5xx, respostas conformes ao
       # esquema e tipos de conteudo corretos. (A checagem de autenticacao em modo producao e feita
       # por testes de unidade que percorrem todas as rotas.)
+      # Um unico worker: com varios, a imagem do Schemathesis (Python 3.14 free-threaded) falhou de
+      # forma intermitente por corrida interna da ferramenta (hypothesis: "dictionary changed size
+      # during iteration") e por erros de conexao do proprio cliente. Mesmas checagens e mesmos
+      # exemplos; so muda o paralelismo.
       - name: Fuzz de contrato da API (Schemathesis)
         run: |
           docker run --rm --network host schemathesis/schemathesis@sha256:57cdf625c01901bc050355225251a7fc255c0cd8a07d4ac77fb86e4d3ffb25a2 \
             run http://127.0.0.1:8000/api/v1/openapi.json \
             --checks not_a_server_error,response_schema_conformance,content_type_conformance \
-            --max-examples 50 --workers 4 --no-color
+            --max-examples 50 --workers 1 --no-color
 
       - name: Teste de carga (k6)
         run: |
