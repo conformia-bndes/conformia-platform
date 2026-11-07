@@ -23,9 +23,30 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      # PRs abertos com o GITHUB_TOKEN padrao NAO disparam outros workflows (regra do GitHub contra
+      # loops), entao o PR de release ficaria sem CI, CodeQL e testes (Scorecard: SAST e CI-Tests).
+      # Para que disparem, use um token de GitHub App (preferido, nao depende de pessoa nem expira):
+      # variavel RELEASE_APP_ID e segredo RELEASE_APP_PRIVATE_KEY. Alternativa: segredo
+      # RELEASE_PLEASE_TOKEN (PAT fine-grained). Sem nenhum deles, cai no token padrao e o
+      # comportamento anterior e mantido. Permissoes do App: Contents e Pull requests (escrita).
+      # continue-on-error: se o App estiver mal configurado (por exemplo, chave privada invalida),
+      # o release nao deve parar; cai no RELEASE_PLEASE_TOKEN ou no token padrao, e o erro aparece
+      # como anotacao neste passo para ser corrigido.
+      - name: Gerar token do GitHub App
+        id: app-token
+        if: vars.RELEASE_APP_ID != ''
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
+          token: ${{ steps.app-token.outputs.token || secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 

@@ -76,8 +76,8 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
   próprio exigindo `MANUAL_REVIEW_REQUIRED`.
 - Evals CASE-001 e CASE-003: mesma correção de ground truth; casos sem validade viraram
   CASE-006 e CASE-007 com expectativa de revisão manual.
-- `test_maker_checker_fallback` foi substituido por 13 testes que exigem revisão manual sem
-  saida fabricada.
+- `test_maker_checker_fallback` foi substituído por 13 testes que exigem revisão manual sem
+  saída fabricada.
 
 ---
 
@@ -107,6 +107,6 @@ restrição única foram verificados apenas por leitura de código e teste seque
    falso com respostas roteirizadas.
 4. Evals usam textos sintéticos; o resultado não e evidência estatística de qualidade.
 5. Venv local usa Python 3.13; o CI e a imagem usam 3.11 (diferença não testada aqui).
-6. Segurança: revisão manual de código (autenticação, upload, segredos em logs, saida de
-   erros). Sem SAST, sem gitleaks e sem pip-audit nesta maquina. Nenhuma conformidade com
+6. Segurança: revisão manual de código (autenticação, upload, segredos em logs, saída de
+   erros). Sem SAST, sem gitleaks e sem pip-audit nesta máquina. Nenhuma conformidade com
    OWASP/NIST e declarada.

@@ -1,17 +1,28 @@
-name: Docs Deploy
-
+# Publicacao da documentacao
+#
 # Publica o site via artefato do GitHub Pages (Settings -> Pages: "GitHub Actions").
 # Nao usa "mkdocs gh-deploy": a branch gh-pages nao e necessaria nem mantida.
 #
-# Roda depois que o CI de main termina com sucesso e inclui na pagina "Relatorios de
-# Qualidade" os artefatos "relatorio-*" gerados por essa execucao (testes, cobertura, evals,
-# fuzzing e auditorias). Execucao manual usa a ultima execucao verde do CI em main.
+# Chamado pelo ci.yml no estagio de publicacao: so em push para main, depois do CI OK verde, na
+# mesma execucao do CI. Por isso o checkout e o do proprio commit do push (nunca um SHA vindo de
+# outro workflow ou de PR) e os artefatos "relatorio-*" (testes, cobertura, evals, fuzzing e
+# auditorias) sao os desta execucao. A execucao manual (workflow_dispatch) so vale em main e usa
+# os relatorios da ultima execucao verde do CI em main.
+name: Docs Deploy
+
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [main]
+  workflow_call:
+    inputs:
+      use_current_run:
+        description: "Usar os relatorios da execucao atual (chamada pelo ci.yml)"
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use_current_run:
+        description: "Usar os relatorios da execucao atual (somente quando chamado pelo ci.yml)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -23,25 +34,25 @@ concurrency:
 jobs:
   build:
     name: Build do site
-    # So publica a partir de push em main (nunca de PR) e com o CI verde.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
       actions: read # baixar os artefatos de relatorio da execucao do CI
     steps:
-      - name: Resolver a execucao do CI
+      - name: Resolver a execucao dos relatorios
         id: ci
         env:
           GH_TOKEN: ${{ github.token }}
-          EVENT: ${{ github.event_name }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          CURRENT: ${{ inputs.use_current_run }}
+          CURRENT_RUN_ID: ${{ github.run_id }}
+          CURRENT_SHA: ${{ github.sha }}
         run: |
-          if [ "$EVENT" = "workflow_dispatch" ]; then
+          if [ "$CURRENT" = "true" ]; then
+            RUN_ID="$CURRENT_RUN_ID"
+            RUN_SHA="$CURRENT_SHA"
+          else
             read -r RUN_ID RUN_SHA < <(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
               --branch main --event push --status success --limit 1 \
               --json databaseId,headSha --jq '.[0] | "\(.databaseId) \(.headSha)"')
@@ -55,9 +66,9 @@ jobs:
             echo "sha=$RUN_SHA"
           } >> "$GITHUB_OUTPUT"
 
+      # Sem `ref`: o checkout e sempre o commit que disparou esta execucao em main.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.ci.outputs.sha }}
           fetch-depth: 0 # datas de revisao das paginas vem do historico git
           persist-credentials: false
 
