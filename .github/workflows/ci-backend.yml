@@ -22,6 +22,7 @@ env:
   UV_FROZEN: "1"
   # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
   ENVIRONMENT: test
+  ALLOW_ANONYMOUS_ACCESS: "true"
   DATABASE_URL: sqlite:///./ci-backend.db
   REDIS_URL: redis://127.0.0.1:6379/0
   MINIO_ENDPOINT: 127.0.0.1:9
@@ -130,6 +131,21 @@ jobs:
     needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # PostgreSQL descartavel (so para este job) para os testes de migration em banco real.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: migracao
+          POSTGRES_PASSWORD: migracao-descartavel
+          POSTGRES_DB: migracao
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U migracao -d migracao"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     strategy:
       fail-fast: false
       matrix:
@@ -157,6 +173,8 @@ jobs:
         run: uv sync --all-packages --all-extras
 
       - name: pytest com cobertura
+        env:
+          MIGRATION_TEST_DATABASE_URL: postgresql+psycopg2://migracao:migracao-descartavel@127.0.0.1:5432/migracao
         run: |
           mkdir -p reports
           uv run pytest backend/tests/ -q --durations=10 \
