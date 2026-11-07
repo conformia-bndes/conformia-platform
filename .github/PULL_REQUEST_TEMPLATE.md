@@ -2,7 +2,7 @@
 <!-- Descreva de forma concisa o objetivo desta alteração e o contexto no Conform.IA BNDES. -->
 
 ## Épico / Requisito Associado
-<!-- Relacione a Issue, Épico ou Item da Consulta Publica BNDES no 01/2025 -->
+<!-- Relacione a Issue, Épico ou Item da Consulta Pública BNDES nº 01/2025 -->
 - Issue / Tarefa: #
 - Módulo afetado: [ ] Backend Core [ ] IDP Pipeline [ ] AI / Evals [ ] Motor de Regras [ ] Frontend [ ] Infra/DevOps [ ] Documentação
 
@@ -23,12 +23,12 @@ Antes de solicitar a revisão, marque todos os itens que foram validados:
 
 ### 1. Testes e Qualidade
 - [ ] Testes unitários implementados e cobrindo os novos cenários.
-- [ ] Testes de integracao/regressao executados com sucesso no pipeline local (`make test`).
+- [ ] Testes de integração/regressão executados com sucesso no pipeline local (`make test`).
 - [ ] Sem quebra de contratos de API ou esquemas JSON (`rules/schemas`).
 - [ ] Cobertura de testes mantida ou aumentada sem mocks indevidos no core de regras.
 
 ### 2. Segurança e Segredos
-- [ ] Nenhuma credencial, token, chave de API privada ou arquivo `.env` foi incluido no commit.
+- [ ] Nenhuma credencial, token, chave de API privada ou arquivo `.env` foi incluído no commit.
 - [ ] Validação estrita de schema de dados em todos os endpoints públicos (Pydantic v2).
 - [ ] Tratamento seguro de caminhos de arquivos para evitar Path Traversal em uploads do IDP.
 - [ ] Execução limpa do scanner de vulnerabilidades e segredos.
@@ -47,9 +47,9 @@ Antes de solicitar a revisão, marque todos os itens que foram validados:
 
 ## Como Reproduzir / Testar Localmente
 ```bash
-# Comandos para inicializar e validar esta mudanca:
+# Comandos para inicializar e validar esta mudança:
 make up
-# Exemplo de chamada ou teste especifico:
+# Exemplo de chamada ou teste específico:
 curl http://localhost:8000/api/v1/health
 ```
 

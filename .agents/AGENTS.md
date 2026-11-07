@@ -5,9 +5,9 @@ Este documento estabelece o contexto operacional, os limites de autonomia e as d
 ---
 
 ## Contexto e Missão do Projeto
-O Conform.IA BNDES e uma plataforma SaaS de Processamento Inteligente de Documentos (IDP) e Auditoria Imutável concebida para atender aos requisitos da Consulta Publica BNDES no 01/2025.
+O Conform.IA BNDES é uma plataforma SaaS de Processamento Inteligente de Documentos (IDP) e Auditoria Imutável concebida para atender aos requisitos da Consulta Pública BNDES nº 01/2025.
 
-O sistema automatiza a conferência de conformidade cadastral, fiscal, trabalhista, jurídica e socioambiental de proponentes e operações de credito/investimento no BNDES. Em operações que envolvem recursos públicos federais, a confiabilidade e absoluta: nenhuma certidão inválida ou com pendências pode ser aprovada por alucinação de modelo.
+O sistema automatiza a conferência de conformidade cadastral, fiscal, trabalhista, jurídica e socioambiental de proponentes e operações de crédito/investimento no BNDES. Em operações que envolvem recursos públicos federais, a confiabilidade é absoluta: nenhuma certidão inválida ou com pendências pode ser aprovada por alucinação de modelo.
 
 ---
 
@@ -33,10 +33,10 @@ O sistema automatiza a conferência de conformidade cadastral, fiscal, trabalhis
 
 ---
 
-## Limites Operacionais e Anti-Padroes
+## Limites Operacionais e Anti-Padrões
 
 1. Nunca Assumir Validade por Ausência de Dados:
-   - Se uma certidão não contem a data de validade de forma legível, ela deve ser marcada como `MANUAL_REVIEW_REQUIRED`, nunca como `COMPLIANT`.
+   - Se uma certidão não contém a data de validade de forma legível, ela deve ser marcada como `MANUAL_REVIEW_REQUIRED`, nunca como `COMPLIANT`.
 2. Nunca Executar Comandos Destrutivos:
    - Agentes não devem executar `drop table`, `rm -rf`, resets de banco ou commits com `--force`.
 3. Não Expor Dados Pessoais Sensíveis (LGPD / PII):

@@ -32,10 +32,10 @@ Para reportar uma vulnerabilidade:
 
 | Etapa do Processo | Prazo Limite |
 | :--- | :--- |
-| Confirmação de recebimento do reporte | Ate 24 horas uteis |
-| Triagem técnica e classificação CVSS | Ate 3 dias uteis |
-| Desenvolvimento e homologação de patch | Variável conforme severidade (Crítica: ate 48h) |
-| Publicação coordenada de segurança | Apos deploy da correção em produção |
+| Confirmação de recebimento do reporte | Até 24 horas úteis |
+| Triagem técnica e classificação CVSS | Até 3 dias úteis |
+| Desenvolvimento e homologação de patch | Variável conforme severidade (Crítica: até 48h) |
+| Publicação coordenada de segurança | Após deploy da correção em produção |
 
 ---
 

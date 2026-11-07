@@ -58,7 +58,7 @@ flowchart LR
 | **RF11** | **Relatório Consolidado**          | Média       | Exportação de laudo pericial em formato PDF/JSON estruturado para órgãos de controle externo (TCU/CGU).      |
 | **RF12** | **Dashboard de Acurácia**          | Média       | Painel analítico exibindo indicadores de acurácia, recall, CER, tempo médio e taxa de revisão manual.        |
 | **RF13** | **Camada de Conectores Externos**  | Média       | Integração modular com adaptadores de APIs governamentais (Receita Federal, Caixa, TST, Juntas).             |
-| **RF14** | **Alertas e Notificações**         | Baixa/Media | Disparo de alertas preventivos sobre certidões próximas do vencimento durante a vigência do contrato.        |
+| **RF14** | **Alertas e Notificações**         | Baixa/Média | Disparo de alertas preventivos sobre certidões próximas do vencimento durante a vigência do contrato.        |
 | **RF15** | **Agendamento e Reprocessamento**  | Baixa       | Execução periódica automatizada via Celery Beat para revalidação de proponentes ativos na carteira.          |
 
 ---

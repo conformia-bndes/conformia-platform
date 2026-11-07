@@ -6,7 +6,7 @@ O projeto Conform.IA BNDES adota normas técnicas rigorosas de padronização, a
 
 ## 1. Fluxo de Trabalho e Estratégia de Ramificação (Branching)
 
-1. **Rastreabilidade**: Todas as alterações devem estar vinculadas a uma Issue cadastrada ou a um requisito formal da Consulta Publica BNDES no 01/2025.
+1. **Rastreabilidade**: Todas as alterações devem estar vinculadas a uma Issue cadastrada ou a um requisito formal da Consulta Pública BNDES nº 01/2025.
 2. **Nomenclatura de Branches**: Crie branches de trabalho a partir da branch `main` utilizando os prefixos padronizados:
    - `feat/descricao-curta`: Novas funcionalidades do pipeline IDP, motor de regras ou interface.
    - `fix/descricao-curta`: Correção de falhas funcionais ou bugs em regras.
@@ -33,7 +33,7 @@ O histórico do repositório deve seguir estritamente o padrão **Conventional C
 - `test`: Criação ou ajuste de suítes de teste ou benchmarks de Evals.
 - `style`: Ajustes estritos de formatação de código (espacamento, linter).
 
-**Exemplo de Commit Valido:**
+**Exemplo de Commit Válido:**
 `feat(idp): implementa extracao tabular nativa via pdfplumber`
 
 ---

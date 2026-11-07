@@ -71,7 +71,7 @@ O problema operacional e especialmente crítico porque a verificação manual ex
 | **Orientar o analista de crédito**          | Painel operacional com evidências literais destacadas, explicabilidade e referências legais.         |
 | **Tratar inconsistências e exceções**       | Estados formais (`COMPLIANT`, `NON_COMPLIANT`, `MANUAL_REVIEW_REQUIRED`) e fluxo de revisão humana.  |
 | **Garantir rastreabilidade integral**       | Trilha de auditoria append-only imutável, versionamento de regras e histórico temporal de análises.  |
-| **Controlar performance e acurácia**        | Pipeline de Harness Evals, métricas técnicas e benchmark de regressão continuo.                      |
+| **Controlar performance e acurácia**        | Pipeline de Harness Evals, métricas técnicas e benchmark de regressão contínuo.                      |
 | **Operar em modelo SaaS**                   | Arquitetura conteinerizada em Docker Compose, multi-tenant e preparada para nuvem nacional.          |
 | **LGPD e governança pública**               | Controle de acesso baseado em papéis (RBAC), criptografia em repouso e trânsito, minimização de PII. |
 
@@ -132,7 +132,7 @@ A utilização de Inteligência Artificial em processos que envolvem recursos p�
 
 ## 5. Solução Proposta — Visão de Produto
 
-O Conform.IA BNDES e estruturado como uma plataforma web de alta produtividade voltada a analistas e gestores de conformidade documental.
+O Conform.IA BNDES é estruturado como uma plataforma web de alta produtividade voltada a analistas e gestores de conformidade documental.
 
 ```mermaid
 flowchart TD
@@ -177,7 +177,7 @@ flowchart TD
 | **RF11** | Geração de relatório consolidado de conformidade exportável.                         | Média       | Planejado (Sprint 6/8) |
 | **RF12** | Dashboard com métricas de acurácia, tempo de processamento e distribuição de status. | Média       | Implementado           |
 | **RF13** | Integração com fontes externas e governamentais via camada de conectores.            | Média       | Planejado (Sprint 7)   |
-| **RF14** | Sistema de alertas operacionais e notificação de certidões vencidas.                 | Baixa/Media | Backlog                |
+| **RF14** | Sistema de alertas operacionais e notificação de certidões vencidas.                 | Baixa/Média | Backlog                |
 | **RF15** | Agendamento periódico e reprocessamento em lote de certidões recorrentes.            | Baixa       | Backlog                |
 
 ### 5.3 Requisitos Não Funcionais
@@ -190,7 +190,7 @@ flowchart TD
 - **Manutenibilidade**: Monorepo modular, contratos fortemente tipados (Pydantic / TypeScript) e isolamento de dependências.
 - **Observabilidade**: Logs estruturados, traces de execução e métricas de avaliação continua.
 - **Privacidade e LGPD**: Minimização de dados, ausência de logs com credenciais ou CPF e preparo para destruição segura.
-- **Testabilidade**: Suíte automatizada de testes unitários, testes de integração e benchmark de regressão continuo.
+- **Testabilidade**: Suíte automatizada de testes unitários, testes de integração e benchmark de regressão contínuo.
 
 ---
 
@@ -233,11 +233,11 @@ A solução adota uma arquitetura em camadas orientada a serviços conteinerizad
 | **Motor de Regras**          | Motor Híbrido Python + JSON Schema      | Regras declarativas, desacopladas do código-fonte da aplicação, fáceis de versionar e auditar.                                                |
 | **Padrão Maker-Checker**     | `LLMClient` Abstraido                   | Propositor formula hipótese; auditor algorítmico valida a existência textual exata antes da aprovação.                                        |
 | **Conteinerização**          | Docker Engine + Docker Compose          | Isolamento completo de dependências de sistema (Poppler, Tesseract) e portabilidade multiambiente.                                            |
-| **Integração Continua**      | GitHub Actions                          | Workflows com path-filtering inteligente, validação de linters, cobertura de testes e scans de segredos.                                      |
+| **Integração Contínua**      | GitHub Actions                          | Workflows com path-filtering inteligente, validação de linters, cobertura de testes e scans de segredos.                                      |
 
 ### 6.3 Separação Rigorosa entre Regras de Negócio e Modelos de IA
 
-Regras normativas e critérios determinísticos (prazos de validade de certidões, regularidade fiscal perante a Fazenda Nacional, situação cadastral do CNPJ) são avaliados de forma explicita por lógica booleana e expressões regulares auditáveis.
+Regras normativas e critérios determinísticos (prazos de validade de certidões, regularidade fiscal perante a Fazenda Nacional, situação cadastral do CNPJ) são avaliados de forma explícita por lógica booleana e expressões regulares auditáveis.
 
 Modelos de linguagem (LLMs) são empregados exclusivamente onde a análise requer interpretação semântica ou compreensão contextual não estruturada. Essa segregação impede que alterações de prompts possam desestabilizar regras críticas de conformidade financeira ou mascarar certidões inválidas.
 
@@ -289,7 +289,7 @@ Toda análise consolidada armazena um snapshot contendo:
 
 ## 9. Estratégia de IA, Avaliação e Controle de Performance
 
-### 9.1 Avaliação Continua (Harness Evals)
+### 9.1 Avaliação Contínua (Harness Evals)
 
 A confiabilidade da solução e atestada por meio de um pipeline determinístico de avaliação continua localizado em `evals/eval_pipeline.py`. Nenhuma alteração em prompts ou regras e promovida a produção sem a execução com sucesso da suíte de benchmarks.
 
@@ -308,7 +308,7 @@ A confiabilidade da solução e atestada por meio de um pipeline determinístico
 
 ## 10. Planejamento de Sprints até 07/12/2026
 
-O cronograma do projeto e organizado em 8 sprints sequenciais com objetivos mensuráveis e critérios objetivos de entrega:
+O cronograma do projeto é organizado em 8 sprints sequenciais com objetivos mensuráveis e critérios objetivos de entrega:
 
 | Sprint       | Período       | Foco Estratégico            | Objetivos Principais                                                                                                              | Entrega Consolidada                                                   |
 | :----------- | :------------ | :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |

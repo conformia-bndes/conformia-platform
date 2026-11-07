@@ -23,7 +23,7 @@ prioridade Alta (`requirements.md`).
 | 2 | Extração nativa + OCR Tesseract por página, assíncrona via Celery | RF03 | Implementado; OCR real não testado aqui (Tesseract ausente). |
 | 3 | Campos tipados com evidência (página + trecho) | RF04, RF08 | Implementado (regex). Coordenadas (`bounding_box`) sempre nulas. |
 | 4 | Checklist declarativo + motor determinístico | RF05, RF06 | Corrigido nesta execução (validade e tipologia). |
-| 5 | Maker-Checker com citação literal obrigatória | RF07 | Corrigido para fail-closed. Sem chave LLM, regras híbridas vao para revisão manual. |
+| 5 | Maker-Checker com citação literal obrigatória | RF07 | Corrigido para fail-closed. Sem chave LLM, regras híbridas vão para revisão manual. |
 | 6 | Laudo apresentado ao analista com status compreensíveis | RF08 | Corrigido (rótulos de revisão manual / não aplicável; sem dados simulados). |
 | 7 | **Revisão humana: aprovar, rejeitar ou exceção motivada** | RF09 | API implementada e testada com segregação (chaves pessoais, D1). **UI pendente** (T06b, T06c). |
 | 8 | Trilha de auditoria com executor, timestamp e hash do arquivo | RF10 | Implementado: hash SHA-256 no upload e eventos `REVIEW_*` com o analista. |

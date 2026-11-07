@@ -12,7 +12,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 
 | ID       | Título                                                  | Req. Afetados | Gravidade | Status     |
 |:---------|:--------------------------------------------------------|:--------------|:----------|:-----------|
-| DEF-FI-001 | RF01 (Autenticacao/RBAC) não implementado no fluxo de upload | RF01          | Alta      | Aberto     |
+| DEF-FI-001 | RF01 (Autenticação/RBAC) não implementado no fluxo de upload | RF01          | Alta      | Aberto     |
 | DEF-FI-002 | PDF ilegível (digitalizado) não gera texto via OCR quando Tesseract está ausente | RF03          | Média     | Aberto     |
 | DEF-FI-005 | Requisitos RF05, RF07, RF09, RF10 não cobertos pelo fluxo inicial de teste | RF05, RF07, RF09, RF10 | Baixa | Aberto     |
 
@@ -20,7 +20,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 
 ## Detalhamento dos Defeitos
 
-### DEF-FI-001 — RF01 (Autenticacao/RBAC) não implementado no fluxo de upload
+### DEF-FI-001 — RF01 (Autenticação/RBAC) não implementado no fluxo de upload
 
 **Requisito Afetado:** RF01 — Autenticação e RBAC  
 **Status no Repositório:** Planejado (Sprint 7) — ainda não implementado  
