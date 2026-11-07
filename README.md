@@ -6,6 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18%2B-61DAFB.svg)](https://react.dev/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2-2496ED.svg)](https://www.docker.com/)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16430/badge)](https://www.bestpractices.dev/projects/16430)
 
 Plataforma SaaS de Processamento Inteligente de Documentos (IDP) para verificação automatizada de conformidade cadastral, fiscal, trabalhista e regulatória em operações de crédito e investimentos no BNDES, desenvolvida para atender aos requisitos da Consulta Pública BNDES nº 01/2025.
 
