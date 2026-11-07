@@ -174,12 +174,15 @@ detecção de chaves privadas e validação de YAML/JSON.
 | :-- | :-- | :-- |
 | Local | `make up` + `make smoke` | `.env` gerado por `make env` com segredos aleatórios; nada versionado |
 | CI | Serviços efêmeros do GitHub Actions | `.env` gerado a cada execução |
-| Demonstração | `make up` na máquina de demo, a partir da tag da release | `ENVIRONMENT` diferente de `development`; usuários em `API_USERS` |
+| Demonstração | `make up` na máquina de demo, a partir da tag da release | `ENVIRONMENT=production`, `DEBUG=False`, `ALLOW_ANONYMOUS_ACCESS=false`; usuários em `API_USERS` |
 
 !!! danger "Antes da demonstração"
-    Em `development` e `test` a API aceita requisições sem chave (exceto a revisão humana).
-    No ambiente de demonstração, defina `ENVIRONMENT=production` e cadastre os analistas em
-    `API_USERS` (`python backend/scripts/create_api_user.py <user_id> ANALISTA`).
+    O `.env` gerado por `make env` vem do perfil de desenvolvimento local (`ENVIRONMENT=development`,
+    `DEBUG=True`, `ALLOW_ANONYMOUS_ACCESS=true`), que aceita requisições sem chave (exceto a
+    revisão humana). No ambiente de demonstração, ajuste esses três valores
+    (`ENVIRONMENT=production`, `DEBUG=False`, `ALLOW_ANONYMOUS_ACCESS=false`) e cadastre os
+    analistas em `API_USERS` (`python backend/scripts/create_api_user.py <user_id> ANALISTA`).
+    Em `production`, a aplicação recusa iniciar com `DEBUG` ou acesso anônimo ativos.
 
 ---
 

@@ -10,6 +10,8 @@ os.environ.setdefault("POSTGRES_PASSWORD", "test-postgres-password")
 os.environ.setdefault("MINIO_ROOT_USER", "test-minio-user")
 os.environ.setdefault("MINIO_ROOT_PASSWORD", "test-minio-password")
 os.environ.setdefault("ENVIRONMENT", "test")
+# Os testes usam o cliente sem chave; testes de autenticacao desligam este opt-in.
+os.environ.setdefault("ALLOW_ANONYMOUS_ACCESS", "true")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

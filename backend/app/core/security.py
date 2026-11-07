@@ -89,12 +89,12 @@ def verify_api_key(
     """
     Valida credenciais da API via cabecalho X-API-Key ou Bearer token: a chave de servico
     (API_KEY) ou uma chave pessoal de API_USERS.
-    Em ambiente de desenvolvimento e testes, permite acesso padrao sem credencial.
+    O acesso sem credencial so existe com ALLOW_ANONYMOUS_ACCESS=true (opt-in explicito, nunca
+    em producao); uma credencial enviada e sempre validada.
     """
     token = _extract_token(api_key, credentials)
 
-    # Em desenvolvimento ou teste, permite acesso padrao
-    if settings.ENVIRONMENT in ("development", "test") and not token:
+    if settings.ALLOW_ANONYMOUS_ACCESS and not token:
         return "dev_default_user"
 
     if _is_service_key(token):

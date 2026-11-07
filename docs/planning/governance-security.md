@@ -20,10 +20,13 @@ Dependabot, rulesets) está em [Governança do repositório](../development/gove
 | **CORS restrito** | Origens permitidas definidas em `ALLOWED_ORIGINS` |
 | **Dados sintéticos** | Desenvolvimento, CI e benchmarks usam apenas documentos fictícios |
 
-!!! danger "Ambientes de desenvolvimento e teste"
-    Com `ENVIRONMENT` igual a `development` ou `test`, a API aceita requisições sem chave (exceto
-    a revisão humana). Na demonstração, use `ENVIRONMENT=production` e cadastre os usuários em
-    `API_USERS`.
+!!! danger "Acesso anônimo e DEBUG"
+    Os padrões do código são seguros: `ENVIRONMENT=production`, `DEBUG=False` e acesso anônimo
+    desligado. A API só aceita requisições sem chave (exceto a revisão humana) com
+    `ALLOW_ANONYMOUS_ACCESS=true`, opt-in que o `.env.example` liga apenas para desenvolvimento
+    local. Com `ENVIRONMENT=production`, a aplicação recusa iniciar se `ALLOW_ANONYMOUS_ACCESS`
+    ou `DEBUG` estiverem ativos. Na demonstração, use `ENVIRONMENT=production` e cadastre os
+    usuários em `API_USERS`.
 
 ---
 
