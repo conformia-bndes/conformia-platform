@@ -133,7 +133,7 @@ Outros workflows:
 | `pr-title.yml` | abertura e edição de PR | Título do PR em Conventional Commits |
 | `codeql.yml` | push, PR e semanal | Análise estática de segurança (Python, TypeScript e os próprios workflows) |
 | `scorecard.yml` | push em `main` e semanal | OpenSSF Scorecard: práticas de segurança da cadeia de suprimentos |
-| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG; ao mergear o PR, cria a tag e chama o CD. Para o PR de release também disparar CI e CodeQL, cadastre o segredo `RELEASE_PLEASE_TOKEN` (PAT ou token de GitHub App); sem ele usa o token padrão, que não dispara outros workflows |
+| `release-please.yml` | push em `main` | PR de release com versão semântica e CHANGELOG; ao mergear o PR, cria a tag e chama o CD. Para o PR de release também disparar CI e CodeQL, configure um GitHub App (variável `RELEASE_APP_ID` e segredo `RELEASE_APP_PRIVATE_KEY`) ou, alternativamente, o segredo `RELEASE_PLEASE_TOKEN` (PAT); sem eles usa o token padrão, que não dispara outros workflows |
 | `cd.yml` | release criada ou manual | Build e publicação das imagens de produção no GHCR (ver Deploy) |
 | `docs.yml` | chamado pelo CI em push para `main`, ou manual em `main` | Publicação desta documentação, com os relatórios de qualidade, no GitHub Pages (artefato, sem branch `gh-pages`) |
 | `llm-evals.yml` | manual | Testes do Maker-Checker com LLM real (promptfoo); consome créditos |
