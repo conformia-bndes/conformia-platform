@@ -187,6 +187,7 @@ por um valor aleatório. **Nenhuma credencial é versionada**; o `.env` está no
 
 | Sintoma                                              | Causa e solução                                                          |
 | :--------------------------------------------------- | :----------------------------------------------------------------------- |
+| `ERRO: .env desatualizado. Variaveis ausentes...`    | `.env` antigo sem chaves novas. Rode `bash scripts/setup-env.sh --sync`. |
 | `Segredos nao configurados: ... CHANGE_ME`           | `.env` copiado à mão. Rode `bash scripts/setup-env.sh --force`.          |
 | `password authentication failed` no Postgres / MinIO | Volumes antigos com outras senhas. Rode `make clean` e depois `make up`. |
 | `port is already allocated`                          | Ajuste `*_PORT` no `.env` (ex.: `POSTGRES_PORT=5433`).                   |

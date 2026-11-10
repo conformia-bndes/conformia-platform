@@ -27,6 +27,12 @@ make env
 
 O comando copia `.env.example` para `.env` trocando cada `CHANGE_ME` por um valor aleatório. As senhas ficam no seu `.env` (por exemplo, o login do console MinIO é `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`). `make up` executa `make env` antes, portanto este passo pode ser omitido.
 
+Se o `.env` já existir, o script compara suas variáveis com o `.env.example` antes de subir os contêineres. Caso faltem variáveis novas no seu `.env`, a execução falha informando quais chaves estão ausentes; para acrescentar apenas as chaves novas sem apagar seus segredos atuais, execute:
+
+```bash
+bash scripts/setup-env.sh --sync
+```
+
 ### Passo 2: Subir a Infraestrutura Conteinerizada
 
 Inicialize a stack completa (PostgreSQL, Redis, MinIO, Backend API, Worker e Frontend SPA) e aguarde
@@ -156,6 +162,7 @@ uv run python evals/eval_pipeline.py
 
 | Sintoma                                              | Causa e solução                                                                                                                       |
 | :--------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+| `ERRO: .env desatualizado. Variaveis ausentes...`    | Novas variáveis entraram no `.env.example`. Rode `bash scripts/setup-env.sh --sync` para acrescentar só as chaves novas sem apagar os segredos atuais. |
 | `Segredos nao configurados: ... CHANGE_ME`           | `.env` copiado à mão. Rode `bash scripts/setup-env.sh --force`.                                                                       |
 | `password authentication failed` no Postgres / MinIO | Volumes antigos com outras senhas. Rode `make clean` e depois `make up` (apaga os dados locais).                                      |
 | `make up` expira esperando `backend` saudável        | Veja `docker compose --env-file .env -f infra/docker-compose.yml logs backend`; `/api/v1/health` mostra qual serviço está `degraded`. |

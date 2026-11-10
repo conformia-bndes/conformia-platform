@@ -153,3 +153,108 @@ def test_api_users_parses_json_and_empty_values(monkeypatch):
 def test_api_users_rejects_invalid_configuration(monkeypatch, raw):
     with pytest.raises(ValueError):
         _settings_with_users(monkeypatch, raw)
+
+
+def _find_bash():
+    import os
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    candidates = []
+    which_bash = shutil.which("bash")
+    if which_bash and "system32" not in which_bash.lower():
+        candidates.append(which_bash)
+    git_bin = shutil.which("git")
+    if git_bin:
+        git_root = Path(git_bin).resolve().parents[1]
+        for rel in ("bin/bash.exe", "usr/bin/bash.exe", "bin/bash"):
+            candidate = git_root / rel
+            if candidate.exists():
+                candidates.append(str(candidate))
+    if which_bash:
+        candidates.append(which_bash)
+    for bash in candidates:
+        try:
+            res = subprocess.run(
+                [bash, "-c", "echo ok"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                env={**os.environ, "MSYS_NO_PATHCONV": "1"},
+            )
+            if res.returncode == 0 and "ok" in res.stdout:
+                return bash
+        except Exception:
+            continue
+    return None
+
+
+def test_setup_env_detects_missing_variables_and_syncs_preserving_secrets(tmp_path):
+    """Issue #101: falha listando variaveis ausentes do .env e acrescenta so as novas com --sync."""
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    bash = _find_bash()
+    if not bash:
+        pytest.skip("bash indisponivel no ambiente de teste")
+
+    repo_root = Path(__file__).resolve().parents[2]
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    script_copy = scripts_dir / "setup-env.sh"
+    shutil.copy2(repo_root / "scripts" / "setup-env.sh", script_copy)
+    shutil.copy2(repo_root / ".env.example", tmp_path / ".env.example")
+
+    def run_setup(*args):
+        return subprocess.run(
+            [bash, str(script_copy), *args],
+            cwd=str(tmp_path),
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+
+    # 1) Gera .env inicial e valida que todas as chaves estao presentes sem CHANGE_ME.
+    created = run_setup()
+    assert created.returncode == 0, created.stderr
+    env_file = tmp_path / ".env"
+    initial_lines = env_file.read_text(encoding="utf-8").splitlines()
+    assert not any("CHANGE_ME" in line for line in initial_lines if not line.startswith("#"))
+
+    # Segunda execucao sem mudancas e idempotente.
+    up_to_date = run_setup()
+    assert up_to_date.returncode == 0
+
+    # 2) Simula .env antigo removendo API_KEY e API_USERS, mas guardando SECRET_KEY existente.
+    secret_line = next(line for line in initial_lines if line.startswith("SECRET_KEY="))
+    outdated_lines = [
+        line
+        for line in initial_lines
+        if not line.startswith("API_KEY=") and not line.startswith("API_USERS=")
+    ]
+    env_file.write_text("\n".join(outdated_lines) + "\n", encoding="utf-8")
+
+    failed = run_setup()
+    assert failed.returncode == 1
+    assert "API_KEY" in failed.stderr
+    assert "API_USERS" in failed.stderr
+    assert "--sync" in failed.stderr
+
+    # 3) --sync acrescenta apenas as chaves novas sem apagar os segredos atuais.
+    synced = run_setup("--sync")
+    assert synced.returncode == 0, synced.stderr
+    assert "API_KEY" in synced.stdout
+    assert "API_USERS" in synced.stdout
+
+    final_lines = env_file.read_text(encoding="utf-8").splitlines()
+    assert secret_line in final_lines
+    api_key_line = next(line for line in final_lines if line.startswith("API_KEY="))
+    assert "CHANGE_ME" not in api_key_line
+    assert len(api_key_line.split("=", 1)[1]) == 32
+    assert "API_USERS=[]" in final_lines
+
+    # Apos o --sync, a validacao padrao volta a passar com codigo 0.
+    after_sync = run_setup()
+    assert after_sync.returncode == 0
