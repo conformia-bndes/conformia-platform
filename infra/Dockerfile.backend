@@ -43,7 +43,7 @@ WORKDIR /app
 # Versoes dos pacotes apt nao sao fixadas de proposito: o Debian so mantem a versao corrente de
 # cada pacote, e fixar impediria receber correcoes de seguranca.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-por \
     poppler-utils \
