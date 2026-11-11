@@ -29,6 +29,11 @@ x-backend: &backend
     CELERY_BROKER_URL: redis://redis:6379/0
     CELERY_RESULT_BACKEND: redis://redis:6379/0
     MINIO_ENDPOINT: minio:9000
+    WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+    CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-2}
+    DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+    DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-5}
+    DB_POOL_TIMEOUT: ${DB_POOL_TIMEOUT:-5}
   volumes:
     - ../backend:/app
     - ../rules:/rules:ro
@@ -65,7 +70,11 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-conformia_user} -d ${POSTGRES_DB:-conformia_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-conformia_user} -d ${POSTGRES_DB:-conformia_db}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -136,9 +145,23 @@ services:
   backend:
     <<: *backend
     container_name: conformia-backend
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
     ports:
       - "${BACKEND_PORT:-8000}:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "${BACKEND_CPU_LIMIT:-2.0}"
+          memory: "${BACKEND_MEMORY_LIMIT:-1024M}"
     healthcheck:
       # Saudavel somente se Postgres, Redis e MinIO responderem (status == "healthy").
       test:
@@ -157,9 +180,25 @@ services:
   worker:
     <<: *backend
     container_name: conformia-worker
-    command: ["celery", "-A", "app.core.celery_app.celery", "worker", "--loglevel=info", "-E"]
+    command:
+      - celery
+      - -A
+      - app.core.celery_app.celery
+      - worker
+      - --loglevel=info
+      - --concurrency=${CELERY_CONCURRENCY:-2}
+      - -E
+    deploy:
+      resources:
+        limits:
+          cpus: "${WORKER_CPU_LIMIT:-2.0}"
+          memory: "${WORKER_MEMORY_LIMIT:-2048M}"
     healthcheck:
-      test: ["CMD-SHELL", "celery -A app.core.celery_app.celery inspect ping -d celery@$$HOSTNAME"]
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.core.celery_app.celery inspect ping -d celery@$$HOSTNAME",
+        ]
       interval: 30s
       timeout: 15s
       retries: 5
@@ -184,8 +223,14 @@ services:
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    deploy:
+      resources:
+        limits:
+          cpus: "${FRONTEND_CPU_LIMIT:-1.0}"
+          memory: "${FRONTEND_MEMORY_LIMIT:-512M}"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173/ || exit 1"]
+      test:
+        ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12

@@ -140,6 +140,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
     CELERY_BROKER_URL: Union[str, None] = None
     CELERY_RESULT_BACKEND: Union[str, None] = None
+    WEB_CONCURRENCY: int = Field(default=2, ge=1, le=32)
+    CELERY_CONCURRENCY: int = Field(default=2, ge=1, le=32)
 
     @field_validator("CELERY_BROKER_URL", mode="before")
     @classmethod
