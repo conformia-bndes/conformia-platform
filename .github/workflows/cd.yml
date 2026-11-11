@@ -110,6 +110,52 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}${{ matrix.service == 'frontend' && '-production' || '' }}
           cache-to: type=gha,scope=${{ matrix.service }}${{ matrix.service == 'frontend' && '-production' || '' }},mode=max
 
+      - name: Carregar imagem para validacao local
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          load: true
+          push: false
+          tags: conformia/${{ matrix.service }}:cd-validate
+          cache-from: type=gha,scope=${{ matrix.service }}${{ matrix.service == 'frontend' && '-production' || '' }}
+
+      - name: Validar container de producao (${{ matrix.service }})
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          if [ "$SERVICE" = "backend" ]; then
+            docker run --rm conformia/backend:cd-validate \
+              python -c "import app.main; print('Backend runtime image OK')"
+          else
+            docker rm -f cd-frontend-validate >/dev/null 2>&1 || true
+            docker run -d --name cd-frontend-validate -p 8080:8080 -p 18080:80 conformia/frontend:cd-validate
+            trap 'docker rm -f cd-frontend-validate >/dev/null 2>&1 || true' EXIT
+            ok=0
+            for _ in $(seq 1 15); do
+              if curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1 || curl -fsS http://127.0.0.1:18080/ >/dev/null 2>&1; then
+                ok=1
+                break
+              fi
+              sleep 1
+            done
+            if [ "$ok" -ne 1 ]; then
+              docker logs cd-frontend-validate >&2 || true
+              echo "::error::Frontend de producao nao respondeu HTTP na porta 8080/80"
+              exit 1
+            fi
+          fi
+
+      - name: Validar pull das tags publicadas no GHCR
+        if: inputs.push
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          docker pull "$IMAGE:$TAG"
+          docker pull "$IMAGE:latest"
+
       - name: Resumo
         env:
           IMAGE: ${{ steps.image.outputs.name }}
@@ -121,12 +167,13 @@ jobs:
             echo "### Deploy: ${IMAGE##*/}"
             echo ""
             if [ "$PUSHED" = "true" ]; then
-              echo "Imagem publicada: \`$IMAGE:$TAG\` (digest \`$DIGEST\`)."
+              echo "Imagem publicada: \`$IMAGE:$TAG\` e \`$IMAGE:latest\` (digest \`$DIGEST\`)."
               echo ""
               echo "\`\`\`bash"
               echo "docker pull $IMAGE:$TAG"
+              echo "IMAGE_TAG=$TAG docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.ghcr.yml up -d --wait"
               echo "\`\`\`"
             else
-              echo "Execucao de validacao: a imagem foi construida e **nao** foi publicada."
+              echo "Execucao de validacao: a imagem foi construida, validada em container e **nao** foi publicada."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
