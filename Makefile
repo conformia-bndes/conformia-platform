@@ -12,7 +12,6 @@ PYTHON := $(if $(UV),uv run python,python)
 PYTEST := $(if $(UV),uv run pytest,pytest)
 BLACK := $(if $(UV),uv run black,black)
 FLAKE8 := $(if $(UV),uv run flake8,flake8)
-ALEMBIC := $(if $(UV),uv run alembic,alembic)
 MKDOCS := $(if $(UV),uv run --frozen mkdocs,mkdocs)
 
 .PHONY: load resilience scan eval-baseline reports help env setup up smoke down restart logs ps test lint format eval eval-report eval-mlflow llm-eval hooks docs docs-build clean uv-sync uv-lock migrate
@@ -86,7 +85,7 @@ ps:
 	$(DOCKER_COMPOSE) ps
 
 migrate:
-	$(ALEMBIC) -c backend/alembic.ini upgrade head
+	PYTHONPATH=backend $(PYTHON) -m app.db.migrate
 
 test:
 	$(PYTEST) backend/tests/ -v --cov=backend/app --cov-report=term-missing

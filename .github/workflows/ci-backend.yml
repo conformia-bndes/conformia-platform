@@ -1,6 +1,8 @@
-# Area "Backend": Lint, Security, Build, Test, Evals e Fuzz comecam juntos (sem `needs` entre
-# eles): os testes operam sobre o codigo-fonte e nao dependem do build da imagem, entao esperar
-# so alongaria o caminho critico. Os estagios sao logicos; o deploy (imagem no GHCR) e o cd.yml.
+# Area "Backend", em estagios:
+#   1. Qualidade : Lint e Security (rapidos; falhar aqui evita gastar o resto)
+#   2. Validacao : Build da imagem + Trivy, Test, Evals e Fuzz, em paralelo
+#   3. Gate      : "Backend OK" consolida a area
+# O deploy (imagem no GHCR) e o cd.yml, so em release.
 # Workflow reutilizavel, chamado pelo ci.yml. Gera os artefatos "relatorio-*" que o docs.yml
 # publica na documentacao.
 name: CI - Backend
@@ -20,6 +22,7 @@ env:
   UV_FROZEN: "1"
   # Testes usam SQLite e dependencias simuladas: nenhum servico externo e necessario.
   ENVIRONMENT: test
+  ALLOW_ANONYMOUS_ACCESS: "true"
   DATABASE_URL: sqlite:///./ci-backend.db
   REDIS_URL: redis://127.0.0.1:6379/0
   MINIO_ENDPOINT: 127.0.0.1:9
@@ -83,6 +86,7 @@ jobs:
 
   build:
     name: Build
+    needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -124,8 +128,24 @@ jobs:
   # de desenvolvimento. Cobertura e relatorios saem so da 3.11.
   test:
     name: Test (${{ matrix.python }})
+    needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # PostgreSQL descartavel (so para este job) para os testes de migration em banco real.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: migracao
+          POSTGRES_PASSWORD: migracao-descartavel
+          POSTGRES_DB: migracao
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U migracao -d migracao"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     strategy:
       fail-fast: false
       matrix:
@@ -153,6 +173,8 @@ jobs:
         run: uv sync --all-packages --all-extras
 
       - name: pytest com cobertura
+        env:
+          MIGRATION_TEST_DATABASE_URL: postgresql+psycopg2://migracao:migracao-descartavel@127.0.0.1:5432/migracao
         run: |
           mkdir -p reports
           uv run pytest backend/tests/ -q --durations=10 \
@@ -181,6 +203,7 @@ jobs:
   # (evals/baseline.json): sem falso positivo, sem queda de acuracia e sem regressao pontual.
   evals:
     name: Evals
+    needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -216,6 +239,7 @@ jobs:
 
   fuzz:
     name: Fuzz
+    needs: [lint, security]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -250,3 +274,29 @@ jobs:
           path: reports/
           if-no-files-found: warn
           retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Estagio final: consolida a area em um unico no do grafo
+  # ---------------------------------------------------------------------------
+  gate:
+    name: Backend OK
+    if: always()
+    needs: [lint, security, build, test, evals, fuzz]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consolidar resultado da area
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          {
+            echo "### Backend"
+            echo
+            echo "| Job | Resultado |"
+            echo "| :-- | :-- |"
+            echo "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if echo "$RESULTS" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' > /dev/null; then
+            echo "::error::Backend: ha jobs com falha ou cancelados."
+            exit 1
+          fi

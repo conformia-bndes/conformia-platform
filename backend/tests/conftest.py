@@ -10,6 +10,8 @@ os.environ.setdefault("POSTGRES_PASSWORD", "test-postgres-password")
 os.environ.setdefault("MINIO_ROOT_USER", "test-minio-user")
 os.environ.setdefault("MINIO_ROOT_PASSWORD", "test-minio-password")
 os.environ.setdefault("ENVIRONMENT", "test")
+# Os testes usam o cliente sem chave; testes de autenticacao desligam este opt-in.
+os.environ.setdefault("ALLOW_ANONYMOUS_ACCESS", "true")
 # Testes nao dependem de rede: força o engine da aplicacao a ser SQLite em memoria,
 # para que o lifespan nao tente conectar ao Postgres (evita ~4 s por TestClient).
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")

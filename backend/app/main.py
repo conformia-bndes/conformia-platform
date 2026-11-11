@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import InterfaceError, OperationalError
 from app.api.v1.api import api_router
 from app.core.config import settings
-from app.db.session import engine, Base
 
 # Configuração de logging estruturado
 logging.basicConfig(
@@ -21,16 +20,10 @@ logger = logging.getLogger("conformia.main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Gerenciamento do ciclo de vida da aplicação:
-    Cria tabelas relacionais em banco local (dev/demo) e inicializa pools.
+    Ciclo de vida da aplicação. O esquema do banco vem somente das migrations Alembic
+    (`python -m app.db.migrate`, executado antes da API e do worker), nunca de create_all.
     """
     logger.info(f"Iniciando {settings.PROJECT_NAME} v{settings.VERSION} [{settings.ENVIRONMENT}]")
-    try:
-        # Garante a criação de tabelas para bootstrap imediato em dev/testes
-        Base.metadata.create_all(bind=engine)
-        logger.info("Esquemas de banco de dados verificados/criados com sucesso.")
-    except Exception as e:
-        logger.error(f"Erro ao inicializar tabelas no banco de dados: {e}")
 
     yield
 

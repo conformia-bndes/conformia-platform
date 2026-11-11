@@ -55,8 +55,13 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Conform.IA BNDES Platform"
     VERSION: str = "0.2.1"  # x-release-please-version
     API_V1_STR: str = "/api/v1"
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    # Padroes seguros: sem .env explicito a aplicacao sobe como producao, sem DEBUG e sem
+    # acesso anonimo. Desenvolvimento local liga cada um deles de forma explicita (.env.example).
+    ENVIRONMENT: Literal["development", "test", "production"] = "production"
+    DEBUG: bool = False
+    # Opt-in para aceitar requisicoes sem chave (sondagem local, testes). A revisao humana
+    # nunca aceita acesso anonimo, qualquer que seja este valor.
+    ALLOW_ANONYMOUS_ACCESS: bool = False
     # Segredos: obrigatorios e sem valor default no codigo (definidos via .env / ambiente)
     SECRET_KEY: str
     API_KEY: str
@@ -166,6 +171,25 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: Union[str, None] = None
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_TEMPERATURE: float = 0.0
+
+    @model_validator(mode="after")
+    def reject_unsafe_production_flags(self) -> "Settings":
+        """Producao nunca aceita acesso anonimo nem DEBUG (que expoe str(exc) em erros 500)."""
+        if self.ENVIRONMENT == "production":
+            unsafe = [
+                name
+                for name, enabled in (
+                    ("ALLOW_ANONYMOUS_ACCESS", self.ALLOW_ANONYMOUS_ACCESS),
+                    ("DEBUG", self.DEBUG),
+                )
+                if enabled
+            ]
+            if unsafe:
+                raise ValueError(
+                    f"{', '.join(unsafe)} nao pode ser ativado com ENVIRONMENT=production. "
+                    "Para desenvolvimento local use ENVIRONMENT=development."
+                )
+        return self
 
     @model_validator(mode="after")
     def reject_placeholder_secrets(self) -> "Settings":

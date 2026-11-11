@@ -12,7 +12,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 
 | ID       | Título                                                  | Req. Afetados | Gravidade | Status     |
 |:---------|:--------------------------------------------------------|:--------------|:----------|:-----------|
-| DEF-FI-001 | RF01 (Autenticacao/RBAC) não implementado no fluxo de upload | RF01          | Alta      | Aberto     |
+| DEF-FI-001 | RF01 (Autenticação/RBAC) não implementado no fluxo de upload | RF01          | Alta      | Aberto     |
 | DEF-FI-002 | PDF ilegível (digitalizado) não gera texto via OCR quando Tesseract está ausente | RF03          | Média     | Aberto     |
 | DEF-FI-005 | Requisitos RF05, RF07, RF09, RF10 não cobertos pelo fluxo inicial de teste | RF05, RF07, RF09, RF10 | Baixa | Aberto     |
 
@@ -20,10 +20,10 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 
 ## Detalhamento dos Defeitos
 
-### DEF-FI-001 — RF01 (Autenticacao/RBAC) não implementado no fluxo de upload
+### DEF-FI-001 — RF01 (Autenticação/RBAC) não implementado no fluxo de upload
 
-**Requisito Afetado:** RF01 — Autenticacao e RBAC  
-**Status no Repositorio:** Planejado (Sprint 7) — ainda não implementado  
+**Requisito Afetado:** RF01 — Autenticação e RBAC  
+**Status no Repositório:** Planejado (Sprint 7) — ainda não implementado  
 **Gravidade:** Alta  
 **Status:** Aberto  
 
@@ -43,7 +43,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 ### DEF-FI-002 — PDF ilegível (digitalizado) não gera texto via OCR quando Tesseract está ausente
 
 **Requisito Afetado:** RF03 — Pipeline IDP e OCR  
-**Status no Repositorio:** Implementado  
+**Status no Repositório:** Implementado  
 **Gravidade:** Média  
 **Status:** Aberto  
 
@@ -66,7 +66,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 ### DEF-FI-005 — Requisitos RF05, RF07, RF09, RF10 não cobertos pelo fluxo inicial de teste
 
 **Requisitos Afetados:** RF05, RF07, RF09, RF10  
-**Status no Repositorio:** Implementado  
+**Status no Repositório:** Implementado  
 **Gravidade:** Baixa  
 **Status:** Aberto  
 
@@ -81,7 +81,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 
 **Evidência:** Matriz de rastreabilidade em `matriz_rastreabilidade_rf01_rf10.md` mostra as lacunas de cobertura.
 
-**Acao Sugerida:** Adicionar testes específicos para RF05 (carregamento de checklist JSON Schema), RF07 (Maker-Checker via endpoint de verificação), RF09 (fluxo de revisão humana) e RF10 (consulta de trilha de auditoria) à base de testes do fluxo inicial.
+**Ação Sugerida:** Adicionar testes específicos para RF05 (carregamento de checklist JSON Schema), RF07 (Maker-Checker via endpoint de verificação), RF09 (fluxo de revisão humana) e RF10 (consulta de trilha de auditoria) à base de testes do fluxo inicial.
 
 ---
 

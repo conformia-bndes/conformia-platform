@@ -66,7 +66,7 @@ Este documento detalha o planejamento operacional das 8 sprints de desenvolvimen
     Dashboard de métricas de desempenho, acurácia geral, recall de extração, Character Error Rate (CER) e taxas de revisão.
 
 - ### E10 — Segurança e Governança
-    Controle de acesso baseado em papeis (RBAC), conformidade estrita com a LGPD, gestão segura de credenciais e CI com SAST.
+    Controle de acesso baseado em papéis (RBAC), conformidade estrita com a LGPD, gestão segura de credenciais e CI com SAST.
 
 </div>
 
@@ -74,15 +74,15 @@ Este documento detalha o planejamento operacional das 8 sprints de desenvolvimen
 
 ## 3. Definition of Done (DoD) Formal
 
-Nenhuma funcionalidade, commit ou pull request e considerado concluido sem atender integralmente aos seguintes requisitos:
+Nenhuma funcionalidade, commit ou pull request e considerado concluído sem atender integralmente aos seguintes requisitos:
 
 1. **Revisão de Código**: Mudanças integradas ao monorepo de acordo com as diretrizes do `CONTRIBUTING.md` e revisadas tecnicamente.
-2. **Suite de Testes**: Testes automatizados (`pytest`, `vitest`) passando integralmente com cobertura mínima de 70%.
+2. **Suíte de Testes**: Testes automatizados (`pytest`, `vitest`) passando integralmente com cobertura mínima de 70%.
 3. **Harness Evals Aprovado**: Benchmark de avaliação continua (`python evals/eval_pipeline.py`) aprovado com 100% de acerto e 0 falsos positivos.
 4. **Linters e Formatação**: Verificações com `black --check`, `flake8` e `npm run lint` concluidas sem nenhuma advertência.
 5. **Segurança Aprovada**: Escaneamento de segredos com `gitleaks` e auditoria de vulnerabilidades com `pip-audit` sem apontamentos.
 6. **Documentação Sincronizada**: Atualização imediata das páginas relevantes no MkDocs e no README.
-7. **Política Estilistica**: **Proibição absoluta do uso de emojis** em códigos, testes, documentação e mensagens de commit.
+7. **Política Estilística**: **Proibição absoluta do uso de emojis** em códigos, testes, documentação e mensagens de commit.
 
 ---
 
@@ -97,7 +97,7 @@ Para a demonstração técnica conclusiva perante o BNDES em 07/12/2026, o cená
 [Upload de PDF de CND Federal / CRF FGTS]
             │
             ▼
-[Extracao automatica vetorial + OCR Tesseract]
+[Extração automática vetorial + OCR Tesseract]
             │
             ▼
 [Execucao do Checklist Normativo BNDES 2025]
@@ -106,11 +106,11 @@ Para a demonstração técnica conclusiva perante o BNDES em 07/12/2026, o cená
 [Maker-Checker valida evidencias textuais]
             │
             ▼
-[Apresentacao de laudo com destaque literal]
+[Apresentação de laudo com destaque literal]
             │
             ▼
 [Intervencao do analista com parecer de excecao]
             │
             ▼
-[Gravacao na Trilha de Auditoria e emissao de laudo PDF]
+[Gravação na Trilha de Auditoria e emissão de laudo PDF]
 ```

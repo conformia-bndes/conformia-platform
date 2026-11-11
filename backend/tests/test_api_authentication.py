@@ -55,6 +55,7 @@ ROUTES = sorted(_protected_routes())
 @pytest.fixture(autouse=True)
 def production_mode(monkeypatch):
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_ACCESS", False)
 
 
 def test_route_inventory_is_not_empty():
@@ -78,6 +79,28 @@ def test_route_rejects_invalid_key_in_production(client, method, path):
         method, _concrete(path), headers={"X-API-Key": "chave-invalida"}, **kwargs
     )
     assert response.status_code == 401, f"{method} {path} aceitou chave invalida"
+
+
+@pytest.mark.parametrize("environment", ["development", "test"])
+def test_environment_alone_does_not_grant_anonymous_access(client, monkeypatch, environment):
+    """Antes, ENVIRONMENT=development/test abria a API sem chave; agora so o opt-in abre."""
+    monkeypatch.setattr(settings, "ENVIRONMENT", environment)
+    response = client.get(f"{settings.API_V1_STR}/compliance/rules")
+    assert response.status_code == 401
+
+
+def test_explicit_opt_in_allows_anonymous_access(client, monkeypatch):
+    monkeypatch.setattr(settings, "ENVIRONMENT", "development")
+    monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_ACCESS", True)
+    assert client.get(f"{settings.API_V1_STR}/compliance/rules").status_code == 200
+
+
+def test_opt_in_does_not_bypass_an_invalid_key(client, monkeypatch):
+    monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_ACCESS", True)
+    response = client.get(
+        f"{settings.API_V1_STR}/compliance/rules", headers={"X-API-Key": "chave-invalida"}
+    )
+    assert response.status_code == 401
 
 
 def test_health_stays_public(client):
