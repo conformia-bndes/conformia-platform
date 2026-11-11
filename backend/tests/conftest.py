@@ -12,9 +12,6 @@ os.environ.setdefault("MINIO_ROOT_PASSWORD", "test-minio-password")
 os.environ.setdefault("ENVIRONMENT", "test")
 # Os testes usam o cliente sem chave; testes de autenticacao desligam este opt-in.
 os.environ.setdefault("ALLOW_ANONYMOUS_ACCESS", "true")
-# Testes nao dependem de rede: força o engine da aplicacao a ser SQLite em memoria,
-# para que o lifespan nao tente conectar ao Postgres (evita ~4 s por TestClient).
-os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 from types import SimpleNamespace  # noqa: E402
 
@@ -43,8 +40,7 @@ def _no_network(monkeypatch):
     """Desliga chamadas de rede reais (MinIO, Redis, Postgres) em todos os testes.
 
     Nenhum teste unitario depende de servicos externos. Assim o health endpoint e os
-    uploads nao esperam timeouts de MinIO/Redis e o lifespan nao tenta conectar ao
-    Postgres (DATABASE_URL aponta para SQLite em memoria, definido acima).
+    uploads nao esperam timeouts de MinIO/Redis.
     """
     from app.core import storage as storage_module
     from app.api.v1.endpoints import health as health_module
