@@ -174,7 +174,20 @@ detecção de chaves privadas e validação de YAML/JSON.
 | :-- | :-- | :-- |
 | Local | `make up` + `make smoke` | `.env` gerado por `make env` com segredos aleatórios; nada versionado |
 | CI | Serviços efêmeros do GitHub Actions | `.env` gerado a cada execução |
-| Demonstração | `make up` na máquina de demo, a partir da tag da release | `ENVIRONMENT=production`, `DEBUG=False`, `ALLOW_ANONYMOUS_ACCESS=false`; usuários em `API_USERS` |
+| Demonstração / Produção | `docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d --wait` | Sem `--reload`, com `WEB_CONCURRENCY`, `CELERY_CONCURRENCY`, pool de conexões e frontend Nginx na porta `8080` |
+
+### Concorrência, Pool de Conexões e Limites de Recursos
+
+O `infra/docker-compose.yml` define limites explícitos de CPU e memória (`deploy.resources.limits`) para `backend`, `worker` e `frontend`, além de parametrizar a concorrência da API e do Celery:
+
+| Variável | Padrão | Papel |
+| :-- | :-- | :-- |
+| `WEB_CONCURRENCY` | `2` | Processos do `uvicorn` por réplica no perfil de produção (`infra/docker-compose.prod.yml`, sem `--reload`) |
+| `CELERY_CONCURRENCY` | `2` | Processos concorrentes do worker Celery (`--concurrency=${CELERY_CONCURRENCY:-2}`) |
+| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | `5` / `5` | Pool de conexões SQLAlchemy **por processo**; total máximo = `(WEB_CONCURRENCY + CELERY_CONCURRENCY) x (DB_POOL_SIZE + DB_MAX_OVERFLOW)` (40 conexões no padrão, abaixo do `max_connections=100` do PostgreSQL) |
+| `BACKEND_CPU_LIMIT` / `BACKEND_MEMORY_LIMIT` | `2.0` / `1024M` | Limite de recursos do contêiner `backend` |
+| `WORKER_CPU_LIMIT` / `WORKER_MEMORY_LIMIT` | `2.0` / `2048M` | Limite de recursos do contêiner `worker` (dimensionado para ~900 MB por processo OCR) |
+| `FRONTEND_CPU_LIMIT` / `FRONTEND_MEMORY_LIMIT` | `1.0` / `512M` | Limite de recursos do contêiner `frontend` |
 
 !!! danger "Antes da demonstração"
     O `.env` gerado por `make env` vem do perfil de desenvolvimento local (`ENVIRONMENT=development`,

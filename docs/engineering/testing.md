@@ -60,14 +60,19 @@ Medido em uma máquina de desenvolvimento (Docker Desktop, 7,6 GB), com a stack 
 A vazão de um processo satura perto de 150 req/s e o excedente vira latência; mais workers
 escalam quase linearmente (2,9x com 4). Para dimensionar:
 
-- `WEB_CONCURRENCY` (padrão 2 na imagem) define os workers do uvicorn por réplica.
-- **Conexões com o banco = (workers + processos do Celery) x (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`)**
+- `WEB_CONCURRENCY` (padrão 2 na imagem e no `infra/docker-compose.prod.yml`, que executa sem `--reload`) define os workers do uvicorn por réplica.
+- `CELERY_CONCURRENCY` (padrão 2) define a concorrência do worker Celery (`--concurrency=${CELERY_CONCURRENCY:-2}`).
+- **Conexões com o banco = (`WEB_CONCURRENCY` + `CELERY_CONCURRENCY`) x (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`)**
   e precisam ficar abaixo do `max_connections` do Postgres (100 por padrão). O padrão 5+5 permite
-  até 8 processos por instância de banco sem ajuste.
+  até 8 processos por instância de banco sem ajuste (com `2 + 2 = 4` processos, o teto é de 40 conexões).
 - O worker do Celery usa cerca de 900 MB por causa do OCR; dimensione a concorrência dele pela
-  memória, não pela CPU.
+  memória, não pela CPU. No compose, os limites padrão são `BACKEND_MEMORY_LIMIT=1024M`,
+  `WORKER_MEMORY_LIMIT=2048M` e `FRONTEND_MEMORY_LIMIT=512M`.
 - A API é sem estado: várias réplicas atrás de um balanceador são possíveis, compartilhando
   Postgres, Redis e MinIO.
+- **Teste de Soak (30 min a carga moderada):** `tests/load/soak.js` e `scripts/soak_test.sh`
+  sustentam leituras (`VUS=10`) e uploads contínuos (`1 req/s`) por 30 minutos, aferindo ausência
+  de vazamento de conexões em `pg_stat_activity` e estabilidade de memória nos contêineres.
 
 ### Limitações conhecidas
 
@@ -76,4 +81,4 @@ escalam quase linearmente (2,9x com 4). Para dimensionar:
   (serviço no ar e inacessível) o limite é de 2 s por tentativa.
 - Os limites do teste de carga no CI são folgados (leitura p95 abaixo de 1,5 s) por causa da
   variação dos runners compartilhados; eles pegam regressões graves, não pequenas.
-- Não há teste de longa duração (soak) nem de estresse com falhas simultâneas.
+- Não há teste de estresse com falhas simultâneas de múltiplas dependências.

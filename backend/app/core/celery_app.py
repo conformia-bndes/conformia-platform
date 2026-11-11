@@ -20,6 +20,7 @@ celery.conf.update(
     enable_utc=True,
     task_track_started=True,
     task_time_limit=600,  # 10 minutos máximo por documento
+    worker_concurrency=settings.CELERY_CONCURRENCY,
     # Com o Redis fora do ar, o publicador reconectava indefinidamente e o upload travava por
     # minutos. Falhar rapido deixa a API responder 503; o worker continua reconectando ao
     # broker por conta propria.
