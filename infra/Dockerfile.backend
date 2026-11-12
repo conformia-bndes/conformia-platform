@@ -48,7 +48,7 @@ WORKDIR /app
 # faz o apt-get install atualiza-los para a versao corrente. Quando o digest da base ja incluir
 # as correcoes, estas tres linhas viram no-op e podem ser removidas.
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-por \
     poppler-utils \
