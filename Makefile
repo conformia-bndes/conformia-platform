@@ -47,6 +47,7 @@ help:
 
 env:
 	@bash scripts/setup-env.sh
+	@$(PYTHON) backend/scripts/smoke_test.py --setup-env .env
 
 setup: env
 	@echo "Instalando dependencias locais..."

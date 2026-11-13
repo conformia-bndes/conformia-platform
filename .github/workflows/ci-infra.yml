@@ -102,15 +102,17 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
-      - name: Gerar .env efemero (segredos aleatorios)
-        run: bash scripts/setup-env.sh
+      - name: Gerar .env efemero (segredos aleatorios e analistas de smoke)
+        run: |
+          bash scripts/setup-env.sh
+          python3 backend/scripts/smoke_test.py --setup-env .env
 
       - name: Subir a stack e aguardar saude
         run: |
           docker compose --env-file .env -f infra/docker-compose.yml \
             up -d --no-build --wait --wait-timeout 240
 
-      - name: Smoke (upload -> fila -> worker)
+      - name: Smoke (upload -> fila -> worker -> laudo -> revisao humana)
         run: |
           docker compose --env-file .env -f infra/docker-compose.yml \
             exec -T backend python scripts/smoke_test.py
