@@ -7,7 +7,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 MODE="${1:-}"
-if [ -n "$MODE" ] && [ "$MODE" != "--force" ] && [ "$MODE" != "--sync" ] && [ "$MODE" != "--update" ]; then
+if [ -n "$MODE" ] && [ "$MODE" != "--force" ] && [ "$MODE" != "--sync" ]; then
   echo "Uso: bash scripts/setup-env.sh [--sync | --force]" >&2
   exit 2
 fi
@@ -49,7 +49,7 @@ if [ -f .env ] && [ "$MODE" != "--force" ]; then
   fi
 
   missing_list="$(printf '%s\n' "$missing" | paste -sd ', ' - | sed 's/,/, /g')"
-  if [ "$MODE" = "--sync" ] || [ "$MODE" = "--update" ]; then
+  if [ "$MODE" = "--sync" ]; then
     if [ -s .env ] && [ "$(tail -c 1 .env | wc -l)" -eq 0 ]; then
       printf '\n' >> .env
     fi
