@@ -171,6 +171,8 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: Union[str, None] = None
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_BASE_URL: str = "https://api.openai.com/v1"
+    LLM_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0, le=300)
+    LLM_MAX_RETRIES: int = Field(default=2, ge=0, le=5)
     LLM_TEMPERATURE: float = 0.0
 
     @model_validator(mode="after")
