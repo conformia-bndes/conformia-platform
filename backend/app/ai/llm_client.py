@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import time
 import unicodedata
 from typing import Dict, Any, Optional
 from app.core.config import settings
@@ -10,6 +11,9 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 VALID_ASSESSMENTS = ("COMPLIANT", "NON_COMPLIANT", "MANUAL_REVIEW_REQUIRED")
+# Limite de taxa e falhas transitorias do provedor: repetir com espera crescente e limitada.
+RETRYABLE_STATUS_CODES = (429, 500, 502, 503, 504)
+MAX_BACKOFF_SECONDS = 15.0
 
 
 class LLMUnavailableError(RuntimeError):
@@ -46,17 +50,32 @@ class LLMClient:
                 messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
 
-            response = httpx.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json={
-                    "model": self.model,
-                    "messages": messages,
-                    "temperature": settings.LLM_TEMPERATURE,
-                },
-                timeout=30.0,
-            )
-            response.raise_for_status()
+            payload = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": settings.LLM_TEMPERATURE,
+                # As respostas do Maker e do Checker sao JSON; provedores que nao
+                # suportam o parametro (modelos gratuitos do OpenRouter) o ignoram.
+                "response_format": {"type": "json_object"},
+            }
+            url = f"{settings.LLM_BASE_URL.rstrip('/')}/chat/completions"
+
+            for attempt in range(settings.LLM_MAX_RETRIES + 1):
+                response = httpx.post(
+                    url, headers=headers, json=payload, timeout=settings.LLM_TIMEOUT_SECONDS
+                )
+                if (
+                    response.status_code in RETRYABLE_STATUS_CODES
+                    and attempt < settings.LLM_MAX_RETRIES
+                ):
+                    delay = min(MAX_BACKOFF_SECONDS, 2.0 * (2**attempt))
+                    logger.warning(
+                        f"LLM respondeu {response.status_code}; nova tentativa em {delay:.0f}s."
+                    )
+                    time.sleep(delay)
+                    continue
+                response.raise_for_status()
+                break
             data = response.json()
             return data["choices"][0]["message"]["content"]
         except Exception as e:
@@ -197,7 +216,15 @@ class MakerCheckerValidator:
         }
 
 
+_JSON_FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL | re.IGNORECASE)
+
+
 def _parse_json_object(raw: str) -> Optional[Dict[str, Any]]:
+    """Le um objeto JSON; tolera a cerca de codigo (```json) que alguns modelos acrescentam."""
+    if isinstance(raw, str):
+        fenced = _JSON_FENCE.match(raw.strip())
+        if fenced:
+            raw = fenced.group(1)
     try:
         parsed = json.loads(raw)
     except (TypeError, ValueError):
