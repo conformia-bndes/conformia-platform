@@ -45,3 +45,63 @@ export function describeApiError(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+import type { ExtractedField, PageEvidence } from '../services/api';
+
+/**
+ * Formata o valor de um campo extraído para exibição no laudo.
+ * - strings/null: retorna o próprio valor ou "—" (em dash) quando vazio.
+ * - números: retorna String(value)
+ * - outros: retorna JSON.stringify
+ */
+export function formatExtractedValue(value: unknown, rawValue?: string | null): string {
+  if (value === null || value === undefined) {
+    return rawValue && rawValue.trim() ? rawValue : '—';
+  }
+  if (typeof value === 'string') {
+    return value.trim() || '—';
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+/**
+ * Determina se o campo extraído possui evidência atrelada.
+ */
+export function hasEvidence(field: ExtractedField): boolean {
+  return Boolean(field.evidence);
+}
+
+/**
+ * Recupera a evidência de um campo extraído, retornando null quando não há evidência.
+ */
+export function getFieldEvidence(field: ExtractedField): PageEvidence | null {
+  return field.evidence ?? null;
+}
+
+/**
+ * Verifica se um campo extraído possui evidência não vazia (texto com tamanho > 0).
+ */
+export function hasNonEmptyEvidence(field: ExtractedField): boolean {
+  const ev = field.evidence;
+  if (!ev) return false;
+  return ev.text != null && ev.text.trim().length > 0;
+}
+
+/**
+ * Recupera a evidência de um campo extraído; se não houver, retorna um PageEvidence
+ * marcado com texto vazio, para que o componente exiba o estado vazio corretamente.
+ */
+export function getFieldEvidenceOrEmpty(field: ExtractedField): PageEvidence {
+  if (field.evidence) {
+    return field.evidence;
+  }
+  return { text: '', page: 0, confidence: 0, bounding_box: null };
+}
+
