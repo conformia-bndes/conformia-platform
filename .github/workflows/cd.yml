@@ -105,7 +105,7 @@ jobs:
           push: ${{ inputs.push }}
           tags: ${{ steps.image.outputs.tags }}
           build-args: |
-            ALPINE_UPGRADE_STAMP=${{ steps.stamp.outputs.date }}
+            UPGRADE_STAMP=${{ steps.stamp.outputs.date }}
           provenance: mode=max
           sbom: true
           labels: |
