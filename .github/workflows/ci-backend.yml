@@ -109,7 +109,14 @@ jobs:
           cache-to: type=gha,scope=backend,mode=max
 
       - name: Validar OCR (tesseract-ocr-por) com PDF digitalizado no container
-        run: docker run --rm scan/backend:ci python scripts/validate_ocr_container.py
+        run: |
+          # O script importa o extrator, que carrega Settings (cinco variaveis obrigatorias).
+          # Valores descartaveis gerados na hora: o container nao acessa banco, fila nem MinIO.
+          export SECRET_KEY="$(openssl rand -hex 16)" API_KEY="$(openssl rand -hex 16)" \
+            POSTGRES_PASSWORD="$(openssl rand -hex 16)" MINIO_ROOT_USER=ocr-ci \
+            MINIO_ROOT_PASSWORD="$(openssl rand -hex 16)"
+          docker run --rm -e SECRET_KEY -e API_KEY -e POSTGRES_PASSWORD -e MINIO_ROOT_USER \
+            -e MINIO_ROOT_PASSWORD scan/backend:ci python scripts/validate_ocr_container.py
 
       - name: Cache do banco de vulnerabilidades do Trivy
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

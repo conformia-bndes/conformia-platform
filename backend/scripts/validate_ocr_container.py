@@ -5,8 +5,10 @@ Execucao direta no container da stack:
     docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
         python scripts/validate_ocr_container.py
 
-Execucao isolada na imagem construida:
-    docker run --rm scan/backend:ci python scripts/validate_ocr_container.py
+Execucao isolada na imagem construida (Settings exige SECRET_KEY, API_KEY, POSTGRES_PASSWORD,
+MINIO_ROOT_USER e MINIO_ROOT_PASSWORD; valores descartaveis bastam):
+    docker run --rm -e SECRET_KEY=x -e API_KEY=x -e POSTGRES_PASSWORD=x -e MINIO_ROOT_USER=x \
+        -e MINIO_ROOT_PASSWORD=x scan/backend:ci python scripts/validate_ocr_container.py
 """
 
 import io
