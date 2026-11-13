@@ -11,6 +11,7 @@ from app.ai.llm_client import (
     MakerCheckerValidator,
     is_grounded_in_document,
 )
+from app.core.config import settings
 
 RULE = {
     "id": "RULE-BNDES-004",
@@ -75,6 +76,46 @@ def test_provider_failure_raises_llm_unavailable(monkeypatch):
     monkeypatch.setattr(httpx, "post", failing_post)
     with pytest.raises(LLMUnavailableError):
         LLMClient(api_key="test-key").generate("prompt")
+
+
+def test_generate_uses_configured_base_url(monkeypatch):
+    """LLM_BASE_URL permite apontar para um provedor compativel com OpenAI (ex.: Ollama)."""
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": "ok"}}]}
+
+    def fake_post(url, **kwargs):
+        captured["url"] = url
+        return FakeResponse()
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://ollama.local:11434/v1/")
+    assert LLMClient(api_key="test-key").generate("prompt") == "ok"
+    assert captured["url"] == "http://ollama.local:11434/v1/chat/completions"
+
+
+def test_generate_defaults_to_openai_base_url(monkeypatch):
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": "ok"}}]}
+
+    def fake_post(url, **kwargs):
+        captured["url"] = url
+        return FakeResponse()
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    LLMClient(api_key="test-key").generate("prompt")
+    assert captured["url"] == "https://api.openai.com/v1/chat/completions"
 
 
 def test_grounded_and_approved_proposal_is_accepted():

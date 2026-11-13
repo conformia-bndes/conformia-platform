@@ -170,6 +170,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Union[str, None] = None
     ANTHROPIC_API_KEY: Union[str, None] = None
     LLM_MODEL: str = "gpt-4o-mini"
+    LLM_BASE_URL: str = "https://api.openai.com/v1"
     LLM_TEMPERATURE: float = 0.0
 
     @model_validator(mode="after")

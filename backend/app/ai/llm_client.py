@@ -47,7 +47,7 @@ class LLMClient:
             messages.append({"role": "user", "content": prompt})
 
             response = httpx.post(
-                "https://api.openai.com/v1/chat/completions",
+                f"{settings.LLM_BASE_URL.rstrip('/')}/chat/completions",
                 headers=headers,
                 json={
                     "model": self.model,
