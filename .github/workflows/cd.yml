@@ -83,6 +83,10 @@ jobs:
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
+      - name: Data para invalidar o cache do apk upgrade
+        id: stamp
+        run: echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+
       - name: Entrar no GHCR
         if: inputs.push
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
@@ -100,6 +104,8 @@ jobs:
           target: ${{ matrix.target }}
           push: ${{ inputs.push }}
           tags: ${{ steps.image.outputs.tags }}
+          build-args: |
+            ALPINE_UPGRADE_STAMP=${{ steps.stamp.outputs.date }}
           provenance: mode=max
           sbom: true
           labels: |
