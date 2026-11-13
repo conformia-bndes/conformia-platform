@@ -97,6 +97,13 @@ def build_smoke_user(user_id: str, role: str = "ANALISTA") -> tuple:
     return f"{user_id}:{secret}", entry
 
 
+def _unquote_env_value(value: str) -> str:
+    """Remove as aspas simples que protegem o valor no .env (o Compose nao interpola nelas)."""
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return value[1:-1]
+    return value
+
+
 def setup_env_file(env_path: Path) -> None:
     """Garante que o arquivo .env possua dois usuarios ANALISTA de teste para o smoke."""
     if not env_path.is_file():
@@ -108,7 +115,7 @@ def setup_env_file(env_path: Path) -> None:
         stripped = line.strip()
         if stripped and not stripped.startswith("#") and "=" in stripped:
             k, v = stripped.split("=", 1)
-            existing[k.strip()] = v.strip()
+            existing[k.strip()] = _unquote_env_value(v.strip())
 
     try:
         users = json.loads(existing.get("API_USERS", "[]") or "[]")
@@ -137,7 +144,7 @@ def setup_env_file(env_path: Path) -> None:
     replaced_api_users = False
     for line in lines:
         if line.startswith("API_USERS="):
-            new_lines.append(f"API_USERS={api_users_json}")
+            new_lines.append(f"API_USERS='{api_users_json}'")
             replaced_api_users = True
         elif line.startswith("SMOKE_MAKER_KEY=") or line.startswith("SMOKE_CHECKER_KEY="):
             continue
@@ -145,7 +152,7 @@ def setup_env_file(env_path: Path) -> None:
             new_lines.append(line)
 
     if not replaced_api_users:
-        new_lines.append(f"API_USERS={api_users_json}")
+        new_lines.append(f"API_USERS='{api_users_json}'")
     new_lines.append(f"SMOKE_MAKER_KEY={maker_key}")
     new_lines.append(f"SMOKE_CHECKER_KEY={checker_key}")
     env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")

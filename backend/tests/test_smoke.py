@@ -38,7 +38,9 @@ def test_setup_env_file_registers_two_analysts_and_is_idempotent(tmp_path, monke
 
     assert "SMOKE_MAKER_KEY" in kv
     assert "SMOKE_CHECKER_KEY" in kv
-    users = [ApiUser(**u) for u in json.loads(kv["API_USERS"])]
+    # O key_hash tem "$": entre aspas simples, o Docker Compose nao o interpola em env_file.
+    assert kv["API_USERS"].startswith("'[") and kv["API_USERS"].endswith("]'")
+    users = [ApiUser(**u) for u in json.loads(kv["API_USERS"][1:-1])]
     assert {u.user_id for u in users} == {"smoke.maker", "smoke.checker"}
     assert all(u.role == "ANALISTA" for u in users)
 
@@ -62,7 +64,7 @@ def test_extended_smoke_exercises_upload_worker_compliance_and_human_review(
     smoke.setup_env_file(env_file)
     kv = dict(line.split("=", 1) for line in env_file.read_text(encoding="utf-8").splitlines())
 
-    users = [ApiUser(**u) for u in json.loads(kv["API_USERS"])]
+    users = [ApiUser(**u) for u in json.loads(kv["API_USERS"][1:-1])]
     monkeypatch.setattr(settings, "API_USERS", users)
     monkeypatch.setenv("SMOKE_MAKER_KEY", kv["SMOKE_MAKER_KEY"])
     monkeypatch.setenv("SMOKE_CHECKER_KEY", kv["SMOKE_CHECKER_KEY"])
@@ -149,3 +151,32 @@ def test_smoke_fails_when_review_keys_are_missing(monkeypatch):
     with pytest.raises(SystemExit) as exc:
         smoke.main([])
     assert exc.value.code == 1
+
+
+def test_setup_env_file_keeps_quoted_api_users_on_second_run(tmp_path):
+    """Segunda execucao le o API_USERS entre aspas e nao regrava as chaves do smoke."""
+    smoke = _load_smoke_module()
+    env_file = tmp_path / ".env"
+    env_file.write_text("SECRET_KEY=segredo\nAPI_USERS=[]\n", encoding="utf-8")
+
+    smoke.main(["--setup-env", str(env_file)])
+    first = env_file.read_text(encoding="utf-8")
+    smoke.main(["--setup-env", str(env_file)])
+
+    assert env_file.read_text(encoding="utf-8") == first
+
+
+def test_setup_env_file_preserves_existing_users_written_with_quotes(tmp_path):
+    smoke = _load_smoke_module()
+    _, other = smoke.build_smoke_user("ana.silva", "ANALISTA")
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "API_USERS='" + json.dumps([other], separators=(",", ":")) + "'\n", encoding="utf-8"
+    )
+
+    smoke.main(["--setup-env", str(env_file)])
+    rows = env_file.read_text(encoding="utf-8").splitlines()
+    line = next(row for row in rows if row.startswith("API_USERS="))
+    ids = {u["user_id"] for u in json.loads(line.split("=", 1)[1][1:-1])}
+
+    assert ids == {"ana.silva", "smoke.maker", "smoke.checker"}
