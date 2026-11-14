@@ -8,7 +8,10 @@ Para cada PDF do dataset:
 Os numeros valem apenas para este conjunto sintetico; nao representam desempenho em producao.
 """
 
+import argparse
 import json
+import os
+import subprocess
 import sys
 from collections import Counter
 from datetime import datetime
@@ -16,6 +19,16 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "backend"))
+# O avaliar.py nao usa banco, fila nem storage; valores descartaveis apenas satisfazem a
+# validacao de Settings no import (segredos nao possuem default no codigo).
+for _name in (
+    "SECRET_KEY",
+    "API_KEY",
+    "POSTGRES_PASSWORD",
+    "MINIO_ROOT_USER",
+    "MINIO_ROOT_PASSWORD",
+):
+    os.environ.setdefault(_name, "eval-only")
 
 from app.idp.extractor import DocumentExtractor  # noqa: E402
 from app.services.rules_engine import RulesEngine  # noqa: E402
@@ -173,7 +186,60 @@ def imprimir_resumo(resultados):
     print(f"Resultados validos apenas para este conjunto sintetico de {total} documentos.")
 
 
-def main():
+def metricas(resultados):
+    """Numeros do resumo que sao registrados no MLflow."""
+    gravidades = Counter(r["gravidade"] for r in resultados if not r["acerto"])
+    trechos = [achou for r in resultados for achou in r["evidencias_no_texto"].values()]
+    return {
+        "total_casos": len(resultados),
+        "acertos": sum(r["acerto"] for r in resultados),
+        "erros_criticos": gravidades["critico"],
+        "erros_seguros": gravidades["seguro"],
+        "erros_custo_operacional": gravidades["custo_operacional"],
+        "trechos_encontrados": sum(trechos),
+        "trechos_total": len(trechos),
+    }
+
+
+def commit_atual():
+    """Hash do commit em que a avaliacao rodou (None fora de um repositorio Git)."""
+    try:
+        saida = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=RAIZ, check=True
+        )
+        return saida.stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def registrar_no_mlflow(resultados):
+    """Registra a execucao no MLflow, como o evals/eval_pipeline.py (docs/engineering/mlops.md)."""
+    try:
+        import mlflow
+    except ImportError as exc:
+        raise SystemExit(
+            "MLflow nao instalado. Execute com: "
+            "uv run --with mlflow==3.17.2 python evals/sintetico/avaliar.py --mlflow"
+        ) from exc
+    import pytesseract
+
+    if not os.environ.get("MLFLOW_TRACKING_URI"):
+        mlflow.set_tracking_uri(f"sqlite:///{RAIZ / 'mlflow.db'}")
+    mlflow.set_experiment("conformia-evals-sintetico")
+    with mlflow.start_run(run_name=f"sintetico-{datetime.now():%Y-%m-%d}"):
+        mlflow.log_params(
+            {
+                "git_commit": commit_atual() or "desconhecido",
+                "tesseract": str(pytesseract.get_tesseract_version()),
+                "selecao_de_regra": "gabarito (target_rule_ids)",
+            }
+        )
+        mlflow.log_metrics(metricas(resultados))
+        mlflow.log_artifact(str(ARQUIVO_RESULTADO))
+    print("Execucao registrada no MLflow (experimento 'conformia-evals-sintetico').")
+
+
+def main(usar_mlflow=False):
     gabarito = json.loads(ARQUIVO_GABARITO.read_text(encoding="utf-8"))
     faltando = [c["arquivo"] for c in gabarito if not (PASTA_PDFS / c["arquivo"]).exists()]
     if faltando:
@@ -204,7 +270,12 @@ def main():
     }
     ARQUIVO_RESULTADO.write_text(json.dumps(saida, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Resultado detalhado salvo em {ARQUIVO_RESULTADO.relative_to(RAIZ)}")
+    if usar_mlflow:
+        registrar_no_mlflow(resultados)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Avalia o pipeline contra o gabarito sintetico.")
+    parser.add_argument("--mlflow", action="store_true", help="Registra a execucao no MLflow")
+    args = parser.parse_args()
+    main(usar_mlflow=args.mlflow)
