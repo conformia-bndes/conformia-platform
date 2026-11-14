@@ -1,4 +1,7 @@
 # Relatorio inicial de avaliacao - Dataset sintetico (Issue #24)
+> **Atualizacao (Issue #56):** as secoes 1 a 8 registram a linha de base original, medida
+> antes do PR #44. A reavaliacao com o motor atualizado, com comparacao caso a caso, esta na
+> secao 9.
 
 ## 1. Objetivo
 
@@ -181,3 +184,149 @@ confirmado; o esperado e `MANUAL_REVIEW_REQUIRED`.
   uma heuristica.
 - As regras hibridas (Maker-Checker com LLM) nao foram avaliadas: as duas regras usadas sao
   deterministicas.
+
+## 9. Reavaliacao apos o PR #44 (Issue #56)
+
+### 9.1 O que mudou no sistema
+
+O PR #44 tornou a data de validade obrigatoria nas certidoes fiscais e trabalhistas (sem data
+legivel, o resultado e `MANUAL_REVIEW_REQUIRED`), passou a filtrar as regras pela tipologia do
+documento e adicionou um parser de campos (`backend/app/idp/parser.py`).
+
+### 9.2 Como foi medido
+
+- Mesmo dataset (22 PDFs gerados por `gerar_dataset.py`), mesmo gabarito e mesmo metodo de
+  avaliacao da secao 4. A regra continua sendo escolhida pelo gabarito (`target_rule_ids`), como
+  na medicao original, para que a comparacao reflita apenas a mudanca no sistema.
+- Execucao em 2026-11-13, com tesseract 5.3.4, no commit 8b15891 da branch `dev`, com o ajuste de configuracao do `avaliar.py` descrito abaixo.
+- O resultado anterior e o da execucao registrada na secao 5 (19/10/2026, commit `363129f`,
+  ultimo commit do PR #42).
+- Ajuste necessario no script: o backend passou a exigir variaveis de configuracao sem valor
+  padrao. O `avaliar.py` define valores descartaveis antes dos imports, como o
+  `evals/eval_pipeline.py`, pois nao usa banco, fila nem armazenamento.
+
+### 9.3 Resultado geral
+
+| Indicador | Antes (PR #42) | Depois (PR #44) |
+|---|---|---|
+| Classificacao correta | 10 de 22 | 18 de 22 |
+| Erros criticos (falsos positivos) | 6 | 0 |
+| Erros seguros | 0 | 2 |
+| Erros de custo operacional | 6 | 2 |
+| Extracao (trechos de evidencia) | 82 de 82 | 82 de 82 |
+
+| Situacao | Antes | Depois |
+|---|---|---|
+| pendente | 4 de 4 | 4 de 4 |
+| vencido | 4 de 6 | 4 de 6 |
+| valido | 2 de 4 | 2 de 4 |
+| ilegivel | 0 de 6 | 6 de 6 |
+| sem_validade | 0 de 2 | 2 de 2 |
+
+Nenhuma regressao: os 10 casos corretos antes continuam corretos.
+
+### 9.4 Comparacao caso a caso
+
+| id | esperado | antes | depois | categoria |
+|---|---|---|---|---|
+| CND-VALIDA-NAT | COMPLIANT | COMPLIANT | COMPLIANT | continua certo |
+| CND-VALIDA-DIG | COMPLIANT | COMPLIANT | COMPLIANT | continua certo |
+| CND-VENCIDA-NAT | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CND-VENCIDA-DIG | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CND-PENDENTE-NAT | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CND-PENDENTE-DIG | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CND-ILEGIVEL-NAT | MANUAL_REVIEW_REQUIRED | NON_COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CND-ILEGIVEL-DIG-DATA | MANUAL_REVIEW_REQUIRED | COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CND-ILEGIVEL-DIG-TITULO | MANUAL_REVIEW_REQUIRED | NON_COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CND-SEM-VALIDADE-NAT | MANUAL_REVIEW_REQUIRED | COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CND-VENCIDA-FMTDATA-NAT | NON_COMPLIANT | COMPLIANT | MANUAL_REVIEW_REQUIRED | parcial |
+| CND-VENCIDA-OCRDATA-NAT | NON_COMPLIANT | COMPLIANT | MANUAL_REVIEW_REQUIRED | parcial |
+| CRF-VALIDA-NAT | COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua errado |
+| CRF-VALIDA-DIG | COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua errado |
+| CRF-VENCIDA-NAT | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CRF-VENCIDA-DIG | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CRF-PENDENTE-NAT | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CRF-PENDENTE-DIG | NON_COMPLIANT | NON_COMPLIANT | NON_COMPLIANT | continua certo |
+| CRF-ILEGIVEL-NAT | MANUAL_REVIEW_REQUIRED | NON_COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CRF-ILEGIVEL-DIG-DATA | MANUAL_REVIEW_REQUIRED | COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CRF-ILEGIVEL-DIG-TITULO | MANUAL_REVIEW_REQUIRED | NON_COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+| CRF-SEM-VALIDADE-NAT | MANUAL_REVIEW_REQUIRED | COMPLIANT | MANUAL_REVIEW_REQUIRED | corrigido |
+
+Categorias: **corrigido** (errado antes, certo depois); **parcial** (errado antes e depois, mas o
+erro deixou de ser critico); **continua certo**; **continua errado**; **regressao** (certo antes,
+errado depois: nenhum caso).
+
+| Categoria | Qtd |
+|---|---|
+| continua certo | 10 |
+| corrigido | 8 |
+| parcial | 2 |
+| continua errado | 2 |
+| regressao | 0 |
+
+### 9.5 Situacao de cada falha da secao 6
+
+| Falha | Situacao | Observacao |
+|---|---|---|
+| 6.1 Sem data legivel e aprovada | Corrigida | Os 4 casos vao para revisao manual. |
+| 6.2 Data nao reconhecida em certidao vencida | Parcialmente corrigida | A data continua nao sendo reconhecida; a certidao deixou de ser aprovada como consequencia da correcao 6.1 e vai para revisao manual. A causa raiz permanece. |
+| 6.3 Data inicial da faixa lida como final (CRF) | Nao corrigida | CRFs validas continuam reprovadas. |
+| 6.4 Titulo ilegivel reprovado em vez de revisao | Corrigida | Os 4 casos vao para revisao manual. |
+
+Os casos da falha 6.2 deixaram de ser aprovados indevidamente e passaram a ser encaminhados
+para revisao humana. O resultado ainda difere do esperado (`NON_COMPLIANT`), mas nenhuma
+certidao vencida e aprovada automaticamente, que e o comportamento fail-closed descrito em
+`docs/engineering/mlops.md`.
+
+A camada de campos nao mudou (validade: 8 corretos, 4 divergentes, 10 nao extraidos). O PR #44
+alterou as regras de decisao, nao a leitura da data de validade. **Os erros restantes (6.2 e 6.3)
+concentram-se justamente na extracao da data de validade**, que e o ponto indicado para a
+proxima correcao.
+
+### 9.6 Rastreio no MLflow
+
+A execucao foi registrada no MLflow, conforme `docs/engineering/mlops.md` (secao 4), no
+experimento `conformia-evals-sintetico`:
+
+```bash
+uv run --frozen --with mlflow==3.17.2 python evals/sintetico/avaliar.py --mlflow
+uv run --frozen --with mlflow==3.17.2 mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+| Registrado | Conteudo |
+|---|---|
+| Parametros | commit (`git_commit`), versao do Tesseract (`tesseract`), modo de selecao da regra (`selecao_de_regra`) |
+| Metricas | `total_casos`, `acertos`, `erros_criticos`, `erros_seguros`, `erros_custo_operacional`, `trechos_encontrados`, `trechos_total` |
+| Artefato | `resultados/resultado.json`, com o resultado de cada caso |
+
+Valores registrados nesta execucao (run `d4c9692e9e344ddca47b7a9fa99c1a09`):
+
+| Metrica | Valor |
+|---|---|
+| total_casos | 22 |
+| acertos | 18 |
+| erros_criticos | 0 |
+| erros_seguros | 2 |
+| erros_custo_operacional | 2 |
+| trechos_encontrados / trechos_total | 82 / 82 |
+
+Parametros: `tesseract` = 5.3.4; `selecao_de_regra` = gabarito (`target_rule_ids`).
+
+O experimento e separado do `conformia-evals` (usado pelo `eval_pipeline.py`) porque as
+metricas tem nomes e significados diferentes. Sem a opcao `--mlflow`, o `avaliar.py` funciona
+como antes e o resultado e identico. O banco `mlflow.db` e local e ignorado pelo Git.
+
+### 9.7 Limitacoes desta reavaliacao
+
+- O Tesseract mudou entre as medicoes, com a atualizacao do sistema de Ubuntu 22.04 para 24.04:
+  4.1.1 na linha de base (secao 5) e 5.3.4 nesta reavaliacao. A camada de extracao encontrou 82 de 82 trechos nas duas versoes, e os
+  digitalizados acompanham os nativos correspondentes, entao as mudancas de status sao
+  atribuidas ao PR #44. A versao do Tesseract passa a ser registrada no MLflow (parametro
+  `tesseract`) para que essa variavel fique sempre visivel.
+- A regra e escolhida pelo gabarito, entao o filtro por tipologia do PR #44 nao e exercitado
+  por esta avaliacao. Avaliar pelo caminho do produto (tipologia detectada pelo parser, como em
+  `evaluate_like_product` do `eval_pipeline.py`) fica como proximo passo.
+- O campo `cnpj` aparece como nao extraido porque o `avaliar.py` ainda le os campos do
+  dicionario `evidence` do motor, e nao do parser adicionado no PR #44, que extrai o CNPJ. E uma
+  limitacao da medicao, nao do sistema.
+- As demais limitacoes da secao 8 continuam valendo.
