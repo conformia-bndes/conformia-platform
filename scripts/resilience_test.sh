@@ -2,7 +2,7 @@
 # Testa uploads quando MinIO ou Redis ficam indisponiveis e confirma a recuperacao.
 #
 # Uso: scripts/resilience_test.sh            (stack ja no ar, API em http://127.0.0.1:8000)
-# Variaveis: API_URL, COMPOSE, UPLOAD_TOTAL_TIMEOUT_SECONDS
+# Variaveis: API_KEY (obrigatoria), API_URL, COMPOSE, UPLOAD_TOTAL_TIMEOUT_SECONDS
 set -u
 
 API_URL="${API_URL:-http://127.0.0.1:8000}"
