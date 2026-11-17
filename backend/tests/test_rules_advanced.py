@@ -75,9 +75,7 @@ FIXED_TODAY = date(2026, 10, 29)
 def _cnd_status(text: str) -> str:
     engine = RulesEngine(today=lambda: FIXED_TODAY)
     result = engine.evaluate({"full_text": text}, document_type="CND_FEDERAL")
-    return next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")[
-        "status"
-    ]
+    return next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")["status"]
 
 
 def test_missing_validity_date_requires_manual_review():
@@ -109,9 +107,7 @@ def test_document_type_scopes_rules_to_matching_code():
 
     assert by_rule["RULE-BNDES-001"] == "COMPLIANT"
     assert all(
-        status == "NOT_APPLICABLE"
-        for rid, status in by_rule.items()
-        if rid != "RULE-BNDES-001"
+        status == "NOT_APPLICABLE" for rid, status in by_rule.items() if rid != "RULE-BNDES-001"
     )
     assert result["overall_status"] == "COMPLIANT"
     assert result["evaluated_rules"] == 1
@@ -139,9 +135,9 @@ def test_summarize_statuses_ignores_not_applicable():
         "MANUAL_REVIEW_REQUIRED",
         0.5,
     )
-    assert summarize_statuses(["COMPLIANT", "NON_COMPLIANT", "MANUAL_REVIEW_REQUIRED"])[
-        0
-    ] == ("NON_COMPLIANT")
+    assert summarize_statuses(["COMPLIANT", "NON_COMPLIANT", "MANUAL_REVIEW_REQUIRED"])[0] == (
+        "NON_COMPLIANT"
+    )
     assert summarize_statuses(["NOT_APPLICABLE"]) == ("MANUAL_REVIEW_REQUIRED", 0.0)
     assert summarize_statuses([]) == ("MANUAL_REVIEW_REQUIRED", 0.0)
 
