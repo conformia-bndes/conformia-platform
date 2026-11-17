@@ -140,6 +140,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
     CELERY_BROKER_URL: Union[str, None] = None
     CELERY_RESULT_BACKEND: Union[str, None] = None
+    WEB_CONCURRENCY: int = Field(default=2, ge=1, le=32)
+    CELERY_CONCURRENCY: int = Field(default=2, ge=1, le=32)
 
     @field_validator("CELERY_BROKER_URL", mode="before")
     @classmethod
@@ -170,6 +172,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Union[str, None] = None
     ANTHROPIC_API_KEY: Union[str, None] = None
     LLM_MODEL: str = "gpt-4o-mini"
+    LLM_BASE_URL: str = "https://api.openai.com/v1"
+    LLM_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0, le=300)
+    LLM_MAX_RETRIES: int = Field(default=2, ge=0, le=5)
     LLM_TEMPERATURE: float = 0.0
 
     @model_validator(mode="after")
