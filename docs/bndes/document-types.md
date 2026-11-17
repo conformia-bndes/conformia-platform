@@ -67,3 +67,18 @@ Este documento estabelece as especificações técnicas das tipologias documenta
   - Identificação do empreendimento e coordenadas geográficas.
   - Tipologia da atividade e número do processo administrativo.
   - Condicionantes e prazo de vigência da licença.
+
+---
+
+## 6. Consulta de Integridade (CEIS / CNEP)
+
+- **Órgão Emissor**: Controladoria-Geral da União (CGU), via Portal da Transparência.
+- **Finalidade**: Verificar se o proponente tem sanção vigente no Cadastro Nacional de Empresas
+  Inidôneas e Suspensas (CEIS) ou no Cadastro Nacional de Empresas Punidas (CNEP, Lei nº 12.846/2013).
+- **Detecção no parser**: siglas `CEIS` ou `CNEP` (palavra inteira) ou o nome por extenso de um
+  dos cadastros. É testada antes da licença ambiental, porque a consulta pode citar o IBAMA.
+- **Tratamento Híbrido (Maker-Checker)**:
+  - "IMPEDIMENTO DE LICITAR" ou "DECLARAÇÃO DE INIDONEIDADE" reprovam direto (`NON_COMPLIANT`).
+  - Um "nada consta" pode se referir a só um dos cadastros; sem LLM, a consulta vai para
+    revisão manual e nunca é aprovada automaticamente.
+- **Campos Esperados**: CNPJ consultado, resultado por cadastro e data da consulta.
