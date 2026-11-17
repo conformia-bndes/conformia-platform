@@ -70,6 +70,34 @@ timeout de 30 segundos por chamada.
 
 ---
 
+## 3.1 Provedor de LLM
+
+O cliente fala a API de chat da OpenAI e funciona com qualquer provedor compatível. A escolha é
+feita por variáveis de ambiente, sem mudar código: `LLM_BASE_URL`, `LLM_MODEL`,
+`OPENAI_API_KEY` (a chave do provedor configurado), `LLM_TIMEOUT_SECONDS` e `LLM_MAX_RETRIES`.
+A requisição pede `response_format: json_object`, aceita JSON dentro de cerca de código e repete
+a chamada com espera crescente em 429 e 5xx. Sem chave ou com falha, a regra vai para revisão
+manual; nunca há resposta simulada.
+
+**Modelo gratuito avaliado (OpenRouter, 13/11/2026).** Cinco modelos gratuitos foram comparados na
+regra RULE-BNDES-004 com quatro casos (nada consta, falência decretada, texto ilegível e sem
+resultado informado), medindo o veredito final do Maker-Checker:
+
+| Modelo | Resultado | Observação |
+| :-- | :-- | :-- |
+| `particle-ai/particle-1:free` | 4 de 4 corretos | 5 a 11 s por avaliação; escolhido |
+| `nvidia/nemotron-3.5-super-vl:free` | 3 de 4 corretos | ~20 s; decide sem evidência no caso "sem resultado" |
+| `openrouter/free` | Checker não aprovou os casos | Maker correto, mas o veredito caiu em revisão manual |
+| `inclusionai/ling-3.2-flash:free` | falhou | 115 s no primeiro caso e 429 no segundo |
+| `google/gemma-4-31b-it:free`, `gemma-4-26b-a4b-it:free` | indisponíveis | 429 do provedor upstream nas três tentativas |
+
+Limites desta avaliação: quatro casos sintéticos por modelo e uma única rodada. A disponibilidade
+dos modelos gratuitos muda e a conta gratuita tem teto diário de requisições. Dados enviados a
+modelos gratuitos podem ser retidos pelo provedor: usar apenas documentos sintéticos ou
+anonimizados nesse modo.
+
+---
+
 ## 4. Harness de desenvolvimento
 
 O mesmo princípio vale para agentes de IA que ajudam a construir o software. As regras ficam
