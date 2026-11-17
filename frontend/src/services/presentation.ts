@@ -68,3 +68,27 @@ export function presentReviewDecision(decision: string | null | undefined): stri
   if (!decision) return '-';
   return REVIEW_DECISION_LABELS[decision as ReviewDecision] ?? decision;
 }
+
+export type DocumentProcessingStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'EXTRACTION_FAILED';
+
+const DOCUMENT_STATUS_PRESENTATION: Record<DocumentProcessingStatus, StatusPresentation> = {
+  PENDING: { label: 'Na Fila', tone: 'neutral' },
+  PROCESSING: { label: 'Processando OCR/IDP...', tone: 'warning' },
+  COMPLETED: { label: 'Concluído', tone: 'success' },
+  FAILED: { label: 'Falhou', tone: 'danger' },
+  EXTRACTION_FAILED: { label: 'Falha na Extração', tone: 'danger' },
+};
+
+export function presentDocumentStatus(status: string): StatusPresentation {
+  return (
+    DOCUMENT_STATUS_PRESENTATION[status as DocumentProcessingStatus] ?? {
+      label: status || 'Desconhecido',
+      tone: 'neutral',
+    }
+  );
+}

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
 import {
   describeApiError,
+  presentDocumentStatus,
   presentReviewDecision,
   presentReviewState,
   presentStatus,
@@ -65,5 +66,13 @@ describe('review presentation helpers', () => {
     expect(presentReviewDecision('REJECT')).toBe('Reprovar Laudo');
     expect(presentReviewDecision('EXCEPTION')).toBe('Aprovar com Exceção Motivada');
     expect(presentReviewDecision(null)).toBe('-');
+  });
+
+  it('labels document processing statuses with distinct tones', () => {
+    expect(presentDocumentStatus('PENDING').tone).toBe('neutral');
+    expect(presentDocumentStatus('PROCESSING').tone).toBe('warning');
+    expect(presentDocumentStatus('COMPLETED')).toEqual({ label: 'Concluído', tone: 'success' });
+    expect(presentDocumentStatus('FAILED').tone).toBe('danger');
+    expect(presentDocumentStatus('EXTRACTION_FAILED').tone).toBe('danger');
   });
 });

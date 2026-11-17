@@ -27,40 +27,52 @@ export function AuditTrailTab({ auditLogs, loadingAudit, onRefreshAudit }: Audit
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4">Data / Hora</th>
-              <th className="px-6 py-4">Ação</th>
-              <th className="px-6 py-4">Entidade</th>
-              <th className="px-6 py-4">Agente Responsável</th>
-              <th className="px-6 py-4">Detalhes</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {auditLogs.map((log) => (
-              <tr key={log.id} className="hover:bg-slate-50/60">
-                <td className="px-6 py-4 text-xs font-mono text-slate-500">
-                  {new Date(log.timestamp).toLocaleString('pt-BR')}
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    {log.action}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-xs font-mono font-medium text-slate-700">
-                  {log.entity_type}: {log.entity_id}
-                </td>
-                <td className="px-6 py-4 text-xs text-slate-600">
-                  {log.performed_by}
-                </td>
-                <td className="px-6 py-4 text-xs font-mono text-slate-500 max-w-xs truncate">
-                  {JSON.stringify(log.details)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {loadingAudit && auditLogs.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-sm">
+            Carregando trilha de auditoria...
+          </div>
+        ) : auditLogs.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-sm">
+            Nenhum evento de auditoria registrado até o momento.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4">Data / Hora</th>
+                  <th className="px-6 py-4">Ação</th>
+                  <th className="px-6 py-4">Entidade</th>
+                  <th className="px-6 py-4">Agente Responsável</th>
+                  <th className="px-6 py-4">Detalhes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {auditLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-50/60">
+                    <td className="px-6 py-4 text-xs font-mono text-slate-500 whitespace-nowrap">
+                      {new Date(log.timestamp).toLocaleString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs font-mono font-medium text-slate-700 whitespace-nowrap">
+                      {log.entity_type}: {log.entity_id}
+                    </td>
+                    <td className="px-6 py-4 text-xs text-slate-600 whitespace-nowrap">
+                      {log.performed_by}
+                    </td>
+                    <td className="px-6 py-4 text-xs font-mono text-slate-500 max-w-xs truncate">
+                      {JSON.stringify(log.details)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

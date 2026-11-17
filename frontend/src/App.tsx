@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 import {
   apiService,
@@ -45,6 +45,38 @@ export default function App() {
 
   // Falhas sao exibidas como erro; a interface nunca substitui a resposta da API por dados simulados.
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const uploadTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (uploadTimerRef.current !== null) {
+        window.clearTimeout(uploadTimerRef.current);
+      }
+    };
+  }, []);
+
+  const hasProcessingDocs = documents.some(
+    (doc) => doc.status === 'PENDING' || doc.status === 'PROCESSING',
+  );
+
+  useEffect(() => {
+    if (!hasProcessingDocs) return;
+
+    const intervalId = window.setInterval(() => {
+      apiService
+        .listDocuments()
+        .then((res) => {
+          setDocuments(res.items || []);
+        })
+        .catch(() => {
+          // Polling silencioso; falhas explícitas continuam visíveis ao atualizar manualmente.
+        });
+    }, 2500);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [hasProcessingDocs]);
 
   const handleSaveApiKey = (newKey: string | null) => {
     setApiKey(newKey);
@@ -163,8 +195,14 @@ export default function App() {
     if (!file) return;
 
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Selecione um arquivo no formato PDF.');
+      setErrorMessage('Selecione um arquivo no formato PDF.');
+      event.target.value = '';
       return;
+    }
+
+    if (uploadTimerRef.current !== null) {
+      window.clearTimeout(uploadTimerRef.current);
+      uploadTimerRef.current = null;
     }
 
     try {
@@ -172,9 +210,12 @@ export default function App() {
       setErrorMessage(null);
       setUploadMessage('Enviando documento para a fila de processamento OCR/IDP...');
       await apiService.uploadDocument(file);
-      setUploadMessage('Documento recebido e enviado para processamento. Atualize a lista para acompanhar o status.');
+      setUploadMessage('Documento recebido e enviado para processamento. O status será atualizado automaticamente.');
       await loadDocuments();
-      setTimeout(() => setUploadMessage(null), 4000);
+      uploadTimerRef.current = window.setTimeout(() => {
+        setUploadMessage(null);
+        uploadTimerRef.current = null;
+      }, 4000);
     } catch (error) {
       setUploadMessage(null);
       setErrorMessage(describeApiError(error, 'Falha no envio do documento.'));
