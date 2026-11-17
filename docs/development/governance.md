@@ -85,3 +85,9 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 | Secret scanning e push protection | Habilitados |
 
 Somente o time `maintainers` pode ignorar os rulesets, e apenas para correções emergenciais. Em `dev`, esse bypass vale só para merge de PR: ninguém consegue apagar a branch nem fazer push direto, o que evita apagá-la pelo botão "Delete branch" após a promoção para `main`.
+
+### Revisão por pares e boas práticas
+
+- **Quem revisa:** o time dono da área, conforme a tabela da seção 1 e o `.github/CODEOWNERS`. Em `main`, a aprovação vem de alguém que não fez o último push.
+- **Nível de proteção de `main`:** decisão registrada no [ADR-004](../architecture/adr-004-protecao-main-e-revisao.md). O bypass é só para emergência e deve ser justificado no PR.
+- **OpenSSF Best Practices:** projeto cadastrado em [bestpractices.dev](https://www.bestpractices.dev/projects/16430), com o selo no `README.md`.
