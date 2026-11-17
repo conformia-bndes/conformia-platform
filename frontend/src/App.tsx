@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 import {
   apiService,
+  setApiKey,
+  getApiKeyLabel,
   HealthResponse,
   DocumentItem,
   ComplianceRule,
@@ -14,6 +16,7 @@ import { Footer } from './components/Footer';
 import { DocumentUploadTab } from './components/DocumentUploadTab';
 import { ChecklistTab } from './components/ChecklistTab';
 import { AuditTrailTab } from './components/AuditTrailTab';
+import { ApiKeyModal } from './components/ApiKeyModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('upload');
@@ -36,8 +39,21 @@ export default function App() {
   const [activeReport, setActiveReport] = useState<ComplianceReport | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
+  // Chave pessoal do analista mantida apenas em memória na sessão.
+  const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState<boolean>(false);
+
   // Falhas sao exibidas como erro; a interface nunca substitui a resposta da API por dados simulados.
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSaveApiKey = (newKey: string | null) => {
+    setApiKey(newKey);
+    setSessionKey(newKey);
+    setErrorMessage(null);
+    if (activeTab === 'upload') loadDocuments();
+    if (activeTab === 'checklist') loadRules();
+    if (activeTab === 'audit') loadAuditLogs();
+  };
 
   // Checagem de Saúde do Backend
   const checkHealthStatus = async () => {
@@ -59,6 +75,7 @@ export default function App() {
       setLoadingDocs(true);
       const res = await apiService.listDocuments();
       setDocuments(res.items || []);
+      setErrorMessage(null);
     } catch (error) {
       setErrorMessage(describeApiError(error, 'Não foi possível carregar os documentos.'));
     } finally {
@@ -111,6 +128,7 @@ export default function App() {
       setLoadingRules(true);
       const res = await apiService.getRules();
       setRules(res.rules || []);
+      setErrorMessage(null);
     } catch (error) {
       setRules([]);
       setErrorMessage(describeApiError(error, 'Não foi possível carregar o checklist de regras.'));
@@ -124,6 +142,7 @@ export default function App() {
       setLoadingAudit(true);
       const res = await apiService.getAuditTrail();
       setAuditLogs(res.items || []);
+      setErrorMessage(null);
     } catch (error) {
       setAuditLogs([]);
       setErrorMessage(describeApiError(error, 'Não foi possível carregar a trilha de auditoria.'));
@@ -190,7 +209,18 @@ export default function App() {
         healthLoading={healthLoading}
         healthError={healthError}
         onRefreshHealth={checkHealthStatus}
+        apiKeyLabel={getApiKeyLabel(sessionKey)}
+        onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
       />
+
+      {apiKeyModalOpen && (
+        <ApiKeyModal
+          isOpen={apiKeyModalOpen}
+          currentKey={sessionKey}
+          onSave={handleSaveApiKey}
+          onClose={() => setApiKeyModalOpen(false)}
+        />
+      )}
 
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -10,6 +10,37 @@ export const apiClient = axios.create({
   },
 });
 
+// Chave pessoal mantida estritamente em memória (nunca em localStorage/sessionStorage).
+let sessionApiKey: string | null = null;
+
+export function setApiKey(key: string | null): void {
+  const trimmed = key?.trim() ?? '';
+  sessionApiKey = trimmed.length > 0 ? trimmed : null;
+}
+
+export function getApiKey(): string | null {
+  return sessionApiKey;
+}
+
+/** Extrai o identificador do analista (prefixo antes de ':') sem expor o segredo. */
+export function getApiKeyLabel(key: string | null = sessionApiKey): string | null {
+  if (!key) return null;
+  const separatorIndex = key.indexOf(':');
+  if (separatorIndex > 0) {
+    return key.slice(0, separatorIndex);
+  }
+  return 'Chave ativa';
+}
+
+apiClient.interceptors.request.use((config) => {
+  if (sessionApiKey) {
+    config.headers.set('X-API-Key', sessionApiKey);
+  } else {
+    config.headers.delete('X-API-Key');
+  }
+  return config;
+});
+
 export interface HealthResponse {
   status: string;
   app_name: string;

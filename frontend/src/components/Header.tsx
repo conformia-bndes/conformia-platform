@@ -4,6 +4,7 @@ import {
   UploadCloud,
   ListFilter,
   History,
+  KeyRound,
 } from 'lucide-react';
 import { HealthResponse } from '../services/api';
 
@@ -16,6 +17,8 @@ interface HeaderProps {
   healthLoading: boolean;
   healthError: boolean;
   onRefreshHealth: () => void;
+  apiKeyLabel: string | null;
+  onOpenApiKeyModal: () => void;
 }
 
 export function Header({
@@ -25,6 +28,8 @@ export function Header({
   healthLoading,
   healthError,
   onRefreshHealth,
+  apiKeyLabel,
+  onOpenApiKeyModal,
 }: HeaderProps) {
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white shadow-md">
@@ -47,8 +52,26 @@ export function Header({
             </div>
           </div>
 
-          {/* Indicador de Status da API */}
-          <div className="flex items-center space-x-4">
+          {/* Chave do Analista e Indicador de Status da API */}
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={onOpenApiKeyModal}
+              title={
+                apiKeyLabel
+                  ? `Chave de sessão ativa (${apiKeyLabel}). Clique para alterar ou remover.`
+                  : 'Informar chave pessoal (X-API-Key) para operações autenticadas'
+              }
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                apiKeyLabel
+                  ? 'bg-emerald-950/60 border-emerald-700 text-emerald-200 hover:bg-emerald-900/70'
+                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:border-slate-500'
+              }`}
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>{apiKeyLabel ? `Analista: ${apiKeyLabel}` : 'Informar Chave'}</span>
+            </button>
+
             <div className="flex items-center space-x-2 bg-slate-800 px-3.5 py-1.5 rounded-full border border-slate-700">
               <span className="relative flex h-2.5 w-2.5">
                 {healthLoading ? (
