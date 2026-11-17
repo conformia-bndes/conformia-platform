@@ -129,11 +129,17 @@ sem segregação, com a restrição declarada no roteiro e aceita formalmente pe
 
 ## 7. Release e rollback
 
+- **Code Freeze (01/12/2026):** a partir de `2026-12-01` entra em vigor o congelamento de código
+  (`pr-title.yml` bloqueia PRs do tipo `feat:` até `2026-12-05`); apenas correções de defeitos
+  bloqueadores (`fix`, `sec`, `revert`) e ajustes de documentação/testes são aceitos após essa data.
+- **Release Candidate RC1 (`v1.0.0-rc.1`):** gerada pelo fluxo automatizado do `release-please`
+  (`release-please-config.json` com `prerelease: true`, `prerelease-type: "rc"` e
+  `release-as: "1.0.0-rc.1"`), acionando o `cd.yml` para construir e validar as imagens do backend
+  e do frontend a partir da tag `v1.0.0-rc.1`.
 - Release: tag anotada no commit aprovado; imagens construidas a partir do mesmo commit;
   `.env` gerado por `make env` (sem segredos versionados).
 - Rollback de aplicação: subir a tag anterior (`git checkout <tag>` + `make up`).
 - Rollback de banco: a migration 002 (futura) deve ter `downgrade` testado **somente em banco
   descartável**; no ambiente de demo, preferir restaurar volume a partir de backup.
-- Observação: hoje o backend cria tabelas com `create_all` no startup, e não via Alembic.
-  A migration 001 coincide com os modelos (verificado com `alembic check`), mas qualquer
-  tabela nova precisa de migration explícita.
+- Observação: hoje o backend executa `alembic upgrade head` na etapa `migrate` antes da API e do
+  worker; qualquer tabela nova precisa de migration explícita.

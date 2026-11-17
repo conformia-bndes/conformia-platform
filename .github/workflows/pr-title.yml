@@ -40,3 +40,17 @@ jobs:
             sec
             infra
           requireScope: false
+
+      - name: Verificar politica de Code Freeze (01/12/2026)
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          CODE_FREEZE_DATE: "2026-12-01"
+          RELEASE_DATE: "2026-12-05"
+        run: |
+          today="$(date -u +%Y-%m-%d)"
+          if [[ "$today" > "$CODE_FREEZE_DATE" || "$today" == "$CODE_FREEZE_DATE" ]] && [[ "$today" < "$RELEASE_DATE" || "$today" == "$RELEASE_DATE" ]]; then
+            if [[ "$PR_TITLE" =~ ^feat(\(.*\))?!?: ]]; then
+              echo "::error::Code freeze ativo desde 01/12/2026: novas funcionalidades (feat) estao bloqueadas. Apenas correcoes de defeitos bloqueadores (fix, sec, revert) sao permitidas."
+              exit 1
+            fi
+          fi

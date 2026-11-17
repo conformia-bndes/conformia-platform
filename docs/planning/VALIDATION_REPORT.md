@@ -93,6 +93,19 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 | Docs | `mkdocs build --strict` | OK |
 | Script de chave | `python backend/scripts/create_api_user.py ana.silva ANALISTA` | Gera chave e entrada JSON; argumentos inválidos retornam 2 |
 
+### Regressão Completa — Release Candidate RC1 (`v1.0.0-rc.1`, Issue #62)
+
+Execução consolidada da bateria de regressão para a Release Candidate `v1.0.0-rc.1` (configurada em `release-please-config.json` e protegida pela política de Code Freeze em `01/12/2026` no `pr-title.yml`):
+
+| Suíte | Comando | Resultado |
+| :-- | :-- | :-- |
+| **Backend (`pytest`)** | `pytest backend/tests/ -q --cov=backend/app` | **225 passed, 11 skipped**, código 0. Cobertura global **91%** (`1447` statements, `136` miss; `security.py` 100%, `compliance_service.py` 100%, `review_service.py` 99%, `documents.py` 98%, `llm_client.py` 95%, `config.py` 94%, `rules_engine.py` 92%) |
+| **Backend Lint / Format** | `black --check backend/ && flake8 backend/ --count --max-line-length=100` | **OK** (`0` erros em todos os arquivos) |
+| **Frontend (`vitest` + `eslint` + `build`)** | `npm run lint && npm test && npm run build` | **8 passed** em 2 arquivos (`presentation.test.ts`: 6 testes; `api.test.ts`: 2 testes), `0` warnings no ESLint, bundle de produção gerado em 273 ms (`302.74 kB` JS / `96.57 kB` gzip) |
+| **Evals (`eval_pipeline.py`)** | `python evals/eval_pipeline.py` | **PASS**: **14/14** verificações aprovadas, **100,00%** de acurácia (mínimo exigido: 90%), **0 falsos positivos** (tolerância máxima: 0), tempo `0,004s` |
+| **Smoke (`make smoke`)** | `python backend/scripts/smoke_test.py` | **Código 0**: fluxo ponta a ponta validado (health -> upload PDF -> fila Celery/worker -> `COMPLETED` -> laudo `/compliance/results` -> proposta e confirmação por dois analistas em `/reviews`) |
+| **Documentação (`mkdocs`)** | `mkdocs build --strict` | **OK** (build estrito concluído sem warnings) |
+
 Não validado: migration 002 em PostgreSQL; concorrência real (o lock `with_for_update` e a
 restrição única foram verificados apenas por leitura de código e teste sequencial).
 
