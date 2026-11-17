@@ -117,7 +117,7 @@
       "code": "INTEGRIDADE_CEIS_CNEP",
       "title": "Consulta de Idoneidade nos Cadastros CEIS e CNEP (Portal da Transparência)",
       "category": "INTEGRIDADE",
-      "type": "DETERMINISTIC",
+      "type": "HYBRID",
       "severity": "CRITICAL",
       "legal_basis": "Lei nº 12.846/2013 (Lei Anticorrupção) e Diretrizes de Compliance BNDES",
       "required_keywords": [
