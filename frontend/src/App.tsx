@@ -1,27 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import {
-  FileText,
-  CheckCircle2,
-  XCircle,
-  UploadCloud,
-  ShieldCheck,
-  History,
-  ListFilter,
-  RefreshCw,
-  X
-} from 'lucide-react';
+import { CheckCircle2, XCircle, X } from 'lucide-react';
 import {
   apiService,
   HealthResponse,
   DocumentItem,
   ComplianceRule,
   ComplianceReport,
-  AuditLogItem
+  AuditLogItem,
 } from './services/api';
-import { describeApiError, presentStatus, TONE_CLASSES } from './services/presentation';
+import { describeApiError } from './services/presentation';
+import { Header, ActiveTab } from './components/Header';
+import { Footer } from './components/Footer';
+import { DocumentUploadTab } from './components/DocumentUploadTab';
+import { ChecklistTab } from './components/ChecklistTab';
+import { AuditTrailTab } from './components/AuditTrailTab';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'upload' | 'checklist' | 'audit'>('upload');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('upload');
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthLoading, setHealthLoading] = useState<boolean>(true);
   const [healthError, setHealthError] = useState<boolean>(false);
@@ -74,7 +69,8 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    apiService.getHealth()
+    apiService
+      .getHealth()
       .then((data) => {
         if (isMounted) {
           setHealth(data);
@@ -91,7 +87,8 @@ export default function App() {
         if (isMounted) setHealthLoading(false);
       });
 
-    apiService.listDocuments()
+    apiService
+      .listDocuments()
       .then((res) => {
         if (isMounted) setDocuments(res.items || []);
       })
@@ -135,7 +132,7 @@ export default function App() {
     }
   };
 
-  const handleTabChange = (tab: 'upload' | 'checklist' | 'audit') => {
+  const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
     if (tab === 'upload') loadDocuments();
     if (tab === 'checklist') loadRules();
@@ -186,101 +183,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
-      {/* Cabeçalho Institucional Conform.IA BNDES */}
-      <header className="bg-slate-900 border-b border-slate-800 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="w-11 h-11 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-md">
-                <ShieldCheck className="w-7 h-7" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl font-bold tracking-tight text-white">Conform.IA</span>
-                  <span className="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-800 text-emerald-200 uppercase">
-                    BNDES
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400">
-                  Consulta Pública nº 01/2025 • Verificação Inteligente de Conformidade
-                </p>
-              </div>
-            </div>
-
-            {/* Indicador de Status da API */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-slate-800 px-3.5 py-1.5 rounded-full border border-slate-700">
-                <span className="relative flex h-2.5 w-2.5">
-                  {healthLoading ? (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  ) : !healthError ? (
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  ) : (
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-                  )}
-                </span>
-                <span className="text-xs font-medium text-slate-300">
-                  {healthLoading
-                    ? 'Conectando...'
-                    : healthError
-                      ? 'API Offline'
-                      : health?.status === 'healthy'
-                        ? `API Online (v${health.version})`
-                        : 'API Degradada'}
-                </span>
-                <button
-                  onClick={checkHealthStatus}
-                  title="Atualizar Status"
-                  className="text-slate-400 hover:text-white transition-colors ml-1"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${healthLoading ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Abas de Navegação */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 -mb-px">
-            <button
-              onClick={() => handleTabChange('upload')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-                activeTab === 'upload'
-                  ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-              }`}
-            >
-              <UploadCloud className="w-4 h-4" />
-              <span>Ingestão Documental (IDP)</span>
-            </button>
-
-            <button
-              onClick={() => handleTabChange('checklist')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-                activeTab === 'checklist'
-                  ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-              }`}
-            >
-              <ListFilter className="w-4 h-4" />
-              <span>Checklist de Conformidade</span>
-            </button>
-
-            <button
-              onClick={() => handleTabChange('audit')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-                activeTab === 'audit'
-                  ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-              }`}
-            >
-              <History className="w-4 h-4" />
-              <span>Trilha de Auditoria</span>
-            </button>
-          </nav>
-        </div>
-      </header>
+      <Header
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        health={health}
+        healthLoading={healthLoading}
+        healthError={healthError}
+        onRefreshHealth={checkHealthStatus}
+      />
 
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -311,305 +221,38 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= ABA 1: UPLOAD & INGESTÃO ================= */}
         {activeTab === 'upload' && (
-          <div className="space-y-8">
-            {/* Área de Ingestão de Documentos */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-              <div className="max-w-2xl mx-auto text-center">
-                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                  Ingestão Inteligente de Documentos PDF
-                </h3>
-                <p className="text-sm text-slate-500 mb-6">
-                  Faça o upload de certidões, balanços ou certidões de regularidade para OCR, extração e avaliação.
-                </p>
-
-                <label className="inline-flex items-center px-5 py-2.5 rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer transition-colors">
-                  <UploadCloud className="w-4 h-4 mr-2" />
-                  {uploading ? 'Processando Documento...' : 'Selecionar Arquivo PDF'}
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    className="hidden"
-                    disabled={uploading}
-                    onChange={handleFileUpload}
-                  />
-                </label>
-                <div className="mt-2 text-xs text-slate-400">Suporte a OCR Tesseract (PT-BR) e extração tabular nativa</div>
-              </div>
-            </div>
-
-            {/* Lista de Documentos Ingeridos */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-                <div>
-                  <h4 className="font-semibold text-slate-900">Documentos em Fila / Processados</h4>
-                  <p className="text-xs text-slate-500">Documentos prontos para laudo de conformidade</p>
-                </div>
-                <button
-                  onClick={loadDocuments}
-                  className="p-2 text-slate-500 hover:text-slate-800 transition-colors"
-                  title="Atualizar lista"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loadingDocs ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-
-              {documents.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-sm">
-                  Nenhum documento ingerido até o momento.
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-slate-50/80 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded bg-slate-100 text-slate-600">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{doc.original_filename}</p>
-                          <div className="flex items-center space-x-3 text-xs text-slate-500 mt-1">
-                            <span>Tamanho: {(doc.file_size / 1024).toFixed(1)} KB</span>
-                            <span>•</span>
-                            <span>Páginas: {doc.total_pages || 1}</span>
-                            <span>•</span>
-                            <span className="text-emerald-700 font-medium">Status: {doc.status}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => handleVerifyCompliance(doc.id, doc.original_filename)}
-                          disabled={verifyingId === doc.id}
-                          className="px-4 py-2 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center space-x-1.5 transition-colors disabled:opacity-50"
-                        >
-                          {verifyingId === doc.id ? (
-                            <>
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              <span>Avaliando Regras...</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="w-3.5 h-3.5" />
-                              <span>Verificar Conformidade</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Painel do Relatório de Conformidade Selecionado */}
-            {activeReport && (
-              <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 space-y-6">
-                <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-                  <div>
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Resultado da Avaliação
-                    </span>
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2 mt-1">
-                      <span>Laudo de Conformidade: {activeReport.document_filename}</span>
-                    </h3>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                      TONE_CLASSES[presentStatus(activeReport.overall_status).tone]
-                    }`}>
-                      {presentStatus(activeReport.overall_status).label}
-                    </span>
-                    <button
-                      onClick={() => setActiveReport(null)}
-                      className="text-slate-400 hover:text-slate-600 text-sm ml-2"
-                      title="Fechar Relatório"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Resumo com Métricas */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <p className="text-xs text-slate-500 font-medium">Score de Conformidade</p>
-                    <p className="text-2xl font-bold text-emerald-600 mt-1">
-                      {(activeReport.compliance_score * 100).toFixed(0)}%
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <p className="text-xs text-slate-500 font-medium">Regras Conformes / Aplicáveis</p>
-                    <p className="text-2xl font-bold text-slate-800 mt-1">
-                      {activeReport.compliant_rules} / {activeReport.evaluated_rules}
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <p className="text-xs text-slate-500 font-medium">Tipologia Identificada</p>
-                    <p className="text-sm font-semibold text-slate-700 mt-2">
-                      {activeReport.document_type ?? 'Não identificada (revisão manual)'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Itens Verificados */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-slate-800">Detalhamento dos Critérios BNDES</h4>
-                  <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden">
-                    {activeReport.checks.map((c) => (
-                      <div key={c.rule_id} className="p-4 flex items-start justify-between bg-white hover:bg-slate-50">
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs font-mono font-bold text-slate-500">{c.rule_id}</span>
-                            <span className="text-sm font-semibold text-slate-900">{c.rule_title}</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-600 uppercase">
-                              {c.category}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-600">{c.findings}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`flex items-center text-xs font-semibold px-2 py-1 rounded space-x-1 ${
-                              TONE_CLASSES[presentStatus(c.status).tone]
-                            }`}
-                          >
-                            {c.status === 'COMPLIANT' ? (
-                              <CheckCircle2 className="w-4 h-4" />
-                            ) : (
-                              <XCircle className="w-4 h-4" />
-                            )}
-                            <span>{presentStatus(c.status).label}</span>
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <DocumentUploadTab
+            documents={documents}
+            loadingDocs={loadingDocs}
+            uploading={uploading}
+            verifyingId={verifyingId}
+            activeReport={activeReport}
+            onFileUpload={handleFileUpload}
+            onRefreshDocuments={loadDocuments}
+            onVerifyCompliance={handleVerifyCompliance}
+            onCloseReport={() => setActiveReport(null)}
+          />
         )}
 
-        {/* ================= ABA 2: CHECKLIST DE REGRAS ================= */}
         {activeTab === 'checklist' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Checklist Declarativo de Conformidade</h3>
-                <p className="text-sm text-slate-500">
-                  Regras normativas configuradas conforme o edital da Consulta Pública BNDES nº 01/2025.
-                </p>
-              </div>
-              <button
-                onClick={loadRules}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingRules ? 'animate-spin' : ''}`} />
-                <span>Atualizar Catálogo</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {rules.map((rule) => (
-                <div key={rule.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between hover:shadow-md transition-shadow">
-                  <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="px-2 py-0.5 text-xs font-mono font-bold rounded bg-slate-100 text-slate-700">
-                        {rule.code}
-                      </span>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {rule.type}
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-900 mb-2">{rule.title}</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed mb-4">{rule.failure_message}</p>
-                  </div>
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                    <span className="font-semibold text-slate-600">Categoria: {rule.category}</span>
-                    <span className="font-mono">{rule.id}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ChecklistTab
+            rules={rules}
+            loadingRules={loadingRules}
+            onRefreshRules={loadRules}
+          />
         )}
 
-        {/* ================= ABA 3: TRILHA DE AUDITORIA ================= */}
         {activeTab === 'audit' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Trilha de Auditoria Imutável</h3>
-                <p className="text-sm text-slate-500">
-                  Registro cronológico de todas as decisões automatizadas, avaliações Maker-Checker e uploads.
-                </p>
-              </div>
-              <button
-                onClick={loadAuditLogs}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingAudit ? 'animate-spin' : ''}`} />
-                <span>Atualizar Logs</span>
-              </button>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-4">Data / Hora</th>
-                    <th className="px-6 py-4">Ação</th>
-                    <th className="px-6 py-4">Entidade</th>
-                    <th className="px-6 py-4">Agente Responsável</th>
-                    <th className="px-6 py-4">Detalhes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50/60">
-                      <td className="px-6 py-4 text-xs font-mono text-slate-500">
-                        {new Date(log.timestamp).toLocaleString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-xs font-mono font-medium text-slate-700">
-                        {log.entity_type}: {log.entity_id}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-600">
-                        {log.performed_by}
-                      </td>
-                      <td className="px-6 py-4 text-xs font-mono text-slate-500 max-w-xs truncate">
-                        {JSON.stringify(log.details)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <AuditTrailTab
+            auditLogs={auditLogs}
+            loadingAudit={loadingAudit}
+            onRefreshAudit={loadAuditLogs}
+          />
         )}
       </main>
 
-      {/* Rodapé Institucional */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <p>© 2026 Conform.IA BNDES Platform • Consulta Pública BNDES nº 01/2025</p>
-          <div className="flex space-x-4">
-            <span className="hover:text-slate-700">Harness Engineering Standard</span>
-            <span>•</span>
-            <span className="hover:text-slate-700">Maker-Checker Protocol</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
