@@ -238,6 +238,43 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "RULE-BNDES-005": "NOT_APPLICABLE"
         }
     },
+    {
+        "id": "CASE-014",
+        "description": "Consulta CEIS: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)",
+        "input_text": (
+            "PORTAL DA TRANSPARÊNCIA - CONTROLADORIA-GERAL DA UNIÃO\n"
+            "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS (CEIS)\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Resultado: NADA CONSTA\n"
+            "Data da consulta: 28/10/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "NOT_APPLICABLE",
+            "RULE-BNDES-002": "NOT_APPLICABLE",
+            "RULE-BNDES-003": "NOT_APPLICABLE",
+            "RULE-BNDES-004": "NOT_APPLICABLE",
+            "RULE-BNDES-005": "NOT_APPLICABLE",
+            # HYBRID sem LLM: Maker-Checker fail-closed
+            "RULE-BNDES-006": "MANUAL_REVIEW_REQUIRED"
+        },
+        "expected_overall": "MANUAL_REVIEW_REQUIRED"
+    },
+    {
+        "id": "CASE-015",
+        "description": "Consulta CEIS que cita licença ambiental e IBAMA é avaliada pela 006, não pela 005",
+        "input_text": (
+            "PORTAL DA TRANSPARÊNCIA - CONTROLADORIA-GERAL DA UNIÃO\n"
+            "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS (CEIS)\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Órgão sancionador: IBAMA - Licença ambiental de operação cassada\n"
+            "Sanção: IMPEDIMENTO DE LICITAR E CONTRATAR\n"
+            "Data da consulta: 28/10/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-005": "NOT_APPLICABLE",
+            "RULE-BNDES-006": "NON_COMPLIANT"
+        }
+    },
 ]
 
 

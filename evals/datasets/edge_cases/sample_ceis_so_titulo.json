@@ -1,0 +1,7 @@
+{
+  "id": "DATASET-EDGECASE-007",
+  "document_type": "INTEGRIDADE_CEIS_CNEP",
+  "text": "CONSULTA CEIS / CNEP",
+  "expected_status": "MANUAL_REVIEW_REQUIRED",
+  "expected_rule": "RULE-BNDES-006"
+}
