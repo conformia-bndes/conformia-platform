@@ -138,9 +138,31 @@ def extract_fields_and_evidence(
                 confidence=0.95,
                 evidence=ev,
             )
-    # Ordem proposital: a licenca vem depois dos quatro ramos existentes, entao nenhum
-    # documento ja reconhecido muda de tipologia. "RECUPERACAO" sozinha (ex.: de area
-    # degradada) nao dispara o ramo de falencia acima, que exige "RECUPERACAO JUDICIAL".
+    # Ordem proposital: CEIS/CNEP e licenca vem depois dos quatro ramos originais, entao
+    # nenhum documento ja reconhecido muda de tipologia. CEIS/CNEP vem antes da licenca
+    # porque uma consulta de sancoes pode citar o IBAMA ou uma licenca ambiental.
+    elif re.search(r"\b(CEIS|CNEP)\b", text_norm) or (
+        "CADASTRO NACIONAL DE EMPRESAS INIDONEAS E SUSPENSAS" in text_norm
+        or "CADASTRO NACIONAL DE EMPRESAS PUNIDAS" in text_norm
+    ):
+        detected_type = "INTEGRIDADE_CEIS_CNEP"
+        page_num, snippet = _find_page_and_snippet(
+            r"\bCEIS\b|\bCNEP\b|CADASTRO NACIONAL DE EMPRESAS (INID[OÔ]NEAS|PUNIDAS)",
+            pages,
+            text,
+        )
+        if snippet:
+            ev = PageEvidence(text=snippet, page=page_num, confidence=0.95)
+            evidences.append(ev)
+            fields["document_type"] = ExtractedField(
+                name="document_type",
+                value="INTEGRIDADE_CEIS_CNEP",
+                raw_value=snippet,
+                confidence=0.95,
+                evidence=ev,
+            )
+    # "RECUPERACAO" sozinha (ex.: de area degradada) nao dispara o ramo de falencia
+    # acima, que exige "RECUPERACAO JUDICIAL".
     elif "LICENCA" in text_norm and (
         "AMBIENTAL" in text_norm
         or "IBAMA" in text_norm
