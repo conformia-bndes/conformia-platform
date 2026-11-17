@@ -157,6 +157,87 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
         },
         "expected_overall": "COMPLIANT"
     },
+    {
+        "id": "CASE-009",
+        "description": "Licença Ambiental: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)",
+        "input_text": (
+            "IBAMA - INSTITUTO BRASILEIRO DO MEIO AMBIENTE\n"
+            "ÓRGÃO AMBIENTAL FEDERAL\n"
+            "LICENÇA AMBIENTAL DE OPERAÇÃO N. 1010/2026\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Válida até: 01/03/2029"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "NOT_APPLICABLE",
+            "RULE-BNDES-002": "NOT_APPLICABLE",
+            "RULE-BNDES-003": "NOT_APPLICABLE",
+            "RULE-BNDES-004": "NOT_APPLICABLE",
+            # HYBRID sem LLM: Maker-Checker fail-closed
+            "RULE-BNDES-005": "MANUAL_REVIEW_REQUIRED",
+            "RULE-BNDES-006": "NOT_APPLICABLE"
+        },
+        "expected_overall": "MANUAL_REVIEW_REQUIRED"
+    },
+    {
+        "id": "CASE-010",
+        "description": "CND Federal que cita licença ambiental continua CND_FEDERAL",
+        "input_text": (
+            "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Finalidade: instruir pedido de licença ambiental\n"
+            "Válida até: 31/12/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "COMPLIANT",
+            "RULE-BNDES-005": "NOT_APPLICABLE"
+        }
+    },
+    {
+        "id": "CASE-011",
+        "description": "CRF FGTS que cita licença ambiental continua CRF_FGTS",
+        "input_text": (
+            "CAIXA ECONÔMICA FEDERAL\n"
+            "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
+            "A empresa encontra-se em SITUAÇÃO REGULAR.\n"
+            "Finalidade: licença ambiental de operação\n"
+            "Validade: 15/11/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-002": "COMPLIANT",
+            "RULE-BNDES-005": "NOT_APPLICABLE"
+        }
+    },
+    {
+        "id": "CASE-012",
+        "description": "CNDT que cita licença ambiental continua CNDT_TRABALHISTA",
+        "input_text": (
+            "PODER JUDICIÁRIO - JUSTIÇA DO TRABALHO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS TRABALHISTAS\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Não constam débitos inadimplidos.\n"
+            "Finalidade: licença ambiental\n"
+            "Validade: 20/12/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-003": "COMPLIANT",
+            "RULE-BNDES-005": "NOT_APPLICABLE"
+        }
+    },
+    {
+        "id": "CASE-013",
+        "description": "Certidão de falência que cita licença ambiental continua FALENCIA_RECUPERACAO",
+        "input_text": (
+            "TRIBUNAL DE JUSTIÇA DO ESTADO DO RIO DE JANEIRO\n"
+            "CERTIDÃO DOS DISTRIBUIDORES CÍVEIS\n"
+            "CONSTA DISTRIBUIÇÃO DE PROCESSO DE FALÊNCIA E RECUPERAÇÃO JUDICIAL\n"
+            "Finalidade: renovação de licença ambiental"
+        ),
+        "expected_results": {
+            "RULE-BNDES-004": "NON_COMPLIANT",
+            "RULE-BNDES-005": "NOT_APPLICABLE"
+        }
+    },
 ]
 
 
