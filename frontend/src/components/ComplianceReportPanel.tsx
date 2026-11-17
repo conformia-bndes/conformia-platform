@@ -1,13 +1,121 @@
+import { useEffect, useState, useCallback } from 'react';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
-import { ComplianceReport } from '../services/api';
-import { presentStatus, TONE_CLASSES } from '../services/presentation';
+import {
+  apiService,
+  ComplianceReport,
+  ExtractionResult,
+  ReviewStateResponse,
+} from '../services/api';
+import { describeApiError, presentStatus, TONE_CLASSES } from '../services/presentation';
+import { PageEvidencesSection } from './PageEvidencesSection';
+import { HumanReviewPanel } from './HumanReviewPanel';
 
 interface ComplianceReportPanelProps {
   report: ComplianceReport;
+  apiKeyLabel: string | null;
+  onOpenApiKeyModal: () => void;
   onClose: () => void;
 }
 
-export function ComplianceReportPanel({ report, onClose }: ComplianceReportPanelProps) {
+function renderRuleEvidenceSummary(evidence: Record<string, unknown> | null | undefined) {
+  if (!evidence) return null;
+  const entries = Object.entries(evidence).filter(([, value]) => {
+    if (value === null || value === undefined) return false;
+    if (Array.isArray(value) && value.length === 0) return false;
+    return true;
+  });
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {entries.map(([key, value]) => (
+        <span
+          key={key}
+          className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 text-[11px] font-mono text-slate-700"
+        >
+          {key}: {Array.isArray(value) ? value.join(', ') : String(value)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function ComplianceReportPanel({
+  report,
+  apiKeyLabel,
+  onOpenApiKeyModal,
+  onClose,
+}: ComplianceReportPanelProps) {
+  const [extraction, setExtraction] = useState<ExtractionResult | null | undefined>(undefined);
+  const [loadingExtraction, setLoadingExtraction] = useState<boolean>(true);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
+
+  const [reviewState, setReviewState] = useState<ReviewStateResponse | null>(null);
+  const [loadingReview, setLoadingReview] = useState<boolean>(true);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const loadReviewState = useCallback(async () => {
+    try {
+      setLoadingReview(true);
+      setReviewError(null);
+      const data = await apiService.getReviewState(report.document_id);
+      setReviewState(data);
+    } catch (error) {
+      setReviewState(null);
+      setReviewError(describeApiError(error, 'Não foi possível carregar o estado da revisão humana.'));
+    } finally {
+      setLoadingReview(false);
+    }
+  }, [report.document_id]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    apiService
+      .getProcessingStatus(report.document_id)
+      .then((res) => {
+        if (isMounted) {
+          setExtraction(res.extraction ?? null);
+          setExtractionError(null);
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setExtraction(null);
+          setExtractionError(
+            describeApiError(error, 'Não foi possível carregar as evidências por página.'),
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoadingExtraction(false);
+      });
+
+    apiService
+      .getReviewState(report.document_id)
+      .then((data) => {
+        if (isMounted) {
+          setReviewState(data);
+          setReviewError(null);
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setReviewState(null);
+          setReviewError(
+            describeApiError(error, 'Não foi possível carregar o estado da revisão humana.'),
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoadingReview(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [report.document_id]);
+
   return (
     <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 space-y-6">
       <div className="flex justify-between items-start border-b border-slate-100 pb-4">
@@ -66,10 +174,10 @@ export function ComplianceReportPanel({ report, onClose }: ComplianceReportPanel
           {report.checks.map((c) => (
             <div
               key={c.rule_id}
-              className="p-4 flex items-start justify-between bg-white hover:bg-slate-50"
+              className="p-4 flex items-start justify-between gap-4 bg-white hover:bg-slate-50"
             >
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
+              <div className="space-y-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-mono font-bold text-slate-500">{c.rule_id}</span>
                   <span className="text-sm font-semibold text-slate-900">{c.rule_title}</span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-600 uppercase">
@@ -77,8 +185,9 @@ export function ComplianceReportPanel({ report, onClose }: ComplianceReportPanel
                   </span>
                 </div>
                 <p className="text-xs text-slate-600">{c.findings}</p>
+                {renderRuleEvidenceSummary(c.evidence)}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 <span
                   className={`flex items-center text-xs font-semibold px-2 py-1 rounded space-x-1 ${
                     TONE_CLASSES[presentStatus(c.status).tone]
@@ -96,6 +205,26 @@ export function ComplianceReportPanel({ report, onClose }: ComplianceReportPanel
           ))}
         </div>
       </div>
+
+      {/* Evidências e Campos Extraídos por Página */}
+      <PageEvidencesSection
+        extraction={extraction}
+        loading={loadingExtraction}
+        error={extractionError}
+      />
+
+      {/* Painel de Revisão Humana (Maker-Checker) */}
+      <HumanReviewPanel
+        key={report.document_id}
+        documentId={report.document_id}
+        overallStatus={report.overall_status}
+        reviewState={reviewState}
+        loading={loadingReview}
+        loadError={reviewError}
+        apiKeyLabel={apiKeyLabel}
+        onOpenApiKeyModal={onOpenApiKeyModal}
+        onReviewUpdated={loadReviewState}
+      />
     </div>
   );
 }

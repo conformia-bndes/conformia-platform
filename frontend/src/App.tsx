@@ -258,9 +258,11 @@ export default function App() {
             uploading={uploading}
             verifyingId={verifyingId}
             activeReport={activeReport}
+            apiKeyLabel={getApiKeyLabel(sessionKey)}
             onFileUpload={handleFileUpload}
             onRefreshDocuments={loadDocuments}
             onVerifyCompliance={handleVerifyCompliance}
+            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
             onCloseReport={() => setActiveReport(null)}
           />
         )}

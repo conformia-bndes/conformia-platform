@@ -148,6 +148,31 @@ export interface AuditLogItem {
   timestamp: string;
 }
 
+export type ReviewDecision = 'APPROVE' | 'REJECT' | 'EXCEPTION';
+export type ReviewState = 'NO_REVIEW' | 'PENDING_CHECK' | 'FINAL' | 'RETURNED';
+export type ReviewEventType = 'PROPOSED' | 'CONFIRMED' | 'RETURNED';
+
+export interface ReviewEvent {
+  id: string;
+  document_id: string;
+  event_type: ReviewEventType;
+  decision: ReviewDecision | null;
+  justification: string;
+  resolves_id: string | null;
+  report_status: string | null;
+  actor_id: string;
+  actor_role: string;
+  created_at: string;
+}
+
+export interface ReviewStateResponse {
+  document_id: string;
+  state: ReviewState;
+  final_decision: ReviewDecision | null;
+  pending_proposal_id: string | null;
+  events: ReviewEvent[];
+}
+
 export const apiService = {
   // Diagnóstico e Saúde
   async getHealth(): Promise<HealthResponse> {
@@ -196,6 +221,48 @@ export const apiService = {
   // Trilha de Auditoria Imutável
   async getAuditTrail(): Promise<{ total: number; items: AuditLogItem[] }> {
     const res = await apiClient.get('/api/v1/compliance/audit-trail');
+    return res.data;
+  },
+
+  // Revisão Humana (Maker-Checker)
+  async getReviewState(documentId: string): Promise<ReviewStateResponse> {
+    const res = await apiClient.get<ReviewStateResponse>(`/api/v1/compliance/reviews/${documentId}`);
+    return res.data;
+  },
+
+  async proposeReview(
+    documentId: string,
+    decision: ReviewDecision,
+    justification: string,
+  ): Promise<ReviewEvent> {
+    const res = await apiClient.post<ReviewEvent>(`/api/v1/compliance/reviews/${documentId}`, {
+      decision,
+      justification,
+    });
+    return res.data;
+  },
+
+  async confirmReview(
+    documentId: string,
+    proposalId: string,
+    comment: string,
+  ): Promise<ReviewEvent> {
+    const res = await apiClient.post<ReviewEvent>(
+      `/api/v1/compliance/reviews/${documentId}/${proposalId}/confirm`,
+      { comment },
+    );
+    return res.data;
+  },
+
+  async returnReview(
+    documentId: string,
+    proposalId: string,
+    comment: string,
+  ): Promise<ReviewEvent> {
+    const res = await apiClient.post<ReviewEvent>(
+      `/api/v1/compliance/reviews/${documentId}/${proposalId}/return`,
+      { comment },
+    );
     return res.data;
   },
 };

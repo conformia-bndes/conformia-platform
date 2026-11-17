@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
-import { describeApiError, presentStatus } from '../services/presentation';
+import {
+  describeApiError,
+  presentReviewDecision,
+  presentReviewState,
+  presentStatus,
+} from '../services/presentation';
 
 function axiosError(status?: number, data?: unknown): AxiosError {
   const config = { headers: new AxiosHeaders() };
@@ -41,5 +46,24 @@ describe('describeApiError', () => {
 
   it('falls back to the generic message for non-HTTP errors', () => {
     expect(describeApiError(new Error('x'), 'Falha no envio.')).toBe('Falha no envio.');
+  });
+});
+
+describe('review presentation helpers', () => {
+  it('labels each review state distinctly', () => {
+    expect(presentReviewState('NO_REVIEW').tone).toBe('neutral');
+    expect(presentReviewState('PENDING_CHECK')).toEqual({
+      label: 'Aguardando 2º Analista',
+      tone: 'warning',
+    });
+    expect(presentReviewState('FINAL').tone).toBe('success');
+    expect(presentReviewState('RETURNED').tone).toBe('danger');
+  });
+
+  it('formats review decisions in Portuguese', () => {
+    expect(presentReviewDecision('APPROVE')).toBe('Aprovar Laudo');
+    expect(presentReviewDecision('REJECT')).toBe('Reprovar Laudo');
+    expect(presentReviewDecision('EXCEPTION')).toBe('Aprovar com Exceção Motivada');
+    expect(presentReviewDecision(null)).toBe('-');
   });
 });

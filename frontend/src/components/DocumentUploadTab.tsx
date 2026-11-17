@@ -9,9 +9,11 @@ interface DocumentUploadTabProps {
   uploading: boolean;
   verifyingId: string | null;
   activeReport: ComplianceReport | null;
+  apiKeyLabel: string | null;
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRefreshDocuments: () => void;
   onVerifyCompliance: (docId: string, filename: string) => void;
+  onOpenApiKeyModal: () => void;
   onCloseReport: () => void;
 }
 
@@ -21,9 +23,11 @@ export function DocumentUploadTab({
   uploading,
   verifyingId,
   activeReport,
+  apiKeyLabel,
   onFileUpload,
   onRefreshDocuments,
   onVerifyCompliance,
+  onOpenApiKeyModal,
   onCloseReport,
 }: DocumentUploadTabProps) {
   return (
@@ -128,7 +132,13 @@ export function DocumentUploadTab({
 
       {/* Painel do Relatório de Conformidade Selecionado */}
       {activeReport && (
-        <ComplianceReportPanel report={activeReport} onClose={onCloseReport} />
+        <ComplianceReportPanel
+          key={activeReport.document_id}
+          report={activeReport}
+          apiKeyLabel={apiKeyLabel}
+          onOpenApiKeyModal={onOpenApiKeyModal}
+          onClose={onCloseReport}
+        />
       )}
     </div>
   );
