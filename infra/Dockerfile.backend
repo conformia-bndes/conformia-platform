@@ -47,8 +47,14 @@ WORKDIR /app
 # CVE-2026-76844 e CVE-2026-85091, corrigidos em 1.3.dfsg+really1.3.1-1+deb13u1). Lista-los aqui
 # faz o apt-get install atualiza-los para a versao corrente. Quando o digest da base ja incluir
 # as correcoes, estas tres linhas viram no-op e podem ser removidas.
+# O ARG invalida o cache desta camada: sem ele o cache do CI reaproveita um `apt-get install`
+# antigo (libpq5 17.11, zlib1g...) e o Trivy reprova a imagem por CVEs ja corrigidos no Debian.
+# O CI passa a data UTC; localmente o valor fixo "local" mantem o cache.
+ARG UPGRADE_STAMP=local
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN echo "apt em ${UPGRADE_STAMP}" \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-por \
     poppler-utils \
