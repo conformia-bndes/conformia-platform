@@ -5,6 +5,24 @@ Todas as mudancas notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semantico](https://semver.org/lang/pt-BR/).
 
+## [0.4.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.3.0...v0.4.0) (2026-11-17)
+
+
+### Adicionado
+
+* **ai:** JSON mode, retentativas e timeout configuravel para provedores de LLM ([cb8e911](https://github.com/conformia-bndes/conformia-platform/commit/cb8e911296ae263b9139390ddaeeb060679d66b0)), closes [#129](https://github.com/conformia-bndes/conformia-platform/issues/129)
+* **ai:** provedor de LLM configuravel (OpenRouter), JSON mode e retentativas ([a9359a9](https://github.com/conformia-bndes/conformia-platform/commit/a9359a9db2ca160c68609bf87d51aceb042bb9f9))
+* **ai:** tornar a URL base do LLM configuravel (LLM_BASE_URL) ([0615c1d](https://github.com/conformia-bndes/conformia-platform/commit/0615c1d4d9c35a12e19c012885c928895825e78c)), closes [#129](https://github.com/conformia-bndes/conformia-platform/issues/129)
+* **infra:** definir limites de recursos, concorrencia e perfil de pr… ([7148804](https://github.com/conformia-bndes/conformia-platform/commit/714880428def5201dd975431b820a95d79d2f3f3))
+* **infra:** definir limites de recursos, concorrencia e perfil de producao ([#103](https://github.com/conformia-bndes/conformia-platform/issues/103)) ([d5362ae](https://github.com/conformia-bndes/conformia-platform/commit/d5362ae08f2094b24eea123b14db6a0e655cee1e))
+
+
+### Corrigido
+
+* **infra:** invalidar o cache do apk upgrade da imagem do frontend (Trivy) ([9427831](https://github.com/conformia-bndes/conformia-platform/commit/9427831723fced17fb04b825b57a42e15fa66632)), closes [#126](https://github.com/conformia-bndes/conformia-platform/issues/126)
+* **infra:** invalidar o cache do apt/apk upgrade das imagens (Trivy) ([4d7c250](https://github.com/conformia-bndes/conformia-platform/commit/4d7c250cdd50f4f7f5bf0f24d2776e97574cccc2))
+* **infra:** invalidar tambem o cache do apt-get install da imagem do backend (Trivy) ([80d8634](https://github.com/conformia-bndes/conformia-platform/commit/80d8634fb1aba5a7c9c3a6f1677ab0559270be17)), closes [#126](https://github.com/conformia-bndes/conformia-platform/issues/126)
+
 ## [0.3.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.2.1...v0.3.0) (2026-11-07)
 
 
