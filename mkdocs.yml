@@ -93,6 +93,7 @@ nav:
           - ADR-001 Monorepo Modular: architecture/adr-001-monorepo-modular.md
           - ADR-002 Adoção do Astral uv: architecture/adr-002-astral-uv-toolchain.md
           - ADR-003 React SPA vs Next.js: architecture/adr-003-spa-vs-nextjs.md
+          - ADR-004 Proteção de main e revisão: architecture/adr-004-protecao-main-e-revisao.md
           - Modelo de ADR: architecture/adr-template.md
   - Engenharia:
       - Pipeline IDP e OCR: engineering/idp-pipeline.md
