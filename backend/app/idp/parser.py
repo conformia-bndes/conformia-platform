@@ -138,6 +138,26 @@ def extract_fields_and_evidence(
                 confidence=0.95,
                 evidence=ev,
             )
+    # Ordem proposital: a licenca vem depois dos quatro ramos existentes, entao nenhum
+    # documento ja reconhecido muda de tipologia. "RECUPERACAO" sozinha (ex.: de area
+    # degradada) nao dispara o ramo de falencia acima, que exige "RECUPERACAO JUDICIAL".
+    elif "LICENCA" in text_norm and (
+        "AMBIENTAL" in text_norm
+        or "IBAMA" in text_norm
+        or re.search(r"LICENCA (PREVIA|DE INSTALACAO|DE OPERACAO)", text_norm)
+    ):
+        detected_type = "LICENCA_AMBIENTAL"
+        page_num, snippet = _find_page_and_snippet(r"LICEN[CÇ]A", pages, text)
+        if snippet:
+            ev = PageEvidence(text=snippet, page=page_num, confidence=0.95)
+            evidences.append(ev)
+            fields["document_type"] = ExtractedField(
+                name="document_type",
+                value="LICENCA_AMBIENTAL",
+                raw_value=snippet,
+                confidence=0.95,
+                evidence=ev,
+            )
 
     # 2. Extracao de CNPJ
     cnpj_pattern = r"\b(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})\b"
