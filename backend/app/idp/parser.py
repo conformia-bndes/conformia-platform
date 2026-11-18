@@ -55,6 +55,26 @@ def _find_page_and_snippet(
     return 1, ""
 
 
+def _find_page_and_snippet_normalized(
+    pattern: str,
+    pages: Optional[List[Dict[str, Any]]] = None,
+    full_text: str = "",
+) -> Tuple[int, str]:
+    """
+    Como _find_page_and_snippet, mas compara cada linha sem acento e em caixa alta (o mesmo
+    texto usado na deteccao). Assim tipologia e evidencia saem sempre juntas, mesmo com
+    acentos em NFD ou trocados. Devolve a linha original em NFC.
+    """
+    regex = re.compile(pattern)
+    sources = [(p.get("page_number", 1), p.get("text", "")) for p in pages] if pages else []
+    sources.append((1, full_text))
+    for page_num, source in sources:
+        for line in source.splitlines():
+            if regex.search(normalize_text(line)):
+                return page_num, unicodedata.normalize("NFC", line).strip()
+    return 1, ""
+
+
 def extract_fields_and_evidence(
     text: str,
     pages: Optional[List[Dict[str, Any]]] = None,
@@ -72,12 +92,45 @@ def extract_fields_and_evidence(
             full_text_preview=None,
         )
 
+    # Texto e paginas em NFC: acentos decompostos (NFD) passam a casar com os padroes
+    # de evidencia ([AÃ], [EÉ]...). As paginas sao copiadas; o dicionario original nao muda.
+    text = unicodedata.normalize("NFC", text)
+    if pages:
+        pages = [{**p, "text": unicodedata.normalize("NFC", p.get("text", ""))} for p in pages]
+
     text_norm = normalize_text(text)
     fields: Dict[str, ExtractedField] = {}
     evidences: List[PageEvidence] = []
 
     # 1. Identificacao de Tipologia Documental
     detected_type: Optional[str] = None
+
+    # CEIS/CNEP e licenca ambiental: a deteccao e a propria busca da evidencia, com o mesmo
+    # padrao, entao uma nunca sai sem a outra.
+    ceis_page, ceis_snippet = _find_page_and_snippet_normalized(
+        r"\bCEIS\b|\bCNEP\b|CADASTRO NACIONAL DE EMPRESAS (INIDONEAS E SUSPENSAS|PUNIDAS)",
+        pages,
+        text,
+    )
+    # Licenca exige a expressao E um orgao ambiental: "licenca" e "ambiental" soltos nao bastam
+    # (licenca sanitaria, de software, de pesca do IBAMA, de operacao da ANATEL/ANAC).
+    lic_page, lic_snippet = _find_page_and_snippet_normalized(
+        r"LICENCA (AMBIENTAL|PREVIA|DE INSTALACAO|DE OPERACAO)", pages, text
+    )
+    has_environmental_agency = bool(
+        re.search(r"\bIBAMA\b|ORGAO AMBIENTAL|MEIO AMBIENTE|\b(INEA|CETESB|FEPAM)\b", text_norm)
+    )
+    is_ceis = bool(ceis_snippet)
+    is_licenca = bool(lic_snippet) and has_environmental_agency
+    # Precedencia: CNDT e falencia disparam pela palavra solta. Elas so vencem CEIS/licenca
+    # com o sinal forte da propria certidao ("DEBITOS TRABALHISTAS"; distribuidor + falencia).
+    # Assim uma consulta CEIS que cita "certidao de falencia" ou "anexo: CNDT", ou uma
+    # licenca que cita falencia nas condicionantes, nao muda de tipologia.
+    newer_type_found = is_ceis or is_licenca
+    cndt_strong = "DEBITOS TRABALHISTAS" in text_norm
+    falencia_word = "FALENCIA" in text_norm or "RECUPERACAO JUDICIAL" in text_norm
+    falencia_strong = falencia_word and bool(re.search(r"DISTRIBUI(DOR|CAO)", text_norm))
+
     # Certidao positiva tambem e a mesma tipologia: precisa ser avaliada (e reprovada)
     # pela regra da CND, e nao cair em "tipologia nao identificada".
     if ("CERTIDAO NEGATIVA" in text_norm or "CERTIDAO POSITIVA" in text_norm) and (
@@ -110,7 +163,7 @@ def extract_fields_and_evidence(
                 confidence=1.0,
                 evidence=ev,
             )
-    elif "DEBITOS TRABALHISTAS" in text_norm or "CNDT" in text_norm:
+    elif cndt_strong or ("CNDT" in text_norm and not newer_type_found):
         detected_type = "CNDT_TRABALHISTA"
         page_num, snippet = _find_page_and_snippet(r"D[EÉ]BITOS TRABALHISTAS|CNDT", pages, text)
         if snippet:
@@ -123,7 +176,7 @@ def extract_fields_and_evidence(
                 confidence=1.0,
                 evidence=ev,
             )
-    elif "FALENCIA" in text_norm or "RECUPERACAO JUDICIAL" in text_norm:
+    elif falencia_strong or (falencia_word and not newer_type_found):
         detected_type = "FALENCIA_RECUPERACAO"
         page_num, snippet = _find_page_and_snippet(
             r"FAL[EÊ]NCIA|RECUPERA[CÇ][AÃ]O JUDICIAL", pages, text
@@ -138,19 +191,11 @@ def extract_fields_and_evidence(
                 confidence=0.95,
                 evidence=ev,
             )
-    # Ordem proposital: CEIS/CNEP e licenca vem depois dos quatro ramos originais, entao
-    # nenhum documento ja reconhecido muda de tipologia. CEIS/CNEP vem antes da licenca
-    # porque uma consulta de sancoes pode citar o IBAMA ou uma licenca ambiental.
-    elif re.search(r"\b(CEIS|CNEP)\b", text_norm) or (
-        "CADASTRO NACIONAL DE EMPRESAS INIDONEAS E SUSPENSAS" in text_norm
-        or "CADASTRO NACIONAL DE EMPRESAS PUNIDAS" in text_norm
-    ):
+    # CEIS/CNEP vem antes da licenca porque uma consulta de sancoes pode citar o IBAMA ou
+    # uma licenca ambiental.
+    elif is_ceis:
         detected_type = "INTEGRIDADE_CEIS_CNEP"
-        page_num, snippet = _find_page_and_snippet(
-            r"\bCEIS\b|\bCNEP\b|CADASTRO NACIONAL DE EMPRESAS (INID[OÔ]NEAS|PUNIDAS)",
-            pages,
-            text,
-        )
+        page_num, snippet = ceis_page, ceis_snippet
         if snippet:
             ev = PageEvidence(text=snippet, page=page_num, confidence=0.95)
             evidences.append(ev)
@@ -163,13 +208,9 @@ def extract_fields_and_evidence(
             )
     # "RECUPERACAO" sozinha (ex.: de area degradada) nao dispara o ramo de falencia
     # acima, que exige "RECUPERACAO JUDICIAL".
-    elif "LICENCA" in text_norm and (
-        "AMBIENTAL" in text_norm
-        or "IBAMA" in text_norm
-        or re.search(r"LICENCA (PREVIA|DE INSTALACAO|DE OPERACAO)", text_norm)
-    ):
+    elif is_licenca:
         detected_type = "LICENCA_AMBIENTAL"
-        page_num, snippet = _find_page_and_snippet(r"LICEN[CÇ]A", pages, text)
+        page_num, snippet = lic_page, lic_snippet
         if snippet:
             ev = PageEvidence(text=snippet, page=page_num, confidence=0.95)
             evidences.append(ev)
