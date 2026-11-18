@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 for _name in ("SECRET_KEY", "API_KEY", "POSTGRES_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"):
     os.environ.setdefault(_name, "eval-only")
 
+from app.ai.llm_client import LLMUnavailableError, MakerCheckerValidator  # noqa: E402
 from app.idp.parser import extract_fields_and_evidence  # noqa: E402
 from app.services.rules_engine import RulesEngine  # noqa: E402
 
@@ -46,6 +47,17 @@ RULES_FILE = os.path.join(EVALS_DIR, "..", "rules", "schemas", "bndes_sample_che
 # Data de referencia fixa: o resultado do benchmark nao depende do dia em que roda.
 REFERENCE_DATE = date(2026, 10, 29)
 ACCURACY_THRESHOLD = 90.0
+
+
+class _LLMDisabledClient:
+    """
+    Cliente de LLM que sempre recusa. O benchmark mede as regras deterministicas e o
+    fail-closed do Maker-Checker; ele nao pode depender de OPENAI_API_KEY no .env nem
+    de rede. O MakerCheckerValidator trata a recusa como LLM indisponivel.
+    """
+
+    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
+        raise LLMUnavailableError("LLM desativada no benchmark de evals.")
 
 
 # Casos de teste de referência com Ground Truth
@@ -308,9 +320,14 @@ def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) 
     print("=" * 70)
     print("Conform.IA BNDES - Pipeline de Avaliacao Continua (Evals)")
     print(f"Data de referencia: {REFERENCE_DATE.isoformat()}")
+    print("LLM: desativada (regras HYBRID terminam em revisao manual, fail-closed)")
     print("=" * 70)
 
-    engine = RulesEngine(rules_file=RULES_FILE, today=lambda: REFERENCE_DATE)
+    engine = RulesEngine(
+        rules_file=RULES_FILE,
+        maker_checker=MakerCheckerValidator(client=_LLMDisabledClient()),
+        today=lambda: REFERENCE_DATE,
+    )
     total_checks = 0
     passed_checks = 0
     false_positives = 0
