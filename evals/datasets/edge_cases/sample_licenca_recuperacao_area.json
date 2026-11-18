@@ -1,0 +1,7 @@
+{
+  "id": "DATASET-EDGECASE-004",
+  "document_type": "LICENCA_AMBIENTAL",
+  "text": "ORGAO AMBIENTAL ESTADUAL\nLICENCA AMBIENTAL DE INSTALACAO N. 0789/2026\nCondicionante: execucao do PLANO DE RECUPERACAO DE AREA DEGRADADA (PRAD)\nValida ate: 30/06/2028",
+  "expected_status": "MANUAL_REVIEW_REQUIRED",
+  "expected_rule": "RULE-BNDES-005"
+}

@@ -31,8 +31,15 @@ prioridade Alta (`requirements.md`).
 
 **Tipologias obrigatórias propostas para o MVP:** `CND_FEDERAL` e `CRF_FGTS` (as duas citadas no
 cenário de demonstração). `CNDT_TRABALHISTA` e `FALENCIA_RECUPERACAO` permanecem ativas (já tem
-regra e detecção), mas não são critério de Go. `LICENCA_AMBIENTAL` e `INTEGRIDADE_CEIS_CNEP` tem
-regra, porém **não tem detecção de tipologia no parser**: hoje sempre resultam em revisão manual.
+regra e detecção), mas não são critério de Go. `LICENCA_AMBIENTAL` tem regra e detecção no parser
+(expressão de licença + órgão ambiental). Por ser regra HYBRID, sem LLM configurado uma licença
+vigente resulta em revisão manual (Maker-Checker fail-closed). São reprovadas direto as licenças
+com a frase exata "LICENÇA SUSPENSA" ou com "EMBARGADO" ("embargada" não é reconhecida). A licença
+vencida só é reprovada se tiver os termos obrigatórios da regra ("LICENÇA AMBIENTAL", "VÁLIDA ATÉ",
+"ÓRGÃO AMBIENTAL"); sem algum deles, vai para revisão manual.
+`INTEGRIDADE_CEIS_CNEP` tem detecção no parser e regra HYBRID: os termos de sanção definidos na
+regra reprovam direto; sem LLM configurado, o restante vai para revisão manual (inclusive "nada
+consta" no CEIS com sanção no CNEP).
 
 ### Itens explicitamente adiados (fora do MVP)
 
