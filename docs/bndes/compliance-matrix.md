@@ -21,10 +21,12 @@ O processo de concessão de apoio financeiro pelo BNDES requer a estrita observ�
 | **RULE-BNDES-005** | Regularidade / Licenciamento Ambiental      | Resolução CMN no 4.327/2014; Política Socioambiental BNDES   | Híbrida (Maker-Checker) | Licença ambiental de operação valida para a atividade ou dispensa formal comprovada   | Bloqueio ou revisão técnica (`MANUAL_REVIEW_REQUIRED`)          |
 | **RULE-BNDES-006** | Idoneidade e Transparência (CEIS / CNEP)    | Lei no 12.846/2013 (Anticorrupção); Diretrizes de Compliance | Híbrida (Maker-Checker) | Ausência de inscrição nos cadastros de empresas inidoneas e suspensas                 | Bloqueio imediato (`NON_COMPLIANT`)                             |
 
-> **Nota sobre a RULE-BNDES-006:** sanções explícitas ("impedimento de licitar" e
-> "declaração de inidoneidade") bloqueiam automaticamente (`NON_COMPLIANT`). Os demais
-> registros no CEIS/CNEP são encaminhados ao analista (`MANUAL_REVIEW_REQUIRED`), que
-> aplica o bloqueio.
+> **Nota sobre a RULE-BNDES-006:** os termos de sanção definidos na regra (`anti_keywords`;
+> por exemplo, "impedimento de licitar" e "declaração de inidoneidade") bloqueiam
+> automaticamente (`NON_COMPLIANT`). Sem LLM configurado, os demais registros no CEIS/CNEP
+> são encaminhados ao analista (`MANUAL_REVIEW_REQUIRED`), que aplica o bloqueio. Com LLM,
+> o Maker-Checker só decide sozinho quando o Checker aprova e a citação existe no
+> documento; nos demais casos, o resultado também é revisão manual.
 
 ---
 

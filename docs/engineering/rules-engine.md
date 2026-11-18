@@ -23,7 +23,8 @@ conformidade. As regras ficam fora do código, em JSON versionado.
 | RULE-BNDES-006 | `INTEGRIDADE_CEIS_CNEP` | INTEGRIDADE | HYBRID | CRITICAL | Não |
 
 > **Detecção de tipologia:** as seis regras têm detecção no parser, incluindo a RULE-BNDES-005
-> (`LICENCA_AMBIENTAL`) e a RULE-BNDES-006 (`INTEGRIDADE_CEIS_CNEP`).
+> (`LICENCA_AMBIENTAL`) e a RULE-BNDES-006 (`INTEGRIDADE_CEIS_CNEP`). Os critérios de cada
+> tipologia e a precedência entre elas estão em `docs/bndes/document-types.md`.
 
 Campos de cada regra:
 
