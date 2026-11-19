@@ -9,7 +9,7 @@ import pytest
 
 from app.api.v1.endpoints import documents, health
 from app.core.celery_app import process_document_task
-from app.core.config import ApiUser, settings
+from app.core.config import ApiUser, Settings, settings
 from app.core.security import resolve_principal
 from app.core.storage import storage_service
 from app.db.models.review import ReviewEvent
@@ -180,3 +180,48 @@ def test_setup_env_file_preserves_existing_users_written_with_quotes(tmp_path):
     ids = {u["user_id"] for u in json.loads(line.split("=", 1)[1][1:-1])}
 
     assert ids == {"ana.silva", "smoke.maker", "smoke.checker"}
+
+
+def test_setup_env_file_validates_against_settings_and_makefile_does_not_swallow_errors(
+    tmp_path, monkeypatch
+):
+    """Issue #127: valida .env gerado por --setup-env direto em Settings e alvo env do Makefile."""
+    smoke = _load_smoke_module()
+    repo_root = Path(__file__).resolve().parents[2]
+    env_example = (repo_root / ".env.example").read_text(encoding="utf-8")
+    env_file = tmp_path / ".env"
+    env_file.write_text(env_example.replace("CHANGE_ME", "segredo_valido_123456"), encoding="utf-8")
+
+    smoke.main(["--setup-env", str(env_file)])
+
+    raw_line = next(
+        row
+        for row in env_file.read_text(encoding="utf-8").splitlines()
+        if row.startswith("API_USERS=")
+    )
+    raw_value = raw_line.split("=", 1)[1]
+    assert raw_value.startswith("'[") and raw_value.endswith("]'")
+
+    monkeypatch.delenv("API_USERS", raising=False)
+    loaded = Settings(_env_file=str(env_file))
+    assert {u.user_id for u in loaded.API_USERS} == {"smoke.maker", "smoke.checker"}
+
+    # Tambem valida quando o valor bruto com aspas simples e repassado diretamente ao validador.
+    monkeypatch.setenv("API_USERS", raw_value)
+    loaded_from_raw_env = Settings(_env_file=str(env_file))
+    assert {u.user_id for u in loaded_from_raw_env.API_USERS} == {"smoke.maker", "smoke.checker"}
+
+    makefile = (repo_root / "Makefile").read_text(encoding="utf-8")
+    env_target_lines = []
+    in_env = False
+    for line in makefile.splitlines():
+        if line.startswith("env:"):
+            in_env = True
+            continue
+        if in_env:
+            if line.startswith("\t"):
+                env_target_lines.append(line)
+            elif line.strip():
+                break
+    assert any("smoke_test.py --setup-env .env" in line for line in env_target_lines)
+    assert all("2>/dev/null" not in line and "|| true" not in line for line in env_target_lines)

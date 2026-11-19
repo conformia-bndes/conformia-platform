@@ -45,6 +45,13 @@ SMOKE_CND_LINES = [
 ]
 
 
+def _unquote_env_value(value: str) -> str:
+    """Remove as aspas simples que protegem o valor no .env (o Compose nao interpola nelas)."""
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return value[1:-1]
+    return value
+
+
 def _load_dotenv_fallback() -> dict:
     """Le variaveis de um arquivo .env local caso nao estejam no ambiente do processo."""
     for candidate in (Path(".env"), Path(__file__).resolve().parents[2] / ".env"):
@@ -55,7 +62,7 @@ def _load_dotenv_fallback() -> dict:
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 k, v = line.split("=", 1)
-                values[k.strip()] = v.strip()
+                values[k.strip()] = _unquote_env_value(v.strip())
             return values
     return {}
 
@@ -95,13 +102,6 @@ def build_smoke_user(user_id: str, role: str = "ANALISTA") -> tuple:
         "key_hash": f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt.hex()}${digest.hex()}",
     }
     return f"{user_id}:{secret}", entry
-
-
-def _unquote_env_value(value: str) -> str:
-    """Remove as aspas simples que protegem o valor no .env (o Compose nao interpola nelas)."""
-    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
-        return value[1:-1]
-    return value
 
 
 def setup_env_file(env_path: Path) -> None:
