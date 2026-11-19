@@ -15,7 +15,8 @@ Preparacao de analistas de teste no .env (usado pelo CI e pelo Makefile):
     python3 backend/scripts/smoke_test.py --setup-env .env
 
 Variaveis: API_URL (padrao http://localhost:8000), API_KEY (opcional em desenvolvimento),
-SMOKE_MAKER_KEY e SMOKE_CHECKER_KEY (chaves pessoais de dois usuarios ANALISTA distintos),
+API_USERS (JSON com os hashes PBKDF2 dos analistas smoke.maker e smoke.checker; chaves explicitas
+SMOKE_MAKER_KEY e SMOKE_CHECKER_KEY em memoria tambem sao aceitas como override),
 SMOKE_TIMEOUT (segundos por etapa, padrao 120).
 
 Codigo de saida 0 = ambiente, fila, motor de conformidade e revisao humana funcionando;
@@ -26,7 +27,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import secrets
 import sys
 import time
 import urllib.error
@@ -76,8 +76,6 @@ def _env(name: str, default: str = "") -> str:
 
 API_URL = _env("API_URL", "http://localhost:8000").rstrip("/")
 API_KEY = _env("API_KEY", "")
-SMOKE_MAKER_KEY = _env("SMOKE_MAKER_KEY", "")
-SMOKE_CHECKER_KEY = _env("SMOKE_CHECKER_KEY", "")
 TIMEOUT = int(_env("SMOKE_TIMEOUT", "120"))
 API = f"{API_URL}/api/v1"
 
@@ -91,47 +89,92 @@ def fail(msg: str) -> None:
     sys.exit(1)
 
 
+def _derive_smoke_verifier(user_id: str, salt_hex: str) -> str:
+    """Deriva o verificador efemero do analista de smoke a partir do user_id e do sal PBKDF2."""
+    payload = f"conformia-smoke-v1:{user_id}:{salt_hex}".encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def build_smoke_user(user_id: str, role: str = "ANALISTA") -> tuple:
-    """Gera (chave_pessoal, entrada_api_users) com PBKDF2-HMAC-SHA256 usando apenas a stdlib."""
-    secret = secrets.token_urlsafe(32)
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", secret.encode("utf-8"), salt, PBKDF2_ITERATIONS)
+    """Gera (credencial, entrada_api_users) com PBKDF2-HMAC-SHA256 usando apenas a stdlib."""
+    salt = os.urandom(16)
+    salt_hex = salt.hex()
+    verifier = _derive_smoke_verifier(user_id, salt_hex)
+    digest = hashlib.pbkdf2_hmac("sha256", verifier.encode("utf-8"), salt, PBKDF2_ITERATIONS)
     entry = {
         "user_id": user_id,
         "role": role,
-        "key_hash": f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt.hex()}${digest.hex()}",
+        "key_hash": f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt_hex}${digest.hex()}",
     }
-    return f"{user_id}:{secret}", entry
+    return f"{user_id}:{verifier}", entry
+
+
+def resolve_smoke_credential(user_id: str, raw_api_users: str = None) -> str:
+    """Reconstroi em memoria a credencial do analista de smoke a partir do sal em API_USERS."""
+    source = raw_api_users if raw_api_users is not None else _env("API_USERS", "")
+    unquoted = _unquote_env_value(source.strip())
+    if not unquoted:
+        return ""
+    try:
+        users = json.loads(unquoted)
+    except json.JSONDecodeError:
+        return ""
+    if not isinstance(users, list):
+        return ""
+
+    entry = next(
+        (u for u in users if isinstance(u, dict) and u.get("user_id") == user_id),
+        None,
+    )
+    if not entry:
+        return ""
+    key_hash = str(entry.get("key_hash") or "")
+    parts = key_hash.split("$")
+    if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
+        return ""
+    _, iterations_str, salt_hex, digest_hex = parts
+    try:
+        iterations = int(iterations_str)
+        salt = bytes.fromhex(salt_hex)
+    except ValueError:
+        return ""
+
+    verifier = _derive_smoke_verifier(user_id, salt_hex)
+    candidate = hashlib.pbkdf2_hmac("sha256", verifier.encode("utf-8"), salt, iterations).hex()
+    if candidate != digest_hex:
+        return ""
+    return f"{user_id}:{verifier}"
 
 
 def setup_env_file(env_path: Path) -> None:
-    """Garante que o arquivo .env possua dois usuarios ANALISTA de teste para o smoke."""
+    """Garante que o arquivo .env possua dois usuarios ANALISTA de teste em API_USERS."""
     if not env_path.is_file():
         fail(f"arquivo {env_path} nao encontrado; execute bash scripts/setup-env.sh antes.")
 
     lines = env_path.read_text(encoding="utf-8").splitlines()
-    existing = {}
+    raw_api_users = "[]"
+    has_legacy_clear_keys = False
     for line in lines:
         stripped = line.strip()
-        if stripped and not stripped.startswith("#") and "=" in stripped:
-            k, v = stripped.split("=", 1)
-            existing[k.strip()] = _unquote_env_value(v.strip())
+        if stripped.startswith("API_USERS="):
+            raw_api_users = _unquote_env_value(stripped.split("=", 1)[1].strip())
+        elif stripped.startswith("SMOKE_MAKER_KEY=") or stripped.startswith("SMOKE_CHECKER_KEY="):
+            has_legacy_clear_keys = True
 
     try:
-        users = json.loads(existing.get("API_USERS", "[]") or "[]")
+        users = json.loads(raw_api_users or "[]")
     except json.JSONDecodeError:
         users = []
 
-    user_ids = {u.get("user_id") for u in users if isinstance(u, dict)}
     if (
-        existing.get("SMOKE_MAKER_KEY")
-        and existing.get("SMOKE_CHECKER_KEY")
-        and {"smoke.maker", "smoke.checker"}.issubset(user_ids)
+        not has_legacy_clear_keys
+        and resolve_smoke_credential("smoke.maker", raw_api_users)
+        and resolve_smoke_credential("smoke.checker", raw_api_users)
     ):
         return
 
-    maker_key, maker_entry = build_smoke_user("smoke.maker", "ANALISTA")
-    checker_key, checker_entry = build_smoke_user("smoke.checker", "ANALISTA")
+    _, maker_entry = build_smoke_user("smoke.maker", "ANALISTA")
+    _, checker_entry = build_smoke_user("smoke.checker", "ANALISTA")
     users = [
         u
         for u in users
@@ -153,8 +196,7 @@ def setup_env_file(env_path: Path) -> None:
 
     if not replaced_api_users:
         new_lines.append(f"API_USERS='{api_users_json}'")
-    new_lines.append(f"SMOKE_MAKER_KEY={maker_key}")
-    new_lines.append(f"SMOKE_CHECKER_KEY={checker_key}")
+    # Nao persistir chaves sensiveis em texto claro no .env.
     env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
 
 
@@ -302,11 +344,11 @@ def main(argv: list = None) -> None:
     )
 
     # 6) Revisao humana Maker-Checker por dois usuarios de teste (proposta + confirmacao)
-    maker_key = _env("SMOKE_MAKER_KEY", "")
-    checker_key = _env("SMOKE_CHECKER_KEY", "")
+    maker_key = _env("SMOKE_MAKER_KEY", "") or resolve_smoke_credential("smoke.maker")
+    checker_key = _env("SMOKE_CHECKER_KEY", "") or resolve_smoke_credential("smoke.checker")
     if not maker_key or not checker_key:
         fail(
-            "SMOKE_MAKER_KEY e SMOKE_CHECKER_KEY ausentes; "
+            "credenciais de smoke (smoke.maker / smoke.checker) ausentes em API_USERS; "
             "rode 'python3 backend/scripts/smoke_test.py --setup-env .env' antes de subir a stack."
         )
 

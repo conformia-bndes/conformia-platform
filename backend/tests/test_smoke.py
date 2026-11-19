@@ -36,8 +36,9 @@ def test_setup_env_file_registers_two_analysts_and_is_idempotent(tmp_path, monke
         if line.strip() and not line.startswith("#")
     )
 
-    assert "SMOKE_MAKER_KEY" in kv
-    assert "SMOKE_CHECKER_KEY" in kv
+    # Seguranca (CodeQL): nenhuma chave em texto claro e gravada no .env; apenas o hash PBKDF2.
+    assert "SMOKE_MAKER_KEY" not in kv
+    assert "SMOKE_CHECKER_KEY" not in kv
     # O key_hash tem "$": entre aspas simples, o Docker Compose nao o interpola em env_file.
     assert kv["API_USERS"].startswith("'[") and kv["API_USERS"].endswith("]'")
     users = [ApiUser(**u) for u in json.loads(kv["API_USERS"][1:-1])]
@@ -45,12 +46,14 @@ def test_setup_env_file_registers_two_analysts_and_is_idempotent(tmp_path, monke
     assert all(u.role == "ANALISTA" for u in users)
 
     monkeypatch.setattr(settings, "API_USERS", users)
-    maker = resolve_principal(kv["SMOKE_MAKER_KEY"])
-    checker = resolve_principal(kv["SMOKE_CHECKER_KEY"])
+    maker_cred = smoke.resolve_smoke_credential("smoke.maker", kv["API_USERS"])
+    checker_cred = smoke.resolve_smoke_credential("smoke.checker", kv["API_USERS"])
+    maker = resolve_principal(maker_cred)
+    checker = resolve_principal(checker_cred)
     assert (maker.user_id, maker.role) == ("smoke.maker", "ANALISTA")
     assert (checker.user_id, checker.role) == ("smoke.checker", "ANALISTA")
 
-    # Segunda chamada nao altera as chaves geradas.
+    # Segunda chamada nao altera as entradas geradas.
     smoke.main(["--setup-env", str(env_file)])
     assert env_file.read_text(encoding="utf-8") == content
 
@@ -66,8 +69,12 @@ def test_extended_smoke_exercises_upload_worker_compliance_and_human_review(
 
     users = [ApiUser(**u) for u in json.loads(kv["API_USERS"][1:-1])]
     monkeypatch.setattr(settings, "API_USERS", users)
-    monkeypatch.setenv("SMOKE_MAKER_KEY", kv["SMOKE_MAKER_KEY"])
-    monkeypatch.setenv("SMOKE_CHECKER_KEY", kv["SMOKE_CHECKER_KEY"])
+    # Confirma que o smoke nao depende de chaves de LLM nem de chaves em texto claro no .env.
+    monkeypatch.setattr(settings, "OPENAI_API_KEY", None)
+    monkeypatch.setattr(settings, "ANTHROPIC_API_KEY", None)
+    monkeypatch.delenv("SMOKE_MAKER_KEY", raising=False)
+    monkeypatch.delenv("SMOKE_CHECKER_KEY", raising=False)
+    monkeypatch.setenv("API_USERS", kv["API_USERS"])
 
     # Simula ambiente saudavel (Postgres + Redis + MinIO) e fila Celery consumida pelo worker.
     monkeypatch.setattr(storage_service, "ping", lambda: True)
@@ -113,17 +120,28 @@ def test_extended_smoke_exercises_upload_worker_compliance_and_human_review(
     assert "5/6 laudo de conformidade OK: overall_status=COMPLIANT" in output
     assert "6/6 revisao humana OK: state=FINAL decision=APPROVE" in output
 
+    assert len(task_results) == 1
+    worker_payload = next(iter(task_results.values()))
+    summary = worker_payload["compliance_summary"]
+    assert summary["overall_status"] == "COMPLIANT"
+    assert summary["evaluated_rules"] >= 1
+    assert any(
+        r["rule_id"] == "RULE-BNDES-001" and r["status"] == "COMPLIANT" for r in summary["results"]
+    )
+
     events = db_session.query(ReviewEvent).order_by(ReviewEvent.created_at).all()
-    assert [(e.event_type, e.actor_id) for e in events] == [
-        ("PROPOSED", "smoke.maker"),
-        ("CONFIRMED", "smoke.checker"),
+    assert [(e.event_type, e.actor_id, e.decision) for e in events] == [
+        ("PROPOSED", "smoke.maker", "APPROVE"),
+        ("CONFIRMED", "smoke.checker", None),
     ]
+    assert events[1].resolves_id == events[0].id
 
 
 def test_smoke_fails_when_review_keys_are_missing(monkeypatch):
     smoke = _load_smoke_module()
     monkeypatch.delenv("SMOKE_MAKER_KEY", raising=False)
     monkeypatch.delenv("SMOKE_CHECKER_KEY", raising=False)
+    monkeypatch.delenv("API_USERS", raising=False)
     monkeypatch.setattr(smoke, "_DOTENV", {})
 
     def fake_request(method, url, body=None, headers=None):
