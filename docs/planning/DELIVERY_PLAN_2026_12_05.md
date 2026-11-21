@@ -1,6 +1,8 @@
 # Plano de Entrega - MVP até 05/12/2026
 
-Data de referência: 29/10/2026. Base auditada: branch `developer`, commit `d76f41c` (contém `e39217b`).
+Data de referência: **13/11/2026** (revisado em 21/11/2026). Base: branch de integração `dev`,
+commit `627a95a`. Histórico: a primeira versão deste plano (29/10/2026) auditou o commit
+`d76f41c`, quando a branch de integração ainda se chamava `developer`.
 
 Este plano substitui hipóteses da análise preliminar por fatos verificados no código. O backlog
 detalhado está em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) e as evidências de
@@ -17,17 +19,17 @@ execução em [VALIDATION_REPORT.md](VALIDATION_REPORT.md).
 Derivado do "Cenário de Demonstração Mínima" (`sprints-roadmap.md` seção 4) e dos RF de
 prioridade Alta (`requirements.md`).
 
-| # | Fluxo essencial | Requisito | Estado em 29/10 |
+| # | Fluxo essencial | Requisito | Estado em 13/11 |
 | :- | :-- | :-- | :-- |
-| 1 | Upload de PDF com validação (extensão, `%PDF-`, 50 MB) e armazenamento MinIO | RF02 | Implementado e testado (unitário). Sem validação em compose nesta máquina. |
-| 2 | Extração nativa + OCR Tesseract por página, assíncrona via Celery | RF03 | Implementado; OCR real não testado aqui (Tesseract ausente). |
+| 1 | Upload de PDF com validação (extensão, `%PDF-`, 50 MB) e armazenamento MinIO | RF02 | Implementado e testado; leitura limitada a 50 MB (T03c, PR #82). Exercitado em Compose pelo smoke do CI. |
+| 2 | Extração nativa + OCR Tesseract por página, assíncrona via Celery | RF03 | Implementado; fila validada pelo smoke do CI. OCR no container validado na branch `docs/validar-compose-smoke-ocr` (issue #46), ainda não integrada. |
 | 3 | Campos tipados com evidência (página + trecho) | RF04, RF08 | Implementado (regex). Coordenadas (`bounding_box`) sempre nulas. |
-| 4 | Checklist declarativo + motor determinístico | RF05, RF06 | Corrigido nesta execução (validade e tipologia). |
-| 5 | Maker-Checker com citação literal obrigatória | RF07 | Corrigido para fail-closed. Sem chave LLM, regras híbridas vão para revisão manual. |
-| 6 | Laudo apresentado ao analista com status compreensíveis | RF08 | Corrigido (rótulos de revisão manual / não aplicável; sem dados simulados). |
-| 7 | **Revisão humana: aprovar, rejeitar ou exceção motivada** | RF09 | API implementada e testada com segregação (chaves pessoais, D1). **UI pendente** (T06b, T06c). |
+| 4 | Checklist declarativo + motor determinístico | RF05, RF06 | Corrigido (validade e tipologia, PR #44; política D2, PR #92). |
+| 5 | Maker-Checker com citação literal obrigatória | RF07 | Fail-closed (PR #44). Sem chave LLM, regras híbridas vão para revisão manual. Modelo gratuito via OpenRouter avaliado em 13/11 (`docs/engineering/maker-checker.md`). |
+| 6 | Laudo apresentado ao analista com status compreensíveis | RF08 | Corrigido (rótulos de revisão manual / não aplicável; sem dados simulados). Evidências por página na UI em andamento (T06b). |
+| 7 | **Revisão humana: aprovar, rejeitar ou exceção motivada** | RF09 | API implementada e testada com segregação (chaves pessoais, D1; PRs #45 e #68). **UI pendente** (T06b, T06c). |
 | 8 | Trilha de auditoria com executor, timestamp e hash do arquivo | RF10 | Implementado: hash SHA-256 no upload e eventos `REVIEW_*` com o analista. |
-| 9 | Execução reproduzível em Docker Compose + smoke test | RNF04 | Arquivos existem; **não executado** nesta máquina (Docker parado). |
+| 9 | Execução reproduzível em Docker Compose + smoke test | RNF04 | Migrations no startup (PR #109); smoke em Compose no job `smoke` de `ci-infra.yml` (PR #95). Registro manual com saída pendente de integração (T09a). |
 
 **Tipologias obrigatórias propostas para o MVP:** `CND_FEDERAL` e `CRF_FGTS` (as duas citadas no
 cenário de demonstração). `CNDT_TRABALHISTA` e `FALENCIA_RECUPERACAO` permanecem ativas (já tem
@@ -52,33 +54,35 @@ regra, porém **não tem detecção de tipologia no parser**: hoje sempre result
 ```text
 [D1 decidida] -> [T05a/T05b concluidos] -> [T06c chave na UI] -> [T06b UI de revisao]
                                                                               |
-[T09 Compose + smoke em maquina com Docker] ----------------------------------+--> [Ensaio de demo] -> [Go/No-Go 04/12]
-[D2 Politica para palavra-chave ausente] -> [T04c ajuste de regra + evals] ---+
+[T09a smoke no CI (feito) + registro manual e OCR no container] --------------+--> [Ensaio de demo] -> [Go/No-Go 04/12]
+[D2 decidida] -> [T04c concluido (PR #92)] -----------------------------------+
 ```
 
-- **D1** foi decidida (chaves pessoais); a API de revisão existe. O caminho crítico passa a
-  ser a UI de revisão (T06c, T06b) e a validação em compose com PostgreSQL (T09a, T05d).
-- **T09** precisa de uma máquina com Docker ativo; nenhum teste ponta a ponta com Postgres,
-  Redis, MinIO e worker reais foi executado nesta auditoria.
+- Em 13/11, o caminho crítico é a UI de revisão (T06c, T06b). D1 e D2 estão decididas e
+  implementadas; T05d (migrations no startup) está concluído.
+- **T09a**: o smoke em Compose com PostgreSQL, Redis, MinIO e worker reais roda no CI
+  (`ci-infra.yml`). Falta integrar o registro manual com saída e a validação de OCR no
+  container (branch `docs/validar-compose-smoke-ocr`).
+- Histórico (29/10): nenhum teste ponta a ponta com serviços reais havia sido executado.
 
 ---
 
 ## 3. Cronograma regressivo (revisado)
 
-| Período | Objetivo | Critério de saída verificável |
-| :-- | :-- | :-- |
-| 29/10-04/11 | Auditoria, correções P0 do motor e da UI (feito), **decisões D1/D2**, smoke em compose | `make up && make smoke` com código 0 em máquina da equipe; D1 e D2 registradas |
-| **04/11** | **Congelamento de escopo** (tipologias e fluxos do MVP) | Este documento aprovado pelo responsável de produto |
-| 05/11-12/11 | Identidade mínima, endpoint de revisão humana append-only, migration 002 | Testes de autorização (próprio autor não aprova) e de persistência passando |
-| 13/11-19/11 | UI de revisão (aprovar/rejeitar/exceção com justificativa), evidências por página na UI | Fluxo upload -> laudo -> decisão humana exercitado em compose |
-| 20/11-26/11 | Integração ponta a ponta, smoke estendido (inclui verificação e decisão), evals ampliados com PDFs reais anonimizados | **Congelamento de funcionalidades em 26/11** |
-| 27/11-01/12 | Correções, regressão completa, RC1 | **Code freeze em 01/12** (30/11 e feriado no DF: considerar disponibilidade) |
-| 02/12-04/12 | Ensaio da demonstração, smoke em ambiente de demo, **Go/No-Go em 04/12** | Checklist da seção 5 preenchido com evidências |
-| 05/12 | Entrega | Versão etiquetada, roteiro de demo executado |
+| Período | Objetivo | Critério de saída verificável | Status em 13/11 |
+| :-- | :-- | :-- | :-- |
+| 29/10-04/11 | Auditoria, correções P0 do motor e da UI, **decisões D1/D2**, smoke em compose | `make up && make smoke` com código 0 em máquina da equipe; D1 e D2 registradas | Concluído (histórico): P0 no PR #44; D1 em 29/10, D2 e D3 em 01/11 (PR #90); smoke no CI (PR #95) |
+| **04/11** | **Congelamento de escopo** (tipologias e fluxos do MVP) | Este documento aprovado pelo responsável de produto | Escopo da seção 1 mantido; aprovação formal não registrada no repositório |
+| 05/11-12/11 | Identidade mínima, endpoint de revisão humana append-only, migration 002 | Testes de autorização (próprio autor não aprova) e de persistência passando | Concluído: PRs #45, #68 (adiantados para 29/10), #109 (migrations), #110 (padrões seguros) |
+| 13/11-19/11 | UI de revisão (aprovar/rejeitar/exceção com justificativa), evidências por página na UI | Fluxo upload -> laudo -> decisão humana exercitado em compose | Em andamento: T06c e T06b pendentes; evidências por página em branch |
+| 20/11-26/11 | Integração ponta a ponta, smoke estendido (inclui verificação e decisão), evals ampliados com PDFs reais anonimizados | **Congelamento de funcionalidades em 26/11** | Não iniciado em 13/11 (smoke estendido em `feat/smoke-estendido`, issue #57) |
+| 27/11-01/12 | Correções, regressão completa, RC1 | **Code freeze em 01/12** (30/11 e feriado no DF: considerar disponibilidade) | Não iniciado |
+| 02/12-04/12 | Ensaio da demonstração, smoke em ambiente de demo, **Go/No-Go em 04/12** | Checklist da seção 5 preenchido com evidências | Não iniciado |
+| 05/12 | Entrega | Versão etiquetada, roteiro de demo executado | - |
 
 **Capacidade:** o tamanho e a disponibilidade da equipe não estão documentados no repositório;
-não é possível calcular folga real. Estimativa de esforço P0 restante: ~6 a 9 dias-pessoa
-(T05a 1-2, T05b 2-3, T06 2-3, T09 1). Se a equipe tiver menos de 1,5 pessoa dedicada, reduzir
+não é possível calcular folga real. Estimativa de esforço P0 restante em 13/11: ~3 a 4,5
+dias-pessoa (T06c 0,5-1, T06b 2-3, fechamento de T09a 0,5). Se a equipe tiver menos de 1,5 pessoa dedicada, reduzir
 o escopo: revisão humana somente via API (sem UI própria) e demo com uma única tipologia (CND).
 
 ---
@@ -87,12 +91,11 @@ o escopo: revisão humana somente via API (sem UI própria) e demo com uma únic
 
 | Risco | Impacto | Mitigação |
 | :-- | :-- | :-- |
-| Compose nunca validado nesta auditoria | Demo pode não subir | T09 até 04/11 em máquina com Docker; CI job `smoke` agora roda em `developer` |
-| D1 não decidida até 05/11 | RF09 inviável; demo perde a intervenção do analista | Proposta de identidade mínima pronta (backlog T05a) |
+| Compose validado só no CI; registro manual e OCR no container fora de `dev` em 13/11 | Demo pode não subir no ambiente da equipe | Job `smoke` de `ci-infra.yml` roda em `main` e `dev`; integrar `docs/validar-compose-smoke-ocr` (T09a) |
+| UI de revisão (T06c, T06b) não iniciada em 13/11 | RF09 só demonstrável via API | Plano B da seção 3: revisão humana pela API no roteiro de demo |
 | Sem chave LLM no ambiente de demo | Regras HYBRID sempre em revisão manual | Comportamento correto e seguro; documentar no roteiro; MVP usa CND/CRF (determinísticas) |
-| OCR não validado (Tesseract ausente localmente) | PDFs digitalizados podem falhar na demo | Validar no container (imagem já instala Tesseract `por`); usar PDF nativo como plano B |
-| Evals com poucos casos sintéticos | Acurácia reportada não representa produção | Declarar limite; adicionar PDFs reais anonimizados até 26/11 |
-| Testes de backend lentos (~5 min) por timeouts de rede | CI lento, feedback tardio | Backlog T11 (mockar storage/health) |
+| OCR no container validado apenas em branch não integrada | PDFs digitalizados podem falhar na demo | Integrar o passo de OCR do CI (issue #46); usar PDF nativo como plano B |
+| Evals com poucos casos sintéticos | Acurácia reportada não representa produção | Declarar limite; adicionar PDFs reais anonimizados até 26/11 (T08b) |
 
 ---
 
@@ -132,8 +135,7 @@ sem segregação, com a restrição declarada no roteiro e aceita formalmente pe
 - Release: tag anotada no commit aprovado; imagens construidas a partir do mesmo commit;
   `.env` gerado por `make env` (sem segredos versionados).
 - Rollback de aplicação: subir a tag anterior (`git checkout <tag>` + `make up`).
-- Rollback de banco: a migration 002 (futura) deve ter `downgrade` testado **somente em banco
-  descartável**; no ambiente de demo, preferir restaurar volume a partir de backup.
-- Observação: hoje o backend cria tabelas com `create_all` no startup, e não via Alembic.
-  A migration 001 coincide com os modelos (verificado com `alembic check`), mas qualquer
-  tabela nova precisa de migration explícita.
+- Rollback de banco: a migration 002 tem `downgrade` testado em SQLite descartável; testar
+  **somente em banco descartável**. No ambiente de demo, preferir restaurar volume a partir de backup.
+- Desde o PR #109, o schema vem só do Alembic (serviço `migrate` antes da API e do worker);
+  `create_all` foi removido do startup. Toda tabela nova precisa de migration explícita.
