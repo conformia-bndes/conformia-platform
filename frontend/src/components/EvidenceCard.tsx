@@ -1,6 +1,4 @@
-import React from 'react';
 import { PageEvidence } from '../services/api';
-import { TONE_CLASSES } from '../services/presentation';
 
 export interface EvidenceCardProps {
   evidence: PageEvidence;

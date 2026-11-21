@@ -1,4 +1,5 @@
 import { isAxiosError } from 'axios';
+import type { ExtractedField, PageEvidence } from './api';
 
 export type CheckStatus = 'COMPLIANT' | 'NON_COMPLIANT' | 'MANUAL_REVIEW_REQUIRED' | 'NOT_APPLICABLE';
 
@@ -45,8 +46,6 @@ export function describeApiError(error: unknown, fallback: string): string {
   }
   return fallback;
 }
-
-import type { ExtractedField, PageEvidence } from '../services/api';
 
 /**
  * Formata o valor de um campo extraído para exibição no laudo.
@@ -104,4 +103,3 @@ export function getFieldEvidenceOrEmpty(field: ExtractedField): PageEvidence {
   }
   return { text: '', page: 0, confidence: 0, bounding_box: null };
 }
-
