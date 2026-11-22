@@ -72,7 +72,10 @@ class Settings(BaseSettings):
     @classmethod
     def parse_api_users(cls, v: Union[str, List]) -> List:
         if isinstance(v, str):
-            return json.loads(v) if v.strip() else []
+            raw = v.strip()
+            if len(raw) >= 2 and raw[0] == "'" and raw[-1] == "'":
+                raw = raw[1:-1].strip()
+            return json.loads(raw) if raw else []
         return v
 
     @field_validator("API_USERS")

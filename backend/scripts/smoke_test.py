@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Teste de fumaça: upload -> fila (Redis) -> worker (Celery) -> estado consultavel.
+"""Teste de fumaça: upload -> fila -> worker -> laudo de conformidade -> revisao humana.
 
 Usa apenas a biblioteca padrao. Gera o proprio PDF, entao nao depende de fixtures.
 
@@ -11,23 +11,72 @@ ou diretamente:
 ou no host (sem Docker exec):
     API_URL=http://localhost:8000 python3 backend/scripts/smoke_test.py
 
+Preparacao de analistas de teste no .env (usado pelo CI e pelo Makefile):
+    python3 backend/scripts/smoke_test.py --setup-env .env
+
 Variaveis: API_URL (padrao http://localhost:8000), API_KEY (opcional em desenvolvimento),
+API_USERS (JSON com os hashes PBKDF2 dos analistas smoke.maker e smoke.checker; chaves explicitas
+SMOKE_MAKER_KEY e SMOKE_CHECKER_KEY em memoria tambem sao aceitas como override),
 SMOKE_TIMEOUT (segundos por etapa, padrao 120).
 
-Codigo de saida 0 = ambiente e fila funcionando; qualquer outro valor = falha.
+Codigo de saida 0 = ambiente, fila, motor de conformidade e revisao humana funcionando;
+qualquer outro valor = falha.
 """
 
+import hashlib
 import json
 import os
+from pathlib import Path
 import sys
 import time
 import urllib.error
 import urllib.request
 import uuid
 
-API_URL = os.environ.get("API_URL", "http://localhost:8000").rstrip("/")
-API_KEY = os.environ.get("API_KEY", "")
-TIMEOUT = int(os.environ.get("SMOKE_TIMEOUT", "120"))
+PBKDF2_ITERATIONS = 200_000
+
+SMOKE_CND_LINES = [
+    "REPUBLICA FEDERATIVA DO BRASIL - MINISTERIO DA FAZENDA",
+    "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL",
+    "CERTIDAO NEGATIVA DE DEBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E A DIVIDA ATIVA DA UNIAO",
+    "CNPJ: 12.345.678/0001-90",
+    "E certificado que nao constam pendencias.",
+    "Valida ate: 31/12/2099",
+]
+
+
+def _unquote_env_value(value: str) -> str:
+    """Remove as aspas simples que protegem o valor no .env (o Compose nao interpola nelas)."""
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return value[1:-1]
+    return value
+
+
+def _load_dotenv_fallback() -> dict:
+    """Le variaveis de um arquivo .env local caso nao estejam no ambiente do processo."""
+    for candidate in (Path(".env"), Path(__file__).resolve().parents[2] / ".env"):
+        if candidate.is_file():
+            values = {}
+            for raw in candidate.read_text(encoding="utf-8").splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                values[k.strip()] = _unquote_env_value(v.strip())
+            return values
+    return {}
+
+
+_DOTENV = _load_dotenv_fallback()
+
+
+def _env(name: str, default: str = "") -> str:
+    return os.environ.get(name) or _DOTENV.get(name, default)
+
+
+API_URL = _env("API_URL", "http://localhost:8000").rstrip("/")
+API_KEY = _env("API_KEY", "")
+TIMEOUT = int(_env("SMOKE_TIMEOUT", "120"))
 API = f"{API_URL}/api/v1"
 
 
@@ -40,9 +89,120 @@ def fail(msg: str) -> None:
     sys.exit(1)
 
 
+def _derive_smoke_verifier(user_id: str, salt_hex: str) -> str:
+    """Deriva o verificador efemero do analista de smoke a partir do user_id e do sal PBKDF2."""
+    payload = f"conformia-smoke-v1:{user_id}:{salt_hex}".encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def build_smoke_user(user_id: str, role: str = "ANALISTA") -> tuple:
+    """Gera (credencial, entrada_api_users) com PBKDF2-HMAC-SHA256 usando apenas a stdlib."""
+    salt = os.urandom(16)
+    salt_hex = salt.hex()
+    verifier = _derive_smoke_verifier(user_id, salt_hex)
+    digest = hashlib.pbkdf2_hmac("sha256", verifier.encode("utf-8"), salt, PBKDF2_ITERATIONS)
+    entry = {
+        "user_id": user_id,
+        "role": role,
+        "key_hash": f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt_hex}${digest.hex()}",
+    }
+    return f"{user_id}:{verifier}", entry
+
+
+def resolve_smoke_credential(user_id: str, raw_api_users: str = None) -> str:
+    """Reconstroi em memoria a credencial do analista de smoke a partir do sal em API_USERS."""
+    source = raw_api_users if raw_api_users is not None else _env("API_USERS", "")
+    unquoted = _unquote_env_value(source.strip())
+    if not unquoted:
+        return ""
+    try:
+        users = json.loads(unquoted)
+    except json.JSONDecodeError:
+        return ""
+    if not isinstance(users, list):
+        return ""
+
+    entry = next(
+        (u for u in users if isinstance(u, dict) and u.get("user_id") == user_id),
+        None,
+    )
+    if not entry:
+        return ""
+    key_hash = str(entry.get("key_hash") or "")
+    parts = key_hash.split("$")
+    if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
+        return ""
+    _, iterations_str, salt_hex, digest_hex = parts
+    try:
+        iterations = int(iterations_str)
+        salt = bytes.fromhex(salt_hex)
+    except ValueError:
+        return ""
+
+    verifier = _derive_smoke_verifier(user_id, salt_hex)
+    candidate = hashlib.pbkdf2_hmac("sha256", verifier.encode("utf-8"), salt, iterations).hex()
+    if candidate != digest_hex:
+        return ""
+    return f"{user_id}:{verifier}"
+
+
+def setup_env_file(env_path: Path) -> None:
+    """Garante que o arquivo .env possua dois usuarios ANALISTA de teste em API_USERS."""
+    if not env_path.is_file():
+        fail(f"arquivo {env_path} nao encontrado; execute bash scripts/setup-env.sh antes.")
+
+    lines = env_path.read_text(encoding="utf-8").splitlines()
+    raw_api_users = "[]"
+    has_legacy_clear_keys = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("API_USERS="):
+            raw_api_users = _unquote_env_value(stripped.split("=", 1)[1].strip())
+        elif stripped.startswith("SMOKE_MAKER_KEY=") or stripped.startswith("SMOKE_CHECKER_KEY="):
+            has_legacy_clear_keys = True
+
+    try:
+        users = json.loads(raw_api_users or "[]")
+    except json.JSONDecodeError:
+        users = []
+
+    if (
+        not has_legacy_clear_keys
+        and resolve_smoke_credential("smoke.maker", raw_api_users)
+        and resolve_smoke_credential("smoke.checker", raw_api_users)
+    ):
+        return
+
+    _, maker_entry = build_smoke_user("smoke.maker", "ANALISTA")
+    _, checker_entry = build_smoke_user("smoke.checker", "ANALISTA")
+    users = [
+        u
+        for u in users
+        if isinstance(u, dict) and u.get("user_id") not in ("smoke.maker", "smoke.checker")
+    ]
+    users.extend([maker_entry, checker_entry])
+    api_users_json = json.dumps(users, separators=(",", ":"))
+
+    new_lines = []
+    replaced_api_users = False
+    for line in lines:
+        if line.startswith("API_USERS="):
+            new_lines.append(f"API_USERS='{api_users_json}'")
+            replaced_api_users = True
+        elif line.startswith("SMOKE_MAKER_KEY=") or line.startswith("SMOKE_CHECKER_KEY="):
+            continue
+        else:
+            new_lines.append(line)
+
+    if not replaced_api_users:
+        new_lines.append(f"API_USERS='{api_users_json}'")
+    # Nao persistir chaves sensiveis em texto claro no .env.
+    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
 def request(method: str, url: str, body: bytes = None, headers: dict = None):
     headers = dict(headers or {})
-    if API_KEY:
+    if API_KEY and "X-API-Key" not in headers:
         headers["X-API-Key"] = API_KEY
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
@@ -53,6 +213,14 @@ def request(method: str, url: str, body: bytes = None, headers: dict = None):
         return exc.code, {"error": detail}
     except (urllib.error.URLError, OSError) as exc:
         return 0, {"error": str(exc)}
+
+
+def json_request(method: str, url: str, payload: dict, api_key: str = None):
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["X-API-Key"] = api_key
+    data = json.dumps(payload).encode("utf-8")
+    return request(method, url, body=data, headers=headers)
 
 
 def build_pdf(text_lines) -> bytes:
@@ -106,7 +274,14 @@ def wait_until(label: str, check, timeout: int = TIMEOUT, interval: float = 2.0)
     fail(f"timeout ({timeout}s) aguardando: {label}. Ultimo estado: {last}")
 
 
-def main() -> None:
+def main(argv: list = None) -> None:
+    argv = argv if argv is not None else sys.argv[1:]
+    if len(argv) == 2 and argv[0] == "--setup-env":
+        setup_env_file(Path(argv[1]))
+        return
+    if argv:
+        fail(f"argumentos invalidos: {argv}")
+
     log(f"API: {API_URL}")
 
     # 1) API saudavel (Postgres + Redis + MinIO)
@@ -115,10 +290,10 @@ def main() -> None:
         return (code == 200 and data.get("status") == "healthy"), data
 
     health_data = wait_until("API saudavel (/api/v1/health)", health)
-    log(f"1/4 health OK: {health_data.get('services')}")
+    log(f"1/6 health OK: {health_data.get('services')}")
 
     # 2) Upload despacha a tarefa
-    pdf = build_pdf(["CERTIDAO DE TESTE - SMOKE", "Documento sintetico para validar a fila."])
+    pdf = build_pdf(SMOKE_CND_LINES)
     body, headers = multipart("smoke_test.pdf", pdf)
     code, up = request("POST", f"{API}/documents/upload", body, headers)
     if code != 201:
@@ -126,7 +301,7 @@ def main() -> None:
     doc_id, task_id = up.get("id"), up.get("task_id")
     if not task_id:
         fail(f"upload nao devolveu task_id (processou fora da fila?): {up}")
-    log(f"2/4 upload OK: document_id={doc_id} task_id={task_id}")
+    log(f"2/6 upload OK: document_id={doc_id} task_id={task_id}")
 
     # 3) Estado da tarefa evolui ate SUCCESS (so ocorre se o worker consumiu a fila)
     seen = []
@@ -142,15 +317,90 @@ def main() -> None:
         return state == "SUCCESS", data
 
     result = wait_until("tarefa SUCCESS (worker consumindo a fila)", task_state)
-    log(f"3/4 tarefa concluida pelo worker: {result.get('result')}")
+    log(f"3/6 tarefa concluida pelo worker: {result.get('result')}")
 
     # 4) Estado do documento persistido pelo worker
     code, doc = request("GET", f"{API}/documents/{doc_id}")
     if code != 200 or doc.get("status") != "COMPLETED":
         fail(f"documento nao ficou COMPLETED: HTTP {code} {doc}")
-    log(f"4/4 documento COMPLETED (paginas: {(doc.get('metadata') or {}).get('total_pages')})")
+    log(f"4/6 documento COMPLETED (paginas: {(doc.get('metadata') or {}).get('total_pages')})")
 
-    log("OK - ambiente sobe e processa pela fila. Estados observados: " + " -> ".join(seen))
+    # 5) Laudo de conformidade persistido (/api/v1/compliance/results/{doc_id})
+    code, report = request("GET", f"{API}/compliance/results/{doc_id}")
+    if code != 200:
+        fail(f"consulta ao laudo retornou HTTP {code}: {report}")
+    overall_status = report.get("overall_status")
+    evaluated_rules = report.get("evaluated_rules", 0)
+    checks = report.get("checks") or []
+    if report.get("document_id") != doc_id or overall_status != "COMPLIANT" or evaluated_rules < 1:
+        fail(f"laudo de conformidade inesperado: {report}")
+    if not any(
+        c.get("rule_id") == "RULE-BNDES-001" and c.get("status") == "COMPLIANT" for c in checks
+    ):
+        fail(f"regra RULE-BNDES-001 nao consta como COMPLIANT no laudo: {checks}")
+    log(
+        f"5/6 laudo de conformidade OK: overall_status={overall_status} "
+        f"(regras avaliadas: {evaluated_rules})"
+    )
+
+    # 6) Revisao humana Maker-Checker por dois usuarios de teste (proposta + confirmacao)
+    maker_key = _env("SMOKE_MAKER_KEY", "") or resolve_smoke_credential("smoke.maker")
+    checker_key = _env("SMOKE_CHECKER_KEY", "") or resolve_smoke_credential("smoke.checker")
+    if not maker_key or not checker_key:
+        fail(
+            "credenciais de smoke (smoke.maker / smoke.checker) ausentes em API_USERS; "
+            "rode 'python3 backend/scripts/smoke_test.py --setup-env .env' antes de subir a stack."
+        )
+
+    code, proposal = json_request(
+        "POST",
+        f"{API}/compliance/reviews/{doc_id}",
+        {
+            "decision": "APPROVE",
+            "justification": "Smoke test: validade e CNPJ da CND conferidos contra o documento.",
+        },
+        api_key=maker_key,
+    )
+    if code != 201 or proposal.get("event_type") != "PROPOSED":
+        fail(f"proposta de revisao (Maker) falhou com HTTP {code}: {proposal}")
+    proposal_id = proposal.get("id")
+
+    # Segregacao de funcoes: o proprio autor nao pode confirmar a proposta
+    self_code, _ = json_request(
+        "POST",
+        f"{API}/compliance/reviews/{doc_id}/{proposal_id}/confirm",
+        {"comment": "Tentativa de autoconfirmacao no smoke."},
+        api_key=maker_key,
+    )
+    if self_code != 403:
+        fail(f"segregacao Maker-Checker violada: autoconfirmacao retornou HTTP {self_code}")
+
+    code, confirmed = json_request(
+        "POST",
+        f"{API}/compliance/reviews/{doc_id}/{proposal_id}/confirm",
+        {"comment": "Smoke test: proposta conferida e confirmada por segundo analista."},
+        api_key=checker_key,
+    )
+    if code != 201 or confirmed.get("event_type") != "CONFIRMED":
+        fail(f"confirmacao de revisao (Checker) falhou com HTTP {code}: {confirmed}")
+
+    code, review_state = request("GET", f"{API}/compliance/reviews/{doc_id}")
+    if (
+        code != 200
+        or review_state.get("state") != "FINAL"
+        or review_state.get("final_decision") != "APPROVE"
+    ):
+        fail(f"estado final da revisao inesperado: HTTP {code} {review_state}")
+    log(
+        f"6/6 revisao humana OK: state={review_state.get('state')} "
+        f"decision={review_state.get('final_decision')} "
+        f"(maker={proposal.get('actor_id')}, checker={confirmed.get('actor_id')})"
+    )
+
+    log(
+        "OK - ambiente sobe, processa pela fila, gera laudo e conclui revisao Maker-Checker. "
+        "Estados observados: " + " -> ".join(seen)
+    )
 
 
 if __name__ == "__main__":
