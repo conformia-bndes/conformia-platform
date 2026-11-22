@@ -5,6 +5,30 @@ Todas as mudancas notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semantico](https://semver.org/lang/pt-BR/).
 
+## [0.3.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.2.1...v0.3.0) (2026-11-07)
+
+
+### Adicionado
+
+* **db:** executar migrations Alembic antes da API e do worker ([c735097](https://github.com/conformia-bndes/conformia-platform/commit/c7350974c895b33651e3e1778e289cf871229c81))
+* **db:** executar migrations Alembic antes da API e do worker ([85f54a7](https://github.com/conformia-bndes/conformia-platform/commit/85f54a7694f40642d4723dca77e39ffdd6dd29ad)), closes [#50](https://github.com/conformia-bndes/conformia-platform/issues/50)
+
+
+### Corrigido
+
+* **infra:** atualizar a base nginx do frontend para corrigir libexpat (Trivy) ([86a05e2](https://github.com/conformia-bndes/conformia-platform/commit/86a05e28297a28748a5a883ffcb8d1e2c37e7150))
+* **infra:** atualizar apt e zlib1g na imagem do backend (Trivy) ([7eab2c7](https://github.com/conformia-bndes/conformia-platform/commit/7eab2c7139815619bf2f2f0811cb34b1ba0624ab))
+* **infra:** atualizar apt e zlib1g na imagem do backend (Trivy) ([9c615ed](https://github.com/conformia-bndes/conformia-platform/commit/9c615ed3bc3d910bb2db058851eb603fe5adec27))
+* **security:** padroes seguros de ENVIRONMENT e DEBUG com opt-in de acesso anonimo ([78c3240](https://github.com/conformia-bndes/conformia-platform/commit/78c324052f1f2811821d09723c139d184cedd68e))
+* **security:** padroes seguros de ENVIRONMENT e DEBUG com opt-in de acesso anonimo ([7f660db](https://github.com/conformia-bndes/conformia-platform/commit/7f660db32689b8d171d8acee1e6c346cf123bc9c)), closes [#52](https://github.com/conformia-bndes/conformia-platform/issues/52)
+
+
+### Documentacao
+
+* corrigir acentuacao, quickstart e escopo dos RFs ([ca8aaf6](https://github.com/conformia-bndes/conformia-platform/commit/ca8aaf6347a4b726d177aabe5a849dbfd7a8be44))
+* corrigir acentuacao, quickstart truncado e porta do make docs ([b88755b](https://github.com/conformia-bndes/conformia-platform/commit/b88755b6f3ed7a6b97f67448dfa69e6f534f9856))
+* corrigir residuos de acentuacao e esclarecer escopo dos RFs ([c2836a1](https://github.com/conformia-bndes/conformia-platform/commit/c2836a1429bf99d30d4750d560429a64491f8452))
+
 ## [0.2.1](https://github.com/conformia-bndes/conformia-platform/compare/v0.2.0...v0.2.1) (2026-11-02)
 
 

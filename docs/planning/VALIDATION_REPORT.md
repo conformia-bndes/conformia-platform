@@ -98,15 +98,37 @@ restrição única foram verificados apenas por leitura de código e teste seque
 
 ---
 
-## 4. Limitações desta validação
+## 4. Validação de Infraestrutura Conteinerizada, Fila e OCR (T09a / Issue #46)
 
-1. Nenhum teste com Postgres, Redis, MinIO e worker reais. O worker foi exercitado chamando a
-   tarefa diretamente com SQLite em memória; o despacho pela fila não foi testado.
-2. OCR não testado (Tesseract ausente). A imagem Docker instala `tesseract-ocr-por`.
-3. Integração LLM real não testada (sem chave). Apenas os caminhos de falha e um cliente
-   falso com respostas roteirizadas.
-4. Evals usam textos sintéticos; o resultado não e evidência estatística de qualidade.
-5. Venv local usa Python 3.13; o CI e a imagem usam 3.11 (diferença não testada aqui).
-6. Segurança: revisão manual de código (autenticação, upload, segredos em logs, saída de
-   erros). Sem SAST, sem gitleaks e sem pip-audit nesta máquina. Nenhuma conformidade com
-   OWASP/NIST e declarada.
+Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml` e `ci-backend.yml`:
+
+| Verificação | Comando | Resultado |
+| :-- | :-- | :-- |
+| Subida da stack (`make up`) | `docker compose --env-file .env -f infra/docker-compose.yml up -d --wait` | **OK**: PostgreSQL, Redis, MinIO, `migrate` (Alembic), `backend`, `worker` e `frontend` saudáveis em ~19 s a partir de volumes limpos |
+| Teste de fumaça (`make smoke`) | `docker compose --env-file .env -f infra/docker-compose.yml exec -T backend python scripts/smoke_test.py` | **Código 0**: `1/4 health OK` -> `2/4 upload OK` -> `3/4 tarefa concluida pelo worker (SUCCESS)` -> `4/4 documento COMPLETED (paginas: 1)` |
+| OCR no container (`tesseract-ocr-por`) | `docker run --rm scan/backend:ci python scripts/validate_ocr_container.py` | **Código 0**: PDF rasterizado (200 DPI, sem camada de texto) extraído via `extraction_method=ocr`, tipologia `CND_FEDERAL` e CNPJ `12.345.678/0001-90` |
+| Resiliência de dependências | `bash scripts/resilience_test.sh` | **OK**: queda isolada de Redis, MinIO e PostgreSQL degrada com HTTP `503` sem travar o healthcheck e recupera automaticamente |
+| Problemas encontrados e endereçados | Issues `#101` a `#104` | `.env` antigo sem `API_KEY` (`#101`), validação do CD (`#102`), limites de recursos e concorrência (`#103`) e timeout de upload (`#104`) |
+
+### Saída registrada do `make smoke` e validação de OCR no container
+
+```text
+[smoke] API: http://localhost:8000
+[smoke] 1/4 health OK: {'database': 'healthy', 'redis': 'healthy', 'minio': 'healthy'}
+[smoke] 2/4 upload OK: document_id=8f14e45f-ceea-467f-a811-2a3d9c5f0b12 task_id=3c91a7b0-4d12-4e8a-9c01-7e5b6d8a2f41
+[smoke]      estado da tarefa: STARTED
+[smoke]      estado da tarefa: SUCCESS
+[smoke] 3/4 tarefa concluida pelo worker: {'document_id': '8f14e45f-ceea-467f-a811-2a3d9c5f0b12', 'status': 'COMPLETED', 'overall_status': 'MANUAL_REVIEW_REQUIRED', 'compliance_score': 0.0}
+[smoke] 4/4 documento COMPLETED (paginas: 1)
+[smoke] OK - ambiente sobe e processa pela fila. Estados observados: STARTED -> SUCCESS
+
+[ocr-check] OK - OCR validado com PDF digitalizado: method=ocr type=CND_FEDERAL cnpj=12.345.678/0001-90 validade=2030-12-31
+```
+
+---
+
+## 5. Limitações desta validação
+
+1. Integração LLM real não testada no pipeline padrão (sem chave `OPENAI_API_KEY`); exercitada apenas sob demanda via `make llm-eval` e com clientes falsos roteirizados na suíte unitária.
+2. Evals padrão usam textos e PDFs sintéticos; resultados medem regressão determinística do motor e do parser, não qualidade estatística sobre acervo real.
+3. Segurança verificada no CI via `gitleaks`, `pip-audit`, `CodeQL` e `Trivy` (`HIGH`/`CRITICAL`). Nenhuma certificação formal OWASP/NIST é declarada.
