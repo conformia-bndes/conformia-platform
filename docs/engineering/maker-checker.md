@@ -96,6 +96,21 @@ dos modelos gratuitos muda e a conta gratuita tem teto diário de requisições.
 modelos gratuitos podem ser retidos pelo provedor: usar apenas documentos sintéticos ou
 anonimizados nesse modo.
 
+**Decisão por ambiente e validação reproduzida (Issue #129):**
+
+- **Ambiente de demonstração (05/12/2026):** OpenRouter (`LLM_BASE_URL=https://openrouter.ai/api/v1`,
+  `LLM_MODEL=particle-ai/particle-1:free`) com **exclusivamente documentos fictícios** de
+  `docs/samples/`. Em nova verificação em 22/11/2026 sobre `RULE-BNDES-004` (com retry automático após
+  `HTTP 429`), o ciclo Maker-Checker retornou `COMPLIANT` com confiança `0.96` e citação literal
+  verificada no texto para certidão "NADA CONSTA", e degradou para `MANUAL_REVIEW_REQUIRED`
+  (`is_verified=False`) quando o Checker detectou extrapolação de regra externa pelo Maker.
+  Recomenda-se rotacionar a `OPENAI_API_KEY` de teste antes do uso em ambiente compartilhado.
+- **Ambiente de produção (documentos reais):** **proibido** usar tier gratuito público com dados
+  reais de proponentes (RNF05 / LGPD). A entrada em produção exige decisão contratual por provedor
+  corporativo sem retenção ou modelo auto-hospedado compatível com OpenAI (via `LLM_BASE_URL`).
+- **Instruções de configuração:** ver seção 5.1 de [Início Rápido](../development/quickstart.md) e o
+  [Roteiro de Demonstração](../planning/demo-script.md).
+
 ---
 
 ## 4. Harness de desenvolvimento

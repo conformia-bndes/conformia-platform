@@ -158,6 +158,38 @@ uv run python evals/eval_pipeline.py
 
 ---
 
+## 5.1 Configuração de Provedor LLM (Regras Híbridas / Maker-Checker)
+
+Por padrão, a plataforma opera em modo **fail-closed**: sem chave `OPENAI_API_KEY` configurada no
+`.env`, todas as regras determinísticas (`CND_FEDERAL`, `CRF_FGTS`, `CNDT_TRABALHISTA`) continuam
+sendo avaliadas normalmente, e as regras híbridas (`RULE-BNDES-004`, `RULE-BNDES-005` e
+`RULE-BNDES-006`) degradam de forma segura para `MANUAL_REVIEW_REQUIRED` (`LLM_UNAVAILABLE`).
+
+O cliente (`backend/app/ai/llm_client.py`) usa o protocolo OpenAI Chat Completions e pode ser
+direcionado por variáveis de ambiente no `.env`:
+
+| Variável | Padrão | Uso |
+| :--- | :--- | :--- |
+| `LLM_BASE_URL` | `https://api.openai.com/v1` | Endpoint base compatível com OpenAI (`/chat/completions`). |
+| `LLM_MODEL` | `gpt-4o-mini` | Identificador do modelo no provedor configurado. |
+| `OPENAI_API_KEY` | *(vazio)* | Chave Bearer do provedor (nunca versionar no Git). |
+| `LLM_TIMEOUT_SECONDS` | `30` (ou `60` no `.env` de demo) | Tempo máximo por requisição ao provedor. |
+| `LLM_MAX_RETRIES` | `2` | Retentativas automáticas em `429` e erros `5xx`. |
+
+**Opções por ambiente (Issue #129):**
+
+- **Demonstração (apenas documentos sintéticos/fictícios):** OpenRouter com modelo gratuito avaliado
+  (`LLM_BASE_URL=https://openrouter.ai/api/v1` e `LLM_MODEL=particle-ai/particle-1:free`). Como
+  modelos gratuitos possuem limite diário (`429`) e possível retenção de dados pelo provedor,
+  **nunca envie documentos reais com PII** nesse modo e rotacione a chave antes da apresentação.
+- **Desenvolvimento offline / local:** servidor compatível com OpenAI via Ollama
+  (`LLM_BASE_URL=http://host.docker.internal:11434/v1` dentro do Compose ou
+  `http://localhost:11434/v1` no host).
+- **Produção / documentos reais (LGPD e RNF05):** exige endpoint corporativo dedicado ou hospedagem
+  soberana sem retenção de dados por terceiros (fora do escopo do plano gratuito).
+
+---
+
 ## 6. Problemas Comuns
 
 | Sintoma                                              | Causa e solução                                                                                                                       |
@@ -168,3 +200,4 @@ uv run python evals/eval_pipeline.py
 | `make up` expira esperando `backend` saudável        | Veja `docker compose --env-file .env -f infra/docker-compose.yml logs backend`; `/api/v1/health` mostra qual serviço está `degraded`. |
 | `port is already allocated`                          | Ajuste `*_PORT` no `.env` (ex.: `POSTGRES_PORT=5433`).                                                                                |
 | Upload retorna `503`                                 | Redis ou MinIO indisponível; confira `make ps` e `/api/v1/health`.                                                                    |
+| Regra híbrida cai em `MANUAL_REVIEW_REQUIRED` (`429` / `LLM_UNAVAILABLE`) | Sem `OPENAI_API_KEY`, cota atingida no OpenRouter `:free` ou provedor indisponível; comportamento fail-closed esperado (prossiga com a revisão humana ou troque para provedor dedicado/local). |
