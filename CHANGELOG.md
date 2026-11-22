@@ -5,6 +5,15 @@ Todas as mudancas notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semantico](https://semver.org/lang/pt-BR/).
 
+## [0.4.1](https://github.com/conformia-bndes/conformia-platform/compare/v0.4.0...v0.4.1) (2026-11-22)
+
+
+### Corrigido
+
+* **cd:** injetar envs obrigatorias de Settings na validacao runtime do backend ([f8ff591](https://github.com/conformia-bndes/conformia-platform/commit/f8ff5918fe7a860746db81a41659898b03a25a3c))
+* **cd:** injetar envs obrigatorias na validacao runtime do backend ([98a57c5](https://github.com/conformia-bndes/conformia-platform/commit/98a57c5e463dab33f8bf0eb95184121b42ce8d59))
+* **cd:** promover correcao da validacao runtime do backend em main ([764df36](https://github.com/conformia-bndes/conformia-platform/commit/764df3637ec4b193ca9e4c332c35e444891fa97f))
+
 ## [0.4.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.3.0...v0.4.0) (2026-11-22)
 
 
