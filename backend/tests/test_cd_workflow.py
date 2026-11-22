@@ -59,3 +59,22 @@ def test_devops_docs_registers_ghcr_package_visibility_and_compose():
     assert "nascem privados por padrão" in devops_doc
     assert "infra/docker-compose.ghcr.yml" in devops_doc
     assert "8080" in devops_doc
+
+
+def test_cd_workflow_passes_required_settings_env_to_backend_container():
+    """Garante que a validacao runtime do backend injeta as cinco envs obrigatorias de Settings."""
+    cd_path = REPO_ROOT / ".github" / "workflows" / "cd.yml"
+    data = yaml.safe_load(cd_path.read_text(encoding="utf-8"))
+
+    steps = data["jobs"]["deploy"]["steps"]
+    validate_step = next(s for s in steps if "Validar container de producao" in s.get("name", ""))
+    run_script = validate_step["run"]
+    for env_name in (
+        "SECRET_KEY",
+        "API_KEY",
+        "POSTGRES_PASSWORD",
+        "MINIO_ROOT_USER",
+        "MINIO_ROOT_PASSWORD",
+    ):
+        assert f"-e {env_name}" in run_script
+    assert "import app.main" in run_script
