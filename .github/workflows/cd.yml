@@ -132,7 +132,16 @@ jobs:
           SERVICE: ${{ matrix.service }}
         run: |
           if [ "$SERVICE" = "backend" ]; then
-            docker run --rm conformia/backend:cd-validate \
+            # Importar app.main instancia Settings (cinco variaveis obrigatorias).
+            # Valores descartaveis gerados na hora: esta checagem nao acessa banco, fila nem MinIO.
+            SECRET_KEY="$(openssl rand -hex 16)"
+            API_KEY="$(openssl rand -hex 16)"
+            POSTGRES_PASSWORD="$(openssl rand -hex 16)"
+            MINIO_ROOT_PASSWORD="$(openssl rand -hex 16)"
+            MINIO_ROOT_USER=cd-validate
+            export SECRET_KEY API_KEY POSTGRES_PASSWORD MINIO_ROOT_USER MINIO_ROOT_PASSWORD
+            docker run --rm -e SECRET_KEY -e API_KEY -e POSTGRES_PASSWORD -e MINIO_ROOT_USER \
+              -e MINIO_ROOT_PASSWORD conformia/backend:cd-validate \
               python -c "import app.main; print('Backend runtime image OK')"
           else
             docker rm -f cd-frontend-validate >/dev/null 2>&1 || true
