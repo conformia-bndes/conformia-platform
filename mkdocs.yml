@@ -113,6 +113,8 @@ nav:
   - Gestão:
       - Relatórios de Qualidade: relatorios/index.md
       - Plano de Entrega (05/12/2026): planning/DELIVERY_PLAN_2026_12_05.md
+      - Roteiro de Demonstração: planning/demo-script.md
+      - Checklist Go/No-Go (04/12): planning/go-no-go-checklist.md
       - Backlog de Implementação: planning/IMPLEMENTATION_BACKLOG.md
       - Relatório de Validação: planning/VALIDATION_REPORT.md
       - Log de Defeitos do Fluxo Inicial: planning/log_defeitos_fluxo_inicial.md
