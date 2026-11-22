@@ -5,6 +5,64 @@ Todas as mudancas notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semantico](https://semver.org/lang/pt-BR/).
 
+## [0.4.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.3.0...v0.4.0) (2026-11-22)
+
+
+### Adicionado
+
+* **ai:** JSON mode, retentativas e timeout configuravel para provedores de LLM ([cb8e911](https://github.com/conformia-bndes/conformia-platform/commit/cb8e911296ae263b9139390ddaeeb060679d66b0)), closes [#129](https://github.com/conformia-bndes/conformia-platform/issues/129)
+* **ai:** provedor de LLM configuravel (OpenRouter), JSON mode e retentativas ([a9359a9](https://github.com/conformia-bndes/conformia-platform/commit/a9359a9db2ca160c68609bf87d51aceb042bb9f9))
+* **ai:** tornar a URL base do LLM configuravel (LLM_BASE_URL) ([0615c1d](https://github.com/conformia-bndes/conformia-platform/commit/0615c1d4d9c35a12e19c012885c928895825e78c)), closes [#129](https://github.com/conformia-bndes/conformia-platform/issues/129)
+* **demo,docs:** roteiro de demo, provedor LLM e checklist Go/No-Go ([#63](https://github.com/conformia-bndes/conformia-platform/issues/63), [#64](https://github.com/conformia-bndes/conformia-platform/issues/64), [#129](https://github.com/conformia-bndes/conformia-platform/issues/129)) ([657f459](https://github.com/conformia-bndes/conformia-platform/commit/657f459bf7eb0c04fe0c1b870802bd1a5fcd3b6c))
+* **demo,docs:** roteiro de demo, provedor LLM e checklist Go/No-Go ([#63](https://github.com/conformia-bndes/conformia-platform/issues/63), [#64](https://github.com/conformia-bndes/conformia-platform/issues/64), [#129](https://github.com/conformia-bndes/conformia-platform/issues/129)) ([79cd973](https://github.com/conformia-bndes/conformia-platform/commit/79cd973c8fe610c1c4848d45d47ba3f9c98b9b7c))
+* **frontend:** adicionar entrada em memoria de X-API-Key na sessao (T06c) ([c406237](https://github.com/conformia-bndes/conformia-platform/commit/c4062372ce1c8d59acaed9dc47e66f7e4fd56ad3))
+* **frontend:** adicionar polling de processamento, estados vazios e badges de status ([fa01bee](https://github.com/conformia-bndes/conformia-platform/commit/fa01beee4aeb909e7188707f5d126777e18869d9))
+* **frontend:** adicionar revisao humana maker-checker e evidencias por pagina (T06b) ([56ddb28](https://github.com/conformia-bndes/conformia-platform/commit/56ddb2855fe8ea929cee33c5e3c650d1b05eb094))
+* **frontend:** componentizacao, X-API-Key em memoria e revisao humana (T06b/T06c) ([535cbd8](https://github.com/conformia-bndes/conformia-platform/commit/535cbd86dc446937a95d70a778b9addba226d0c6))
+* **infra:** definir limites de recursos, concorrencia e perfil de pr… ([7148804](https://github.com/conformia-bndes/conformia-platform/commit/714880428def5201dd975431b820a95d79d2f3f3))
+* **infra:** definir limites de recursos, concorrencia e perfil de producao ([#103](https://github.com/conformia-bndes/conformia-platform/issues/103)) ([d5362ae](https://github.com/conformia-bndes/conformia-platform/commit/d5362ae08f2094b24eea123b14db6a0e655cee1e))
+* **smoke:** validar laudo de conformidade e revisao humana no smoke … ([ef761e0](https://github.com/conformia-bndes/conformia-platform/commit/ef761e09f470d0f8c6e4f7a40ca7902bd32e841a))
+* **smoke:** validar laudo de conformidade e revisao humana no smoke ([#57](https://github.com/conformia-bndes/conformia-platform/issues/57)) ([a5080ea](https://github.com/conformia-bndes/conformia-platform/commit/a5080ea44aa67340f82d2ca5a7c194526906ca87))
+
+
+### Corrigido
+
+* **backend:** upgrade apt packages in runtime image build ([a51cb62](https://github.com/conformia-bndes/conformia-platform/commit/a51cb6294ff8adba61bca18ac66a09479735d910))
+* **ci:** declarar e atribuir separadamente os segredos do passo de OCR (SC2155) ([e73cde9](https://github.com/conformia-bndes/conformia-platform/commit/e73cde96025fdbc65ed621232ead3d2eb4a8b7dc)), closes [#128](https://github.com/conformia-bndes/conformia-platform/issues/128)
+* **ci:** passar as variaveis obrigatorias ao validar o OCR no container ([e7ac57a](https://github.com/conformia-bndes/conformia-platform/commit/e7ac57a731be657181e4e7b6418403c009175689)), closes [#128](https://github.com/conformia-bndes/conformia-platform/issues/128)
+* **env:** falhar com mensagem clara quando o .env esta desatualizado … ([4b306a4](https://github.com/conformia-bndes/conformia-platform/commit/4b306a46ee48ca59d98b6a92a72fb04dffd20c16))
+* **env:** falhar com mensagem clara quando o .env esta desatualizado ([#101](https://github.com/conformia-bndes/conformia-platform/issues/101)) ([d77c0fd](https://github.com/conformia-bndes/conformia-platform/commit/d77c0fdaa070374abdfd909c03ab1df231dd5ecb))
+* **env:** remover o alias --update nao documentado do setup-env ([6b35b2c](https://github.com/conformia-bndes/conformia-platform/commit/6b35b2cc55f49f791128512e9622727a572aa5f7)), closes [#101](https://github.com/conformia-bndes/conformia-platform/issues/101)
+* **infra:** invalidar o cache do apk upgrade da imagem do frontend (Trivy) ([7093d82](https://github.com/conformia-bndes/conformia-platform/commit/7093d823937eaadec37f9614f4c05805da9068fb)), closes [#126](https://github.com/conformia-bndes/conformia-platform/issues/126)
+* **infra:** invalidar o cache do apk upgrade da imagem do frontend (Trivy) ([9427831](https://github.com/conformia-bndes/conformia-platform/commit/9427831723fced17fb04b825b57a42e15fa66632)), closes [#126](https://github.com/conformia-bndes/conformia-platform/issues/126)
+* **infra:** invalidar o cache do apt/apk upgrade das imagens (Trivy) ([4d7c250](https://github.com/conformia-bndes/conformia-platform/commit/4d7c250cdd50f4f7f5bf0f24d2776e97574cccc2))
+* **infra:** invalidar o cache do apt/apk upgrade das imagens (Trivy) ([928e5ad](https://github.com/conformia-bndes/conformia-platform/commit/928e5ad9671fdfbcad810af4733627c0ecfb8723))
+* **infra:** invalidar tambem o cache do apt-get install da imagem do backend (Trivy) ([4dc0724](https://github.com/conformia-bndes/conformia-platform/commit/4dc07243ccd6e0679572bfb5a0033020144a54ba)), closes [#126](https://github.com/conformia-bndes/conformia-platform/issues/126)
+* **infra:** invalidar tambem o cache do apt-get install da imagem do backend (Trivy) ([80d8634](https://github.com/conformia-bndes/conformia-platform/commit/80d8634fb1aba5a7c9c3a6f1677ab0559270be17)), closes [#126](https://github.com/conformia-bndes/conformia-platform/issues/126)
+* **rules:** RULE-BNDES-006 nao aprova mais so com CEIS + nada consta ([7a6dce3](https://github.com/conformia-bndes/conformia-platform/commit/7a6dce3acd02370806559700f906e06eeb05aa32))
+* **rules:** RULE-BNDES-006 nao aprova so com CEIS + nada consta ([2e4ab1d](https://github.com/conformia-bndes/conformia-platform/commit/2e4ab1d6052f6e724621eb16ea40788fb66cf09a))
+* **smoke:** proteger API_USERS com aspas simples e nao engolir erros no make env ([e431400](https://github.com/conformia-bndes/conformia-platform/commit/e43140013f30b6ca0871f3852108b134d116880a)), closes [#127](https://github.com/conformia-bndes/conformia-platform/issues/127)
+* **smoke:** validar .env gerado por --setup-env contra Settings em config.py ([#127](https://github.com/conformia-bndes/conformia-platform/issues/127)) ([95d1f35](https://github.com/conformia-bndes/conformia-platform/commit/95d1f35280e1138481b16683640aab098572a51b))
+
+
+### Seguranca
+
+* **smoke:** eliminar armazenamento em texto claro de chaves no .env e alinhar assercoes ([#57](https://github.com/conformia-bndes/conformia-platform/issues/57)) ([38109c4](https://github.com/conformia-bndes/conformia-platform/commit/38109c402ebcb2897733e592ef19c5823688c3c1))
+
+
+### Refatoracao
+
+* **frontend:** extrair componentes de UI do App.tsx ([3817a2c](https://github.com/conformia-bndes/conformia-platform/commit/3817a2ce155dd66364b137772cdf7f5e0683eaad))
+
+
+### Documentacao
+
+* **evals:** reavalia dataset sintetico apos o PR [#44](https://github.com/conformia-bndes/conformia-platform/issues/44) ([f5f286a](https://github.com/conformia-bndes/conformia-platform/commit/f5f286aeb314a2171d8b9560cb8a201a41f9fe58))
+* **governance:** ADR-004 protecao de main e revisao por pares ([7b5243d](https://github.com/conformia-bndes/conformia-platform/commit/7b5243d1fd5e9bdd5bd55abb3d029600439c1680))
+* **governance:** ADR-004 sobre protecao de main e revisao por pares ([#105](https://github.com/conformia-bndes/conformia-platform/issues/105)) ([658221f](https://github.com/conformia-bndes/conformia-platform/commit/658221fbd782aadecd7b936a97b61df6d49b3884))
+* **samples:** adicionar PDFs de CRF, CNDT e licenca ambiental multipagina ([03b7b67](https://github.com/conformia-bndes/conformia-platform/commit/03b7b6746d203dd69e143a6599541d57b4c76107))
+* **samples:** adicionar PDFs ficticios de CND conforme e nao conforme para demonstracao ([9b3441f](https://github.com/conformia-bndes/conformia-platform/commit/9b3441f87a945aa0a88c95d95a7b75baa620cb38))
+
 ## [0.3.0](https://github.com/conformia-bndes/conformia-platform/compare/v0.2.1...v0.3.0) (2026-11-07)
 
 
