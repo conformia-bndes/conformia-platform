@@ -1,0 +1,56 @@
+# ==============================================================================
+# Conform.IA BNDES Platform - Override para Imagens Publicadas no GHCR (CD)
+#
+# Uso (a partir da raiz do repositorio):
+#   make env
+#   IMAGE_TAG=v0.3.0 docker compose --env-file .env \
+#     -f infra/docker-compose.yml \
+#     -f infra/docker-compose.ghcr.yml pull
+#   IMAGE_TAG=v0.3.0 docker compose --env-file .env \
+#     -f infra/docker-compose.yml \
+#     -f infra/docker-compose.ghcr.yml up -d --wait
+#
+# Características:
+# - Consome diretamente as imagens publicadas pelo cd.yml no GHCR:
+#   - ghcr.io/conformia-bndes/conformia-platform/backend:${IMAGE_TAG:-latest}
+#   - ghcr.io/conformia-bndes/conformia-platform/frontend:${IMAGE_TAG:-latest}
+# - Remove bind-mounts de codigo-fonte e hot-reload (--reload).
+# - Frontend de producao (Nginx sem privilegio, UID 101) escuta na porta 8080.
+# ==============================================================================
+
+x-ghcr-backend: &ghcr-backend
+  image: ${BACKEND_IMAGE:-ghcr.io/conformia-bndes/conformia-platform/backend}:${IMAGE_TAG:-latest}
+  pull_policy: always
+  volumes: !reset
+    - ../rules:/rules:ro
+
+services:
+  migrate:
+    <<: *ghcr-backend
+
+  backend:
+    <<: *ghcr-backend
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+
+  worker:
+    <<: *ghcr-backend
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/conformia-bndes/conformia-platform/frontend}:${IMAGE_TAG:-latest}
+    pull_policy: always
+    command: ["nginx", "-g", "daemon off;"]
+    volumes: !reset []
+    ports: !override
+      - "${FRONTEND_PROD_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
