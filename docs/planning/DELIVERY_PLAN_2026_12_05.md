@@ -39,9 +39,11 @@ vigente resulta em revisão manual (Maker-Checker fail-closed). São reprovadas 
 com a frase exata "LICENÇA SUSPENSA" ou com "EMBARGADO" ("embargada" não é reconhecida). A licença
 vencida só é reprovada se tiver os termos obrigatórios da regra ("LICENÇA AMBIENTAL", "VÁLIDA ATÉ",
 "ÓRGÃO AMBIENTAL"); sem algum deles, vai para revisão manual.
-`INTEGRIDADE_CEIS_CNEP` tem detecção no parser e regra HYBRID: os termos de sanção definidos na
-regra reprovam direto; sem LLM configurado, o restante vai para revisão manual (inclusive "nada
-consta" no CEIS com sanção no CNEP).
+`INTEGRIDADE_CEIS_CNEP` tem detecção no parser e regra HYBRID que exige os dois cadastros (CEIS e
+CNEP) e "nada consta". Os termos de sanção definidos na regra reprovam direto, inclusive quando o
+CEIS diz "nada consta" e o CNEP traz um desses termos (ex.: "multa aplicada"). Sem LLM
+configurado, o restante vai para revisão manual; com LLM, só é aprovado se o Checker aprovar e a
+citação existir no documento.
 
 ### Itens explicitamente adiados (fora do MVP)
 
@@ -99,6 +101,7 @@ o escopo: revisão humana somente via API (sem UI própria) e demo com uma únic
 | Compose nunca validado nesta auditoria | Demo pode não subir | T09 até 04/11 em máquina com Docker; CI job `smoke` agora roda em `developer` |
 | D1 não decidida até 05/11 | RF09 inviável; demo perde a intervenção do analista | Proposta de identidade mínima pronta (backlog T05a) |
 | Sem chave LLM no ambiente de demo | Regras HYBRID sempre em revisão manual | Comportamento correto e seguro; documentar no roteiro; MVP usa CND/CRF (determinísticas) |
+| RULE-BNDES-006: sanção no CNEP escrita com outras palavras (ex.: "tipo de sanção: multa") não é bloqueada pela regra | Com LLM, CEIS "nada consta" + multa no CNEP pode sair `COMPLIANT` se o Maker-Checker aprovar | Registrado como `xfail(strict=True)` em `backend/tests/test_maker_checker_rules_005_006.py`; ajuste da regra pendente |
 | OCR não validado (Tesseract ausente localmente) | PDFs digitalizados podem falhar na demo | Validar no container (imagem já instala Tesseract `por`); usar PDF nativo como plano B |
 | Evals com poucos casos sintéticos | Acurácia reportada não representa produção | Declarar limite; adicionar PDFs reais anonimizados até 26/11 |
 | Testes de backend lentos (~5 min) por timeouts de rede | CI lento, feedback tardio | Backlog T11 (mockar storage/health) |

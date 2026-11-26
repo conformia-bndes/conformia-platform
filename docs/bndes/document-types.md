@@ -87,8 +87,11 @@ Este documento estabelece as especificações técnicas das tipologias documenta
   mudam a tipologia; só uma certidão com o sinal da própria tipologia ("débitos trabalhistas";
   distribuidor + falência/recuperação judicial) tem precedência sobre a consulta.
 - **Tratamento Híbrido (Maker-Checker)**:
-  - Os termos de sanção definidos na regra (`anti_keywords`; ex.: "impedimento de licitar")
-    reprovam direto (`NON_COMPLIANT`).
+  - A consulta precisa citar os dois cadastros (CEIS e CNEP) e trazer "nada consta"; se faltar
+    algum desses termos, vai para revisão manual.
+  - Os termos de sanção definidos na regra (`anti_keywords`; ex.: "impedimento de licitar",
+    "multa aplicada") reprovam direto (`NON_COMPLIANT`), sem chamar o LLM.
   - Um "nada consta" pode se referir a só um dos cadastros; sem LLM, a consulta vai para
-    revisão manual e nunca é aprovada automaticamente.
+    revisão manual e nunca é aprovada automaticamente. Com LLM, só sai `COMPLIANT` se o
+    Checker aprovar e a citação do Maker existir no documento; caso contrário, revisão manual.
 - **Campos Esperados**: CNPJ consultado, resultado por cadastro e data da consulta.
