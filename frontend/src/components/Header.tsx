@@ -83,20 +83,20 @@ export function Header({
                     ? `Chave de sessão ativa (${apiKeyLabel}). Clique para alterar ou remover.`
                     : 'Informar chave pessoal (X-API-Key) para operações autenticadas'
                 }
-                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded border text-xs font-semibold transition-colors cursor-pointer ${
+                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded border text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2 ${
                   apiKeyLabel
                     ? 'bg-bndes-green-tint border-bndes-green-border text-bndes-green-ink hover:bg-[#D8EFE2]'
                     : 'bg-bndes-surface-muted border-bndes-border-strong text-bndes-blue hover:bg-bndes-blue-tint hover:border-bndes-blue'
                 }`}
               >
-                <KeyRound className="w-3.5 h-3.5" />
+                <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>{apiKeyLabel ? `Analista: ${apiKeyLabel}` : 'Informar Chave'}</span>
               </button>
 
               <div
                 className={`flex items-center space-x-2 px-3.5 py-1.5 rounded border ${statusBadgeClasses}`}
               >
-                <span className="relative flex h-2.5 w-2.5">
+                <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
                   {healthLoading ? (
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bndes-ochre opacity-75"></span>
                   ) : !healthError && health?.status === 'healthy' ? (
@@ -120,9 +120,10 @@ export function Header({
                   type="button"
                   onClick={onRefreshHealth}
                   title="Atualizar Status"
-                  className="opacity-75 hover:opacity-100 transition-opacity ml-1 cursor-pointer"
+                  aria-label="Atualizar status da API"
+                  className="opacity-75 hover:opacity-100 transition-opacity ml-1 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${healthLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 ${healthLoading ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -133,46 +134,62 @@ export function Header({
       {/* Barra de Navegação Institucional em Azul 1 (#004A8F) */}
       <div className="bg-bndes-blue text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto" aria-label="Módulos da plataforma">
+          <div
+            role="tablist"
+            aria-label="Módulos da plataforma"
+            className="flex space-x-1 sm:space-x-2 overflow-x-auto"
+          >
             <button
+              id="tab-upload"
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'upload'}
+              aria-controls="panel-upload"
               onClick={() => onTabChange('upload')}
-              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer ${
+              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 activeTab === 'upload'
                   ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
                   : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
               }`}
             >
-              <UploadCloud className="w-4 h-4" />
+              <UploadCloud className="w-4 h-4" aria-hidden="true" />
               <span>Ingestão Documental (IDP)</span>
             </button>
 
             <button
+              id="tab-checklist"
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'checklist'}
+              aria-controls="panel-checklist"
               onClick={() => onTabChange('checklist')}
-              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer ${
+              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 activeTab === 'checklist'
                   ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
                   : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
               }`}
             >
-              <ListFilter className="w-4 h-4" />
+              <ListFilter className="w-4 h-4" aria-hidden="true" />
               <span>Checklist de Conformidade</span>
             </button>
 
             <button
+              id="tab-audit"
               type="button"
+              role="tab"
+              aria-selected={activeTab === 'audit'}
+              aria-controls="panel-audit"
               onClick={() => onTabChange('audit')}
-              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer ${
+              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 activeTab === 'audit'
                   ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
                   : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
               }`}
             >
-              <History className="w-4 h-4" />
+              <History className="w-4 h-4" aria-hidden="true" />
               <span>Trilha de Auditoria</span>
             </button>
-          </nav>
+          </div>
         </div>
       </div>
     </header>

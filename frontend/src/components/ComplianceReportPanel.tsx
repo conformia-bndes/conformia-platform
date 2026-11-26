@@ -138,10 +138,11 @@ export function ComplianceReportPanel({
           <button
             type="button"
             onClick={onClose}
-            className="text-bndes-ink-muted hover:text-bndes-ink text-sm ml-2 p-1 rounded cursor-pointer"
+            className="text-bndes-ink-muted hover:text-bndes-ink text-sm ml-2 p-1 rounded cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
             title="Fechar Relatório"
+            aria-label="Fechar laudo de conformidade"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>

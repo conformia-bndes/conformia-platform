@@ -285,67 +285,79 @@ export default function App() {
             className="mb-6 p-4 rounded-md bg-bndes-orange-tint border border-bndes-orange-border border-l-4 border-l-bndes-orange text-bndes-orange-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)"
           >
             <div className="flex items-center space-x-2.5">
-              <XCircle className="w-5 h-5 text-bndes-orange shrink-0" />
+              <XCircle className="w-5 h-5 text-bndes-orange shrink-0" aria-hidden="true" />
               <span className="font-medium">{errorMessage}</span>
             </div>
             <button
               type="button"
               onClick={() => setErrorMessage(null)}
-              className="text-bndes-orange-ink/80 hover:text-bndes-orange-ink p-1 rounded transition-colors cursor-pointer"
+              className="text-bndes-orange-ink/80 hover:text-bndes-orange-ink p-1 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
               title="Fechar"
+              aria-label="Fechar aviso de erro"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
         {uploadMessage && (
-          <div className="mb-6 p-4 rounded-md bg-bndes-green-tint border border-bndes-green-border border-l-4 border-l-bndes-green text-bndes-green-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)">
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-6 p-4 rounded-md bg-bndes-green-tint border border-bndes-green-border border-l-4 border-l-bndes-green text-bndes-green-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)"
+          >
             <div className="flex items-center space-x-2.5">
-              <CheckCircle2 className="w-5 h-5 text-bndes-green shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-bndes-green shrink-0" aria-hidden="true" />
               <span className="font-medium">{uploadMessage}</span>
             </div>
             <button
               type="button"
               onClick={() => setUploadMessage(null)}
-              className="text-bndes-green-ink/80 hover:text-bndes-green-ink p-1 rounded transition-colors cursor-pointer"
+              className="text-bndes-green-ink/80 hover:text-bndes-green-ink p-1 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
               title="Fechar"
+              aria-label="Fechar aviso de envio"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
 
         {activeTab === 'upload' && (
-          <DocumentUploadTab
-            documents={documents}
-            loadingDocs={loadingDocs}
-            uploading={uploading}
-            verifyingId={verifyingId}
-            activeReport={activeReport}
-            apiKeyLabel={getApiKeyLabel(sessionKey)}
-            pollingState={hasProcessingDocs ? pollingState : null}
-            onFileUpload={handleFileUpload}
-            onRefreshDocuments={handleManualRefreshDocuments}
-            onVerifyCompliance={handleVerifyCompliance}
-            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
-            onCloseReport={() => setActiveReport(null)}
-          />
+          <div id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
+            <DocumentUploadTab
+              documents={documents}
+              loadingDocs={loadingDocs}
+              uploading={uploading}
+              verifyingId={verifyingId}
+              activeReport={activeReport}
+              apiKeyLabel={getApiKeyLabel(sessionKey)}
+              pollingState={hasProcessingDocs ? pollingState : null}
+              onFileUpload={handleFileUpload}
+              onRefreshDocuments={handleManualRefreshDocuments}
+              onVerifyCompliance={handleVerifyCompliance}
+              onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
+              onCloseReport={() => setActiveReport(null)}
+            />
+          </div>
         )}
 
         {activeTab === 'checklist' && (
-          <ChecklistTab
-            rules={rules}
-            loadingRules={loadingRules}
-            onRefreshRules={loadRules}
-          />
+          <div id="panel-checklist" role="tabpanel" aria-labelledby="tab-checklist">
+            <ChecklistTab
+              rules={rules}
+              loadingRules={loadingRules}
+              onRefreshRules={loadRules}
+            />
+          </div>
         )}
 
         {activeTab === 'audit' && (
-          <AuditTrailTab
-            auditLogs={auditLogs}
-            loadingAudit={loadingAudit}
-            onRefreshAudit={loadAuditLogs}
-          />
+          <div id="panel-audit" role="tabpanel" aria-labelledby="tab-audit">
+            <AuditTrailTab
+              auditLogs={auditLogs}
+              loadingAudit={loadingAudit}
+              onRefreshAudit={loadAuditLogs}
+            />
+          </div>
         )}
       </main>
 

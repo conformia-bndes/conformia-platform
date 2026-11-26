@@ -76,10 +76,11 @@ export function DocumentUploadTab({
           <button
             type="button"
             onClick={onRefreshDocuments}
-            className="p-2 text-bndes-ink-secondary hover:text-bndes-blue rounded hover:bg-bndes-blue-tint transition-colors cursor-pointer"
+            className="p-2 text-bndes-ink-secondary hover:text-bndes-blue rounded hover:bg-bndes-blue-tint transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
             title="Atualizar lista"
+            aria-label="Atualizar lista de documentos"
           >
-            <RefreshCw className={`w-4 h-4 ${loadingDocs ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loadingDocs ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden="true" />
           </button>
         </div>
 
