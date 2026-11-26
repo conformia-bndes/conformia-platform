@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FileSearch, Quote, ChevronDown, ChevronUp } from 'lucide-react';
 import { ExtractionResult } from '../services/api';
+import { presentExtractedFieldName } from '../services/presentation';
 
 interface PageEvidencesSectionProps {
   extraction: ExtractionResult | null | undefined;
@@ -81,8 +82,8 @@ export function PageEvidencesSection({
                   className="p-3 rounded-md bg-bndes-bg border border-bndes-border space-y-1"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-mono font-semibold uppercase text-bndes-ink-secondary">
-                      {field.name}
+                    <span className="text-[11px] font-semibold uppercase text-bndes-ink-secondary">
+                      {presentExtractedFieldName(field.name)}
                     </span>
                     {field.evidence?.page && (
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border">

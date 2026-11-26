@@ -16,7 +16,8 @@ import {
 import {
   describeApiError,
   presentReviewDecision,
-  presentReviewState,
+  presentReviewEventType,
+  presentReviewSummary,
   TONE_CLASSES,
 } from '../services/presentation';
 
@@ -48,7 +49,9 @@ export function HumanReviewPanel({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const stateBadge = reviewState ? presentReviewState(reviewState.state) : null;
+  const stateBadge = reviewState
+    ? presentReviewSummary(reviewState.state, reviewState.final_decision)
+    : null;
   const pendingProposal =
     reviewState?.pending_proposal_id && reviewState.events
       ? reviewState.events.find((ev) => ev.id === reviewState.pending_proposal_id) ?? null
@@ -130,9 +133,6 @@ export function HumanReviewPanel({
             className={`px-2.5 py-0.5 rounded text-xs font-semibold ${TONE_CLASSES[stateBadge.tone]}`}
           >
             {stateBadge.label}
-            {reviewState?.state === 'FINAL' && reviewState.final_decision
-              ? ` • ${presentReviewDecision(reviewState.final_decision)}`
-              : ''}
           </span>
         )}
       </div>
@@ -330,29 +330,34 @@ export function HumanReviewPanel({
               </div>
             ) : (
               <div className="divide-y divide-bndes-border border border-bndes-border rounded-md overflow-hidden bg-white">
-                {reviewState.events.map((ev) => (
-                  <div key={ev.id} className="p-3 space-y-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center space-x-2">
-                        <span className="px-2 py-0.5 rounded font-semibold bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border">
-                          {ev.event_type}
-                        </span>
-                        {ev.decision && (
-                          <span className="font-semibold text-bndes-ink">
-                            {presentReviewDecision(ev.decision)}
+                {reviewState.events.map((ev) => {
+                  const eventPresentation = presentReviewEventType(ev.event_type);
+                  return (
+                    <div key={ev.id} className="p-3 space-y-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center space-x-2">
+                          <span
+                            className={`px-2 py-0.5 rounded font-semibold ${TONE_CLASSES[eventPresentation.tone]}`}
+                          >
+                            {eventPresentation.label}
                           </span>
-                        )}
-                        <span className="font-mono text-bndes-ink-secondary">
-                          por {ev.actor_id} ({ev.actor_role})
+                          {ev.decision && (
+                            <span className="font-semibold text-bndes-ink">
+                              {presentReviewDecision(ev.decision)}
+                            </span>
+                          )}
+                          <span className="font-mono text-bndes-ink-secondary">
+                            por {ev.actor_id} ({ev.actor_role})
+                          </span>
+                        </div>
+                        <span className="font-mono text-[11px] text-bndes-ink-muted">
+                          {new Date(ev.created_at).toLocaleString('pt-BR')}
                         </span>
                       </div>
-                      <span className="font-mono text-[11px] text-bndes-ink-muted">
-                        {new Date(ev.created_at).toLocaleString('pt-BR')}
-                      </span>
+                      <p className="text-xs text-bndes-ink-secondary">{ev.justification}</p>
                     </div>
-                    <p className="text-xs text-bndes-ink-secondary">{ev.justification}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

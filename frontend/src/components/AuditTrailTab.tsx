@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { AuditLogItem } from '../services/api';
+import { presentAuditAction, presentAuditEntity } from '../services/presentation';
 
 interface AuditTrailTabProps {
   auditLogs: AuditLogItem[];
@@ -69,11 +70,11 @@ export function AuditTrailTab({ auditLogs, loadingAudit, onRefreshAudit }: Audit
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 py-0.5 rounded text-xs font-semibold bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border">
-                            {log.action}
+                            {presentAuditAction(log.action)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-xs font-mono font-medium text-bndes-ink whitespace-nowrap">
-                          {log.entity_type}: {log.entity_id}
+                          {presentAuditEntity(log.entity_type)}: {log.entity_id}
                         </td>
                         <td className="px-6 py-4 text-xs text-bndes-ink-secondary whitespace-nowrap">
                           {log.performed_by}

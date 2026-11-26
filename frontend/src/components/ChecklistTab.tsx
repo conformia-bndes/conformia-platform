@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 import { ComplianceRule } from '../services/api';
+import { presentRuleType } from '../services/presentation';
 
 interface ChecklistTabProps {
   rules: ComplianceRule[];
@@ -49,8 +50,14 @@ export function ChecklistTab({ rules, loadingRules, onRefreshRules }: ChecklistT
                   <span className="px-2 py-0.5 text-xs font-mono font-bold rounded bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border">
                     {rule.code}
                   </span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-bndes-green-tint text-bndes-green-ink border border-bndes-green-border">
-                    {rule.type}
+                  <span
+                    className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border ${
+                      rule.type === 'HYBRID'
+                        ? 'bg-bndes-purple-tint text-bndes-purple-ink border-bndes-purple-border'
+                        : 'bg-bndes-green-tint text-bndes-green-ink border-bndes-green-border'
+                    }`}
+                  >
+                    {presentRuleType(rule.type)}
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-bndes-ink mb-2">{rule.title}</h4>

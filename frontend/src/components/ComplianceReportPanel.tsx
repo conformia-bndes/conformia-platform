@@ -1,5 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { CheckCircle2, XCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  MinusCircle,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import {
   apiService,
   ComplianceReport,
@@ -9,7 +17,9 @@ import {
 import {
   describeApiError,
   formatRuleEvidenceEntries,
+  presentDocumentType,
   presentStatus,
+  StatusTone,
   TONE_CLASSES,
 } from '../services/presentation';
 import { PageEvidencesSection } from './PageEvidencesSection';
@@ -152,7 +162,18 @@ export function ComplianceReportPanel({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-md bg-bndes-bg border border-bndes-border">
           <p className="text-xs text-bndes-ink-secondary font-medium">Score de Conformidade</p>
-          <p className="text-2xl font-bold text-bndes-green-ink mt-1">
+          <p
+            className={`text-2xl font-bold mt-1 ${
+              (
+                {
+                  success: 'text-bndes-green-ink',
+                  danger: 'text-bndes-orange-ink',
+                  warning: 'text-bndes-ochre-ink',
+                  neutral: 'text-bndes-ink-secondary',
+                } as Record<StatusTone, string>
+              )[presentStatus(report.overall_status).tone]
+            }`}
+          >
             {(report.compliance_score * 100).toFixed(0)}%
           </p>
         </div>
@@ -165,7 +186,7 @@ export function ComplianceReportPanel({
         <div className="p-4 rounded-md bg-bndes-bg border border-bndes-border">
           <p className="text-xs text-bndes-ink-secondary font-medium">Tipologia Identificada</p>
           <p className="text-sm font-semibold text-bndes-ink mt-2">
-            {report.document_type ?? 'Não identificada (revisão manual)'}
+            {presentDocumentType(report.document_type)}
           </p>
         </div>
       </div>
@@ -220,9 +241,13 @@ export function ComplianceReportPanel({
                   }`}
                 >
                   {c.status === 'COMPLIANT' ? (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                  ) : c.status === 'NON_COMPLIANT' ? (
+                    <XCircle className="w-4 h-4" aria-hidden="true" />
+                  ) : c.status === 'MANUAL_REVIEW_REQUIRED' ? (
+                    <AlertTriangle className="w-4 h-4" aria-hidden="true" />
                   ) : (
-                    <XCircle className="w-4 h-4" />
+                    <MinusCircle className="w-4 h-4" aria-hidden="true" />
                   )}
                   <span>{presentStatus(c.status).label}</span>
                 </span>

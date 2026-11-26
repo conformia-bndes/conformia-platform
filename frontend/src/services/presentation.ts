@@ -58,6 +58,102 @@ export function presentReviewState(state: string): StatusPresentation {
   return REVIEW_STATE_PRESENTATION[state as ReviewState] ?? REVIEW_STATE_PRESENTATION.NO_REVIEW;
 }
 
+/**
+ * Rótulo e tom semântico do resumo da revisão humana.
+ * Quando FINAL, o tom reflete a decisão final (REJEITAR = danger, EXCEÇÃO = warning, APROVAR = success).
+ */
+export function presentReviewSummary(
+  state: string,
+  finalDecision: string | null | undefined,
+): StatusPresentation {
+  const base = presentReviewState(state);
+  if (state !== 'FINAL' || !finalDecision) {
+    return base;
+  }
+
+  let tone: StatusTone = 'success';
+  if (finalDecision === 'REJECT') {
+    tone = 'danger';
+  } else if (finalDecision === 'EXCEPTION') {
+    tone = 'warning';
+  }
+
+  return {
+    label: `${base.label} • ${presentReviewDecision(finalDecision)}`,
+    tone,
+  };
+}
+
+const REVIEW_EVENT_PRESENTATION: Record<string, StatusPresentation> = {
+  PROPOSED: { label: 'Proposta', tone: 'neutral' },
+  CONFIRMED: { label: 'Confirmada', tone: 'success' },
+  RETURNED: { label: 'Devolvida', tone: 'danger' },
+};
+
+export function presentReviewEventType(eventType: string): StatusPresentation {
+  return REVIEW_EVENT_PRESENTATION[eventType] ?? { label: eventType, tone: 'neutral' };
+}
+
+const RULE_TYPE_LABELS: Record<string, string> = {
+  DETERMINISTIC: 'Determinística',
+  HYBRID: 'Híbrida (IA + Regras)',
+};
+
+export function presentRuleType(ruleType: string): string {
+  return RULE_TYPE_LABELS[ruleType] ?? ruleType;
+}
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  CND_FEDERAL: 'CND Federal (RFB / PGFN)',
+  CRF_FGTS: 'CRF FGTS (Caixa)',
+  CNDT_TRABALHISTA: 'CNDT Trabalhista (TST)',
+  FALENCIA_RECUPERACAO: 'Certidão de Falência e Recuperação',
+  LICENCA_AMBIENTAL: 'Licença Ambiental',
+  INTEGRIDADE_CEIS_CNEP: 'Consulta CEIS / CNEP',
+};
+
+export function presentDocumentType(docType: string | null | undefined): string {
+  if (!docType) return 'Não identificada (revisão manual)';
+  return DOCUMENT_TYPE_LABELS[docType] ?? docType;
+}
+
+const EXTRACTED_FIELD_LABELS: Record<string, string> = {
+  document_type: 'Tipo de Documento',
+  cnpj: 'CNPJ',
+  razao_social: 'Razão Social',
+  data_validade: 'Data de Validade',
+  data_emissao: 'Data de Emissão',
+  numero_certidao: 'Número da Certidão',
+  codigo_controle: 'Código de Controle',
+  situacao: 'Situação',
+};
+
+export function presentExtractedFieldName(name: string): string {
+  return EXTRACTED_FIELD_LABELS[name] ?? name;
+}
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  DOCUMENT_UPLOADED: 'Documento Enviado',
+  COMPLIANCE_VERIFIED: 'Conformidade Avaliada',
+  REVIEW_PROPOSED: 'Revisão Proposta',
+  REVIEW_CONFIRMED: 'Revisão Confirmada',
+  REVIEW_RETURNED: 'Revisão Devolvida',
+};
+
+export function presentAuditAction(action: string): string {
+  return AUDIT_ACTION_LABELS[action] ?? action;
+}
+
+const AUDIT_ENTITY_LABELS: Record<string, string> = {
+  DOCUMENT: 'Documento',
+  COMPLIANCE: 'Laudo',
+  REVIEW: 'Revisão',
+};
+
+export function presentAuditEntity(entityType: string): string {
+  return AUDIT_ENTITY_LABELS[entityType] ?? entityType;
+}
+
 const REVIEW_DECISION_LABELS: Record<ReviewDecision, string> = {
   APPROVE: 'Aprovar Laudo',
   REJECT: 'Reprovar Laudo',
