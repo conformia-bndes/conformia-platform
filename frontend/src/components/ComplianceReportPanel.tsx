@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { CheckCircle2, XCircle, X } from 'lucide-react';
+import { CheckCircle2, XCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   apiService,
   ComplianceReport,
@@ -53,6 +53,7 @@ export function ComplianceReportPanel({
   const [reviewState, setReviewState] = useState<ReviewStateResponse | null>(null);
   const [loadingReview, setLoadingReview] = useState<boolean>(true);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [checksExpanded, setChecksExpanded] = useState<boolean>(true);
 
   const loadReviewState = useCallback(async () => {
     try {
@@ -171,9 +172,32 @@ export function ComplianceReportPanel({
 
       {/* Itens Verificados */}
       <div className="space-y-3">
-        <h4 className="text-sm font-bold text-bndes-blue">Detalhamento dos Critérios BNDES</h4>
-        <div className="divide-y divide-bndes-border border border-bndes-border rounded-md overflow-hidden">
-          {report.checks.map((c) => (
+        <button
+          type="button"
+          onClick={() => setChecksExpanded((prev) => !prev)}
+          aria-expanded={checksExpanded}
+          aria-controls="report-checks-list"
+          className="w-full flex items-center justify-between gap-2 text-left py-1.5 px-2 -mx-2 rounded hover:bg-bndes-surface-muted/70 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
+        >
+          <span className="text-sm font-bold text-bndes-blue">
+            Detalhamento dos Critérios BNDES ({report.checks.length})
+          </span>
+          <span className="inline-flex items-center space-x-1 text-xs font-semibold text-bndes-ink-secondary">
+            <span>{checksExpanded ? 'Recolher' : 'Expandir'}</span>
+            {checksExpanded ? (
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            )}
+          </span>
+        </button>
+
+        {checksExpanded && (
+          <div
+            id="report-checks-list"
+            className="divide-y divide-bndes-border border border-bndes-border rounded-md overflow-hidden"
+          >
+            {report.checks.map((c) => (
             <div
               key={c.rule_id}
               className="p-4 flex items-start justify-between gap-4 bg-white hover:bg-bndes-bg/70 transition-colors"
@@ -203,9 +227,10 @@ export function ComplianceReportPanel({
                   <span>{presentStatus(c.status).label}</span>
                 </span>
               </div>
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Evidências e Campos Extraídos por Página */}

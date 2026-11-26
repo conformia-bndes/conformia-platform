@@ -1,4 +1,5 @@
-import { FileSearch, Quote } from 'lucide-react';
+import { useState } from 'react';
+import { FileSearch, Quote, ChevronDown, ChevronUp } from 'lucide-react';
 import { ExtractionResult } from '../services/api';
 
 interface PageEvidencesSectionProps {
@@ -12,24 +13,45 @@ export function PageEvidencesSection({
   loading,
   error,
 }: PageEvidencesSectionProps) {
+  const [expanded, setExpanded] = useState<boolean>(true);
   const fields = extraction ? Object.values(extraction.fields || {}) : [];
   const evidences = extraction?.evidences || [];
 
   return (
     <div className="border-t border-bndes-border pt-5 space-y-4">
-      <div className="flex items-center justify-between">
+      <button
+        type="button"
+        onClick={() => setExpanded((prev) => !prev)}
+        aria-expanded={expanded}
+        aria-controls="page-evidences-content"
+        className="w-full flex flex-wrap items-center justify-between gap-2 text-left py-1.5 px-2 -mx-2 rounded hover:bg-bndes-surface-muted/70 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
+      >
         <div className="flex items-center space-x-2">
-          <FileSearch className="w-4 h-4 text-bndes-blue" />
-          <h4 className="text-sm font-bold text-bndes-blue">
+          <FileSearch className="w-4 h-4 text-bndes-blue shrink-0" aria-hidden="true" />
+          <span className="text-sm font-bold text-bndes-blue">
             Evidências e Campos Extraídos por Página
-          </h4>
-        </div>
-        {extraction && (
-          <span className="text-xs text-bndes-ink-muted font-medium">
-            {extraction.total_pages} página(s) analisada(s)
+            {extraction ? ` (${evidences.length})` : ''}
           </span>
-        )}
-      </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          {extraction && (
+            <span className="text-xs text-bndes-ink-muted font-medium">
+              {extraction.total_pages} página(s) analisada(s)
+            </span>
+          )}
+          <span className="inline-flex items-center space-x-1 text-xs font-semibold text-bndes-ink-secondary">
+            <span>{expanded ? 'Recolher' : 'Expandir'}</span>
+            {expanded ? (
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            )}
+          </span>
+        </div>
+      </button>
+
+      {expanded && (
+        <div id="page-evidences-content" className="space-y-4">
 
       {loading && (
         <div className="p-4 rounded-md bg-bndes-bg border border-bndes-border text-xs text-bndes-ink-muted">
@@ -100,6 +122,8 @@ export function PageEvidencesSection({
               Nenhum trecho literal de evidência foi registrado na extração.
             </div>
           )}
+        </div>
+      )}
         </div>
       )}
     </div>

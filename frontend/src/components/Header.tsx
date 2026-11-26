@@ -47,14 +47,14 @@ export function Header({
       {/* Barra principal em fundo branco (0% preto - Seção 1.5 do Manual) para máximo contraste da marca em cores */}
       <div className="border-b border-bndes-border bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-between items-center min-h-[5.25rem] py-2 gap-4">
-            <div className="flex items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center min-h-[5.25rem] py-2.5 sm:py-2 gap-3 sm:gap-4">
+            <div className="flex items-center justify-between sm:justify-start">
               {/* Área de proteção equivalente à altura da letra "B" (Seção 1.9) sem distorção ou sombra (Seção 1.11) */}
-              <div className="py-2.5 pr-5 sm:pr-6 shrink-0">
+              <div className="py-1 sm:py-2.5 pr-4 sm:pr-6 shrink-0">
                 <img
                   src={logoBndesConformia}
                   alt="BNDES Conform.IA"
-                  className="h-10 sm:h-11 w-auto object-contain select-none"
+                  className="h-9 sm:h-11 w-auto object-contain select-none"
                 />
               </div>
 
@@ -74,7 +74,7 @@ export function Header({
             </div>
 
             {/* Chave do Analista e Indicador de Status da API */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
               <button
                 type="button"
                 onClick={onOpenApiKeyModal}
@@ -133,11 +133,11 @@ export function Header({
 
       {/* Barra de Navegação Institucional em Azul 1 (#004A8F) */}
       <div className="bg-bndes-blue text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div
             role="tablist"
             aria-label="Módulos da plataforma"
-            className="flex space-x-1 sm:space-x-2 overflow-x-auto"
+            className="grid grid-cols-3 sm:flex sm:space-x-2"
           >
             <button
               id="tab-upload"
@@ -146,14 +146,14 @@ export function Header({
               aria-selected={activeTab === 'upload'}
               aria-controls="panel-upload"
               onClick={() => onTabChange('upload')}
-              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+              className={`py-2.5 sm:py-3.5 px-2 sm:px-4 border-b-[3px] text-[11px] sm:text-sm flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 text-center sm:text-left leading-tight transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 activeTab === 'upload'
                   ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
                   : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
               }`}
             >
-              <UploadCloud className="w-4 h-4" aria-hidden="true" />
-              <span>Ingestão Documental (IDP)</span>
+              <UploadCloud className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Ingestão Documental</span>
             </button>
 
             <button
@@ -163,14 +163,14 @@ export function Header({
               aria-selected={activeTab === 'checklist'}
               aria-controls="panel-checklist"
               onClick={() => onTabChange('checklist')}
-              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+              className={`py-2.5 sm:py-3.5 px-2 sm:px-4 border-b-[3px] text-[11px] sm:text-sm flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 text-center sm:text-left leading-tight transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 activeTab === 'checklist'
                   ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
                   : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
               }`}
             >
-              <ListFilter className="w-4 h-4" aria-hidden="true" />
-              <span>Checklist de Conformidade</span>
+              <ListFilter className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Checklist de Regras</span>
             </button>
 
             <button
@@ -180,13 +180,13 @@ export function Header({
               aria-selected={activeTab === 'audit'}
               aria-controls="panel-audit"
               onClick={() => onTabChange('audit')}
-              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+              className={`py-2.5 sm:py-3.5 px-2 sm:px-4 border-b-[3px] text-[11px] sm:text-sm flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 text-center sm:text-left leading-tight transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 activeTab === 'audit'
                   ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
                   : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
               }`}
             >
-              <History className="w-4 h-4" aria-hidden="true" />
+              <History className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>Trilha de Auditoria</span>
             </button>
           </div>

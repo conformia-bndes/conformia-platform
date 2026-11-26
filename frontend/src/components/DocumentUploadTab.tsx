@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FileText, UploadCloud, ShieldCheck, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
 import { DocumentItem, ComplianceReport } from '../services/api';
 import { PollingSnapshot } from '../services/polling';
@@ -14,6 +14,7 @@ interface DocumentUploadTabProps {
   apiKeyLabel: string | null;
   pollingState?: PollingSnapshot | null;
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileDrop: (file: File) => void;
   onRefreshDocuments: () => void;
   onVerifyCompliance: (docId: string, filename: string) => void;
   onOpenApiKeyModal: () => void;
@@ -29,24 +30,63 @@ export function DocumentUploadTab({
   apiKeyLabel,
   pollingState,
   onFileUpload,
+  onFileDrop,
   onRefreshDocuments,
   onVerifyCompliance,
   onOpenApiKeyModal,
   onCloseReport,
 }: DocumentUploadTabProps) {
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const reportSectionRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (activeReport?.document_id) {
+      reportSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeReport?.document_id]);
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (!uploading) setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    if (uploading) return;
+    const droppedFile = event.dataTransfer.files?.[0];
+    if (droppedFile) {
+      onFileDrop(droppedFile);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Área de Ingestão de Documentos */}
-      <div className="bg-white rounded-md shadow-(--shadow-bndes-card) border border-bndes-border border-t-[3px] border-t-bndes-blue p-8">
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`rounded-md shadow-(--shadow-bndes-card) border border-t-[3px] border-t-bndes-blue p-8 transition-colors ${
+          isDragging
+            ? 'bg-bndes-blue-tint/50 border-bndes-blue border-dashed'
+            : 'bg-white border-bndes-border'
+        }`}
+      >
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-14 h-14 bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border rounded-md flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-7 h-7" />
+            <FileText className="w-7 h-7" aria-hidden="true" />
           </div>
           <h3 className="text-lg font-bold text-bndes-blue tracking-tight mb-1.5">
             Ingestão Inteligente de Documentos PDF
           </h3>
           <p className="text-sm text-bndes-ink-secondary mb-6">
-            Faça o upload de certidões, balanços ou certidões de regularidade para OCR, extração e avaliação.
+            Arraste e solte um PDF aqui ou selecione o arquivo para OCR, extração e avaliação.
           </p>
 
           <label className="inline-flex items-center px-5 py-2.5 rounded shadow-xs text-sm font-semibold text-white bg-bndes-blue hover:bg-bndes-blue-3 active:bg-bndes-blue-deep focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-bndes-blue-2 cursor-pointer transition-colors">
@@ -139,17 +179,22 @@ export function DocumentUploadTab({
             {documents.map((doc) => {
               const statusInfo = presentDocumentStatus(doc.status);
               const isCompleted = doc.status === 'COMPLETED';
+              const isSelected = activeReport?.document_id === doc.id;
               return (
                 <div
                   key={doc.id}
-                  className="p-5 flex flex-wrap items-center justify-between gap-4 hover:bg-bndes-bg/70 transition-colors"
+                  className={`p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+                    isSelected
+                      ? 'bg-bndes-blue-tint/45 border-l-4 border-l-bndes-blue'
+                      : 'hover:bg-bndes-bg/70'
+                  }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border/60">
-                      <FileText className="w-5 h-5" />
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="p-2 rounded bg-bndes-blue-tint text-bndes-blue border border-bndes-blue-border/60 shrink-0">
+                      <FileText className="w-5 h-5" aria-hidden="true" />
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-bndes-ink">{doc.original_filename}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-bndes-ink truncate">{doc.original_filename}</p>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-bndes-ink-secondary mt-1">
                         <span>Tamanho: {(doc.file_size / 1024).toFixed(1)} KB</span>
                         <span>•</span>
@@ -164,7 +209,7 @@ export function DocumentUploadTab({
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center sm:shrink-0">
                     <button
                       type="button"
                       onClick={() => onVerifyCompliance(doc.id, doc.original_filename)}
@@ -174,17 +219,17 @@ export function DocumentUploadTab({
                           ? 'Executar ou abrir laudo de conformidade'
                           : 'Aguarde a conclusão do processamento para verificar a conformidade'
                       }
-                      className="px-4 py-2 rounded text-xs font-semibold text-bndes-blue bg-bndes-blue-tint hover:bg-[#DCEAF7] border border-bndes-blue-border flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:w-auto justify-center px-4 py-2 rounded text-xs font-semibold text-bndes-blue bg-bndes-blue-tint hover:bg-[#DCEAF7] border border-bndes-blue-border flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
                     >
                       {verifyingId === doc.id ? (
                         <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
                           <span>Avaliando Regras...</span>
                         </>
                       ) : (
                         <>
-                          <ShieldCheck className="w-3.5 h-3.5 text-bndes-green" />
-                          <span>Verificar Conformidade</span>
+                          <ShieldCheck className="w-3.5 h-3.5 text-bndes-green" aria-hidden="true" />
+                          <span>{isSelected ? 'Laudo Aberto' : 'Verificar Conformidade'}</span>
                         </>
                       )}
                     </button>
@@ -198,13 +243,15 @@ export function DocumentUploadTab({
 
       {/* Painel do Relatório de Conformidade Selecionado */}
       {activeReport && (
-        <ComplianceReportPanel
-          key={activeReport.document_id}
-          report={activeReport}
-          apiKeyLabel={apiKeyLabel}
-          onOpenApiKeyModal={onOpenApiKeyModal}
-          onClose={onCloseReport}
-        />
+        <div ref={reportSectionRef} className="scroll-mt-6">
+          <ComplianceReportPanel
+            key={activeReport.document_id}
+            report={activeReport}
+            apiKeyLabel={apiKeyLabel}
+            onOpenApiKeyModal={onOpenApiKeyModal}
+            onClose={onCloseReport}
+          />
+        </div>
       )}
     </div>
   );

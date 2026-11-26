@@ -240,9 +240,9 @@ export function HumanReviewPanel({
                 <button
                   type="submit"
                   disabled={!apiKeyLabel || submitting || justification.trim().length < 20}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded text-xs font-semibold text-white bg-bndes-blue hover:bg-bndes-blue-3 active:bg-bndes-blue-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  className="w-full sm:w-auto justify-center inline-flex items-center space-x-1.5 px-4 py-2 rounded text-xs font-semibold text-white bg-bndes-blue hover:bg-bndes-blue-3 active:bg-bndes-blue-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-bndes-blue-2"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  <Send className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>{submitting ? 'Enviando...' : 'Enviar Proposta (Maker)'}</span>
                 </button>
               </div>
@@ -294,23 +294,23 @@ export function HumanReviewPanel({
                 />
               </div>
 
-              <div className="flex flex-wrap justify-end gap-2">
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
                 <button
                   type="button"
                   disabled={!apiKeyLabel || isSameActor || submitting || comment.trim().length < 10}
                   onClick={() => handleResolve('return')}
-                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded text-xs font-semibold text-bndes-orange-ink bg-bndes-orange-tint hover:bg-[#F9E3D7] border border-bndes-orange-border disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  className="w-full sm:w-auto justify-center inline-flex items-center space-x-1.5 px-3.5 py-2 rounded text-xs font-semibold text-bndes-orange-ink bg-bndes-orange-tint hover:bg-[#F9E3D7] border border-bndes-orange-border disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Devolver Proposta</span>
                 </button>
                 <button
                   type="button"
                   disabled={!apiKeyLabel || isSameActor || submitting || comment.trim().length < 10}
                   onClick={() => handleResolve('confirm')}
-                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded text-xs font-semibold text-white bg-bndes-blue hover:bg-bndes-blue-3 active:bg-bndes-blue-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  className="w-full sm:w-auto justify-center inline-flex items-center space-x-1.5 px-3.5 py-2 rounded text-xs font-semibold text-white bg-bndes-blue hover:bg-bndes-blue-3 active:bg-bndes-blue-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-bndes-blue-2"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Confirmar Proposta</span>
                 </button>
               </div>

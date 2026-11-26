@@ -203,26 +203,20 @@ export default function App() {
     if (tab === 'audit') loadAuditLogs();
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const uploadPdfFile = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       setErrorMessage('Selecione um arquivo no formato PDF.');
-      event.target.value = '';
       return;
     }
 
     if (file.size === 0) {
       setErrorMessage('O arquivo PDF selecionado está vazio.');
-      event.target.value = '';
       return;
     }
 
     const MAX_PDF_BYTES = 50 * 1024 * 1024;
     if (file.size > MAX_PDF_BYTES) {
       setErrorMessage('O arquivo excede o limite máximo de 50 MB.');
-      event.target.value = '';
       return;
     }
 
@@ -246,9 +240,18 @@ export default function App() {
       setUploadMessage(null);
       setErrorMessage(describeApiError(error, 'Falha no envio do documento.'));
     } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadPdfFile(file);
+    } finally {
       // Permite reenviar o mesmo arquivo apos uma falha.
       event.target.value = '';
-      setUploading(false);
     }
   };
 
@@ -345,6 +348,7 @@ export default function App() {
               apiKeyLabel={getApiKeyLabel(sessionKey)}
               pollingState={hasProcessingDocs ? pollingState : null}
               onFileUpload={handleFileUpload}
+              onFileDrop={uploadPdfFile}
               onRefreshDocuments={handleManualRefreshDocuments}
               onVerifyCompliance={handleVerifyCompliance}
               onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
