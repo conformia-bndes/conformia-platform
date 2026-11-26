@@ -91,17 +91,53 @@ execução manual e na execução semanal (segunda, 06:00 UTC) tudo roda.
 
 O estágio de deploy é o `cd.yml`. Quando você mergeia o PR de release do release-please, o
 `release-please.yml` cria a tag `vX.Y.Z` e chama o CD, que constrói as imagens de produção do
-backend e do frontend **a partir da tag** e as publica no GitHub Container Registry:
+backend (`target: runtime`) e do frontend (`target: production`, Nginx na porta `8080`) **a partir
+da tag** e as publica no GitHub Container Registry:
 
-| Imagem | Tags |
-| :-- | :-- |
-| `ghcr.io/conformia-bndes/conformia-platform/backend` | `vX.Y.Z`, `latest` |
-| `ghcr.io/conformia-bndes/conformia-platform/frontend` | `vX.Y.Z`, `latest` |
+| Imagem | Tags | Visibilidade |
+| :-- | :-- | :-- |
+| `ghcr.io/conformia-bndes/conformia-platform/backend` | `vX.Y.Z`, `latest` | Pública (vinculada ao repositório) |
+| `ghcr.io/conformia-bndes/conformia-platform/frontend` | `vX.Y.Z`, `latest` | Pública (vinculada ao repositório) |
 
-As imagens saem com provenance e SBOM anexados e com os rótulos OCI de origem, commit e versão.
-O CD também roda manualmente (Actions → CD → Run workflow) com `push` desligado por padrão, o
-que só constrói e valida a imagem de uma tag, sem publicar. A chamada vem do `release-please.yml`
-porque tags criadas com o `GITHUB_TOKEN` não disparam outros workflows.
+As imagens saem com provenance SLSA (`mode=max`) e SBOM anexados, rótulos OCI de origem, commit e
+versão, e passam por validação em contêiner durante o próprio job (`import app.main` no backend e
+resposta HTTP no Nginx do frontend). A chamada vem do `release-please.yml` porque tags criadas com
+o `GITHUB_TOKEN` não disparam outros workflows.
+
+**Validação pré-release (`workflow_dispatch` com `push=false`)**
+
+Antes de publicar uma release ou ao alterar os `Dockerfile`s/`cd.yml`, execute **Actions → CD →
+Run workflow** informando `tag=v0.2.0` (ou a tag alvo) com `push` desligado (`false`, padrão). Os
+dois jobs da matriz (`Deploy (backend)` e `Deploy (frontend)`) constroem as imagens com provenance
+e SBOM, carregam a imagem localmente no runner e validam a inicialização do contêiner sem publicar
+no registro.
+
+**Visibilidade dos pacotes no GHCR**
+
+No GitHub Container Registry, novos pacotes **nascem privados por padrão** na primeira publicação
+feita com `GITHUB_TOKEN`. Como o repositório `conformia-bndes/conformia-platform` é público e as
+imagens não contêm segredos nem credenciais (toda configuração sensível é injetada via `.env` em
+tempo de execução), a decisão adotada para o projeto é configurar os pacotes `backend` e `frontend`
+como **públicos** logo após a primeira publicação (**Package settings → Danger Zone → Change
+visibility → Public**, mantendo *Inherit access from repository* habilitado). Isso permite que a
+máquina de demonstração e auditores externos executem `docker pull` sem exigir Personal Access
+Token (`read:packages`).
+
+**Subindo as imagens publicadas com Docker Compose (frontend na porta 8080)**
+
+O arquivo `infra/docker-compose.ghcr.yml` substitui o build local pelas imagens publicadas no GHCR,
+remove os bind-mounts de código-fonte e o `--reload`, e expõe o frontend de produção (Nginx como
+usuário não-root `101`) na porta **`8080`**:
+
+```bash
+make env
+IMAGE_TAG=v0.3.0 docker compose --env-file .env \
+  -f infra/docker-compose.yml \
+  -f infra/docker-compose.ghcr.yml pull
+IMAGE_TAG=v0.3.0 docker compose --env-file .env \
+  -f infra/docker-compose.yml \
+  -f infra/docker-compose.ghcr.yml up -d --wait
+```
 
 ### Relatórios de qualidade
 

@@ -1,7 +1,8 @@
-# Backlog de Implementação - Entrega 05/12/2026
+# Backlog de Implementação - Entrega 27/11/2026
 
-Atualizado em 21/11/2026 com o estado de **13/11/2026** (branch de integração `dev`, commit
-`627a95a`). Versão anterior: auditoria de 29/10/2026 (histórico na seção final).
+Atualizado em 26/11/2026 com o estado de `dev` após a auditoria de 23/11/2026 (AUD-08). Versão
+anterior: estado de 13/11/2026 (commit `627a95a`) e auditoria de 29/10/2026 (histórico na seção
+final). A entrega, antes prevista para 05/12/2026, foi antecipada para 27/11/2026 (M6).
 Prioridades: **P0** impede fluxo essencial, compromete segurança ou a entrega; **P1** necessário
 para confiabilidade/demo consistente; **P2** adiável.
 
@@ -33,17 +34,17 @@ principal) que integrou o item em `dev`.
 | T05d | P1 | Banco já existente não recebia `review_events` sem `alembic upgrade head`; o compose não executava migrations. | Serviço `migrate` (`python -m app.db.migrate`) antes da API e do worker; `create_all` removido do startup. | Testes de migração em PostgreSQL (issue #50) | PR #109 (`85f54a7`) |
 | T05c | P1 | `ENVIRONMENT` padrão `development` e `DEBUG=True`: deploy sem `.env` correto ficava sem autenticação e expunha `str(exc)`. | Padrão seguro (`production`, `DEBUG=False`); acesso anônimo só com opt-in `ALLOW_ANONYMOUS_ACCESS`. | `test_config.py` (issue #52) | PR #110 (`7f660db`) |
 | T11 | P1 | Suíte de backend levava ~5 min por timeouts de MinIO/Redis/PostgreSQL reais. | Mocks de MinIO, Redis e PostgreSQL nos testes afetados. | `pytest backend/tests/` | PR #108 (`3e402f5`) |
+| T06c | P0 | Frontend não enviava `X-API-Key`; só funcionava com `ALLOW_ANONYMOUS_ACCESS=true`, e a revisão humana exige chave pessoal. | Chave pessoal informada na sessão do navegador (memória, sem localStorage) e enviada no cabeçalho. | `presentation.test.ts`, `api.test.ts` | PR #145 (`c406237`), integrado em `dev` em 22/11 |
+| T06b | P0 | UI sem fluxo de revisão humana nem exibição de evidências por página. | Painel de revisão humana no laudo (propor, confirmar, devolver; estado e histórico) e seção de evidências por página. | `frontend/src/__tests__/` | PR #145 (`56ddb28`), integrado em `dev` em 22/11. Trecho e página no `evidence` das regras: issue #55 |
+| T09a | P0 | Compose + smoke não executados na auditoria de 29/10 (Docker parado). | `make up && make smoke` em máquina da equipe, saída registrada no relatório e OCR validado no container. | Job `smoke` de `ci-infra.yml`; `validate_ocr_container.py` | PR #123 (`6a18d43`), issue #46; smoke estendido no PR #121 |
 
 ---
 
-## Abertos (estado em 13/11)
+## Abertos (estado em 26/11)
 
-| ID | Prio | Problema / evidência | Ação mínima | Dependência | Esforço | Status em 13/11 |
+| ID | Prio | Problema / evidência | Ação mínima | Dependência | Esforço | Status em 26/11 |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| T06c | P0 | Frontend não envia `X-API-Key` (`frontend/src/services/api.ts`); só funciona com `ALLOW_ANONYMOUS_ACCESS=true`, e a revisão humana exige chave pessoal. | Entrada da chave pessoal na sessão do navegador (memória, sem localStorage) e envio no cabeçalho. | - | 0,5-1 d | Pendente |
-| T06b | P0 | UI sem fluxo de revisão humana nem exibição de evidências por página. A API de revisão (T05b) já existe. | Painel de decisão no laudo (propor, confirmar, devolver; estado e histórico); exibir `evidence` e trechos por página. | T06c | 2-3 d | Em andamento: evidências por página na branch `55-exibir-evidencias-por-pagina-no-laudo-rf08` (não integrada); painel de decisão pendente |
-| T09a | P0 | Compose + smoke não executados na auditoria de 29/10 (Docker parado). | `make up && make smoke` em máquina da equipe; registrar saída no relatório e validar OCR no container. | Docker | 0,5 d | Parcial: smoke em Compose roda no job `smoke` de `ci-infra.yml` (PR #95). Registro manual com saída e validação de OCR no container (issue #46) na branch `docs/validar-compose-smoke-ocr`, ainda não integrada; ver `VALIDATION_REPORT.md` seção 4 |
-| T08b | P2 | Evals usam textos e PDFs sintéticos: não medem OCR real nem LLM. | Adicionar PDFs reais anonimizados por tipologia do MVP. | dados | 1 d | Pendente |
+| T08b | P2 | Evals usam textos e PDFs sintéticos: não medem OCR real nem LLM. | Adicionar PDFs reais anonimizados por tipologia do MVP. | dados | 1 d | Pendente (issue #58) |
 | T07a | P2 | `nginx.conf` sem proxy `/api` nem `client_max_body_size`; compose usa o servidor de dev do Vite. | Só necessário se a demo usar o build de produção. | - | 0,5 d | Adiado |
 
 ---

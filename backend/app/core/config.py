@@ -53,7 +53,7 @@ class Settings(BaseSettings):
 
     # Informações do Projeto
     PROJECT_NAME: str = "Conform.IA BNDES Platform"
-    VERSION: str = "0.3.0"  # x-release-please-version
+    VERSION: str = "0.4.1"  # x-release-please-version
     API_V1_STR: str = "/api/v1"
     # Padroes seguros: sem .env explicito a aplicacao sobe como producao, sem DEBUG e sem
     # acesso anonimo. Desenvolvimento local liga cada um deles de forma explicita (.env.example).
@@ -72,7 +72,10 @@ class Settings(BaseSettings):
     @classmethod
     def parse_api_users(cls, v: Union[str, List]) -> List:
         if isinstance(v, str):
-            return json.loads(v) if v.strip() else []
+            raw = v.strip()
+            if len(raw) >= 2 and raw[0] == "'" and raw[-1] == "'":
+                raw = raw[1:-1].strip()
+            return json.loads(raw) if raw else []
         return v
 
     @field_validator("API_USERS")

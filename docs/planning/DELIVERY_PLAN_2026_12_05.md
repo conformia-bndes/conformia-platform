@@ -1,16 +1,21 @@
-# Plano de Entrega - MVP até 05/12/2026
+# Plano de Entrega - MVP até 27/11/2026
 
 Data de referência: **13/11/2026** (revisado em 21/11/2026). Base: branch de integração `dev`,
 commit `627a95a`. Histórico: a primeira versão deste plano (29/10/2026) auditou o commit
 `d76f41c`, quando a branch de integração ainda se chamava `developer`.
 
 Este plano substitui hipóteses da análise preliminar por fatos verificados no código. O backlog
-detalhado está em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) e as evidências de
-execução em [VALIDATION_REPORT.md](VALIDATION_REPORT.md).
+detalhado está em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md), as evidências de
+execução em [VALIDATION_REPORT.md](VALIDATION_REPORT.md), o roteiro da apresentação em
+[demo-script.md](demo-script.md) e o checklist operacional da decisão final em
+[go-no-go-checklist.md](go-no-go-checklist.md).
 
-> Prazo confirmado em 01/11: entrega em **05/12/2026**. As apresentações são em 07 ou 09/12, e os
-> dias entre a entrega e a apresentação servem de folga para ensaio e correção de defeitos críticos.
-> O `sprints-roadmap.md` (07/12) é histórico.
+> **Cronograma vigente (auditoria de 23/11/2026):** a entrega foi antecipada para **27/11/2026**.
+> Milestones: M4 = 25/11, M5 (code freeze) = 26/11, M6 (Go/No-Go e entrega) = 27/11, M7 (pós-entrega) = 10/12. O prazo de 05/12/2026 (decisão D3, 01/11) é histórico. As
+> apresentações seguem em 07 ou 09/12; os dias entre a entrega e a apresentação servem de folga
+> para ensaio e correção de defeitos críticos. O `sprints-roadmap.md` é histórico.
+>
+> O nome do arquivo foi mantido para não quebrar links.
 
 ---
 
@@ -54,7 +59,7 @@ regra, porém **não tem detecção de tipologia no parser**: hoje sempre result
 ```text
 [D1 decidida] -> [T05a/T05b concluidos] -> [T06c chave na UI] -> [T06b UI de revisao]
                                                                               |
-[T09a smoke no CI (feito) + registro manual e OCR no container] --------------+--> [Ensaio de demo] -> [Go/No-Go 04/12]
+[T09a smoke no CI (feito) + registro manual e OCR no container] --------------+--> [Ensaio de demo] -> [Go/No-Go 27/11]
 [D2 decidida] -> [T04c concluido (PR #92)] -----------------------------------+
 ```
 
@@ -75,10 +80,14 @@ regra, porém **não tem detecção de tipologia no parser**: hoje sempre result
 | **04/11** | **Congelamento de escopo** (tipologias e fluxos do MVP) | Este documento aprovado pelo responsável de produto | Escopo da seção 1 mantido; aprovação formal não registrada no repositório |
 | 05/11-12/11 | Identidade mínima, endpoint de revisão humana append-only, migration 002 | Testes de autorização (próprio autor não aprova) e de persistência passando | Concluído: PRs #45, #68 (adiantados para 29/10), #109 (migrations), #110 (padrões seguros) |
 | 13/11-19/11 | UI de revisão (aprovar/rejeitar/exceção com justificativa), evidências por página na UI | Fluxo upload -> laudo -> decisão humana exercitado em compose | Em andamento: T06c e T06b pendentes; evidências por página em branch |
-| 20/11-26/11 | Integração ponta a ponta, smoke estendido (inclui verificação e decisão), evals ampliados com PDFs reais anonimizados | **Congelamento de funcionalidades em 26/11** | Não iniciado em 13/11 (smoke estendido em `feat/smoke-estendido`, issue #57) |
-| 27/11-01/12 | Correções, regressão completa, RC1 | **Code freeze em 01/12** (30/11 e feriado no DF: considerar disponibilidade) | Não iniciado |
-| 02/12-04/12 | Ensaio da demonstração, smoke em ambiente de demo, **Go/No-Go em 04/12** | Checklist da seção 5 preenchido com evidências | Não iniciado |
-| 05/12 | Entrega | Versão etiquetada, roteiro de demo executado | - |
+| 20/11-24/11 | Integração ponta a ponta, smoke estendido (inclui verificação e decisão), evals ampliados com PDFs reais anonimizados | Fluxo completo no smoke do CI | Smoke estendido integrado (PR #121, 22/11); T06b/T06c integrados (PR #145, 22/11); PDFs reais pendentes (#58) |
+| **25/11 (M4)** | Integração final e saneamento dos PRs abertos (issue #168) | Nenhum PR de entrega com CI vermelho ou conflito | - |
+| **26/11 (M5)** | **Code freeze** e RC1 (#62) | Commit candidato definido | - |
+| **27/11 (M6)** | **Go/No-Go e entrega** (#64) | Checklist da seção 5 preenchido com evidências no commit candidato | - |
+| 10/12 (M7) | Pós-entrega: ensaio, apresentações (07 ou 09/12) e correções críticas | Sem funcionalidade nova | - |
+
+As datas anteriores desta tabela (code freeze em 01/12, Go/No-Go em 04/12 e entrega em 05/12)
+foram substituídas pelo cronograma da auditoria de 23/11/2026.
 
 **Capacidade:** o tamanho e a disponibilidade da equipe não estão documentados no repositório;
 não é possível calcular folga real. Estimativa de esforço P0 restante em 13/11: ~3 a 4,5
@@ -95,7 +104,7 @@ o escopo: revisão humana somente via API (sem UI própria) e demo com uma únic
 | UI de revisão (T06c, T06b) não iniciada em 13/11 | RF09 só demonstrável via API | Plano B da seção 3: revisão humana pela API no roteiro de demo |
 | Sem chave LLM no ambiente de demo | Regras HYBRID sempre em revisão manual | Comportamento correto e seguro; documentar no roteiro; MVP usa CND/CRF (determinísticas) |
 | OCR no container validado apenas em branch não integrada | PDFs digitalizados podem falhar na demo | Integrar o passo de OCR do CI (issue #46); usar PDF nativo como plano B |
-| Evals com poucos casos sintéticos | Acurácia reportada não representa produção | Declarar limite; adicionar PDFs reais anonimizados até 26/11 (T08b) |
+| Evals com poucos casos sintéticos | Acurácia reportada não representa produção | Declarar limite; adicionar PDFs reais anonimizados até o freeze de 26/11 (T08b, #58) |
 
 ---
 
@@ -126,7 +135,8 @@ sem segregação, com a restrição declarada no roteiro e aceita formalmente pe
 | :-- | :-- | :-- | :-- |
 | D1 | Como identificar analistas para revisão e segregação Maker-Checker humana | **Decidida em 29/10: (a) chaves de API pessoais mapeadas no servidor** (`API_USERS`). JWT/IdP fica fora do MVP. | - |
 | D2 | Documento de tipologia reconhecida sem uma palavra-chave obrigatória (ex.: OCR ilegível) | **Decidida em 01/11: (b) `MANUAL_REVIEW_REQUIRED`.** Sem termo obrigatório não há prova de irregularidade, só falta de leitura: o analista decide. Termos impeditivos e validade vencida continuam `NON_COMPLIANT`. Implementação: T04c | - |
-| D3 | Data oficial de entrega | **Decidida em 01/11: 05/12/2026.** As apresentações do projeto são em 07 ou 09/12; os dias entre a entrega e a apresentação ficam de folga para ensaio e correções críticas, sem funcionalidade nova. | - |
+| D3 | Data oficial de entrega | Decidida em 01/11: 05/12/2026. **Substituída pela D4.** | - |
+| D4 | Antecipação da entrega | **Decidida na auditoria de 23/11/2026: entrega em 27/11/2026.** M4 = 25/11, M5 (code freeze) = 26/11, M6 (Go/No-Go e entrega) = 27/11, M7 (pós-entrega) = 10/12. As apresentações seguem em 07 ou 09/12, sem funcionalidade nova após a entrega. | - |
 
 ---
 

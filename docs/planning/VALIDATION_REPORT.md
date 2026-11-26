@@ -1,6 +1,7 @@
 # Relatório de Validação
 
-Execução mais recente registrada: **13/11/2026**, branch de integração `dev` (seção 4).
+Execução mais recente registrada: **13/11/2026**, branch de integração `dev` (seção 4). A validação
+de infraestrutura, fila e OCR integrada em 22/11 (PR #123) está na seção 5.
 
 As seções 1 a 3 são **histórico da auditoria de 29/10/2026**: base `d76f41c` na antiga branch
 de integração `developer` (hoje `dev`), working tree limpa no início. Ambiente daquela execução:
@@ -117,16 +118,45 @@ Compose), #108 (T11), #109 (T05d) e #110 (T05c).
 
 Lacuna: a saída dos comandos locais de 13/11 (`pytest`, evals, lint, `make smoke`) não foi
 versionada; a tabela registra apenas o que o histórico do git e os documentos comprovam. A saída
-do `make smoke` e da validação de OCR no container está na branch `docs/validar-compose-smoke-ocr`
-e entra neste relatório quando ela for integrada.
+do `make smoke` e da validação de OCR no container foi integrada depois (PR #123, 22/11) e está na
+seção 5.
 
 ---
 
-## 5. Limitações desta validação
+## 5. Validação de Infraestrutura Conteinerizada, Fila e OCR (T09a / Issue #46) - PR #123, 22/11/2026
 
-1. Histórico (29/10): nenhum teste com serviços reais. Em 13/11, o smoke do CI exercita
-   PostgreSQL, Redis, MinIO e o worker pela fila; o registro manual ainda está fora de `dev`.
-2. OCR no container validado apenas na branch `docs/validar-compose-smoke-ocr` (issue #46).
+Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml` e `ci-backend.yml`:
+
+| Verificação | Comando | Resultado |
+| :-- | :-- | :-- |
+| Subida da stack (`make up`) | `docker compose --env-file .env -f infra/docker-compose.yml up -d --wait` | **OK**: PostgreSQL, Redis, MinIO, `migrate` (Alembic), `backend`, `worker` e `frontend` saudáveis em ~19 s a partir de volumes limpos |
+| Teste de fumaça (`make smoke`) | `docker compose --env-file .env -f infra/docker-compose.yml exec -T backend python scripts/smoke_test.py` | **Código 0**: `1/4 health OK` -> `2/4 upload OK` -> `3/4 tarefa concluida pelo worker (SUCCESS)` -> `4/4 documento COMPLETED (paginas: 1)` |
+| OCR no container (`tesseract-ocr-por`) | `docker run --rm scan/backend:ci python scripts/validate_ocr_container.py` | **Código 0**: PDF rasterizado (200 DPI, sem camada de texto) extraído via `extraction_method=ocr`, tipologia `CND_FEDERAL` e CNPJ `12.345.678/0001-90` |
+| Resiliência de dependências | `bash scripts/resilience_test.sh` | **OK**: queda isolada de Redis, MinIO e PostgreSQL degrada com HTTP `503` sem travar o healthcheck e recupera automaticamente |
+| Problemas encontrados e endereçados | Issues `#101` a `#104` | `.env` antigo sem `API_KEY` (`#101`), validação do CD (`#102`), limites de recursos e concorrência (`#103`) e timeout de upload (`#104`) |
+
+### Saída registrada do `make smoke` e validação de OCR no container
+
+```text
+[smoke] API: http://localhost:8000
+[smoke] 1/4 health OK: {'database': 'healthy', 'redis': 'healthy', 'minio': 'healthy'}
+[smoke] 2/4 upload OK: document_id=8f14e45f-ceea-467f-a811-2a3d9c5f0b12 task_id=3c91a7b0-4d12-4e8a-9c01-7e5b6d8a2f41
+[smoke]      estado da tarefa: STARTED
+[smoke]      estado da tarefa: SUCCESS
+[smoke] 3/4 tarefa concluida pelo worker: {'document_id': '8f14e45f-ceea-467f-a811-2a3d9c5f0b12', 'status': 'COMPLETED', 'overall_status': 'MANUAL_REVIEW_REQUIRED', 'compliance_score': 0.0}
+[smoke] 4/4 documento COMPLETED (paginas: 1)
+[smoke] OK - ambiente sobe e processa pela fila. Estados observados: STARTED -> SUCCESS
+
+[ocr-check] OK - OCR validado com PDF digitalizado: method=ocr type=CND_FEDERAL cnpj=12.345.678/0001-90 validade=2030-12-31
+```
+
+---
+
+## 6. Limitações desta validação
+
+1. Histórico (29/10): nenhum teste com serviços reais. Desde o PR #95 o smoke do CI exercita
+   PostgreSQL, Redis, MinIO e o worker pela fila; o registro manual está na seção 5 (PR #123).
+2. OCR no container validado em máquina da equipe e no CI (PR #123, issue #46).
 3. Integração LLM real avaliada só de forma pontual (13/11, quatro casos sintéticos por modelo,
    uma rodada); o pipeline padrão roda sem chave.
 4. Evals usam textos sintéticos; o resultado não é evidência estatística de qualidade (T08b).
