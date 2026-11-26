@@ -52,6 +52,6 @@
   },
   "datasets_sha256": "ab58fea9c1b1e839f07bc45a805b13b3e6564dc140098fb11edf62c24104805a",
   "false_positives": 0,
-  "rules_sha256": "2ba32167aea8591efbe17e3d6c67eb62586007b93028dc151e08a439670a3b9b",
+  "rules_sha256": "7399628090685db06c28cfe6ab2d0ab3f75755fbc93c901e1b64ed0f8dc9478c",
   "total_checks": 48
 }
