@@ -6,7 +6,12 @@ import {
   ExtractionResult,
   ReviewStateResponse,
 } from '../services/api';
-import { describeApiError, presentStatus, TONE_CLASSES } from '../services/presentation';
+import {
+  describeApiError,
+  formatRuleEvidenceEntries,
+  presentStatus,
+  TONE_CLASSES,
+} from '../services/presentation';
 import { PageEvidencesSection } from './PageEvidencesSection';
 import { HumanReviewPanel } from './HumanReviewPanel';
 
@@ -18,22 +23,17 @@ interface ComplianceReportPanelProps {
 }
 
 function renderRuleEvidenceSummary(evidence: Record<string, unknown> | null | undefined) {
-  if (!evidence) return null;
-  const entries = Object.entries(evidence).filter(([, value]) => {
-    if (value === null || value === undefined) return false;
-    if (Array.isArray(value) && value.length === 0) return false;
-    return true;
-  });
+  const entries = formatRuleEvidenceEntries(evidence);
   if (entries.length === 0) return null;
 
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
-      {entries.map(([key, value]) => (
+      {entries.map((entry) => (
         <span
-          key={key}
+          key={entry.key}
           className="inline-flex items-center px-2 py-0.5 rounded bg-bndes-surface-muted border border-bndes-border text-[11px] font-mono text-bndes-ink-secondary"
         >
-          {key}: {Array.isArray(value) ? value.join(', ') : String(value)}
+          {entry.label}: {entry.displayValue}
         </span>
       ))}
     </div>

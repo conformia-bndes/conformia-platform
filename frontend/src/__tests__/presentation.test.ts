@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
 import {
   describeApiError,
+  formatRuleEvidenceEntries,
   presentDocumentStatus,
   presentReviewDecision,
   presentReviewState,
@@ -74,5 +75,38 @@ describe('review presentation helpers', () => {
     expect(presentDocumentStatus('COMPLETED')).toEqual({ label: 'Concluído', tone: 'success' });
     expect(presentDocumentStatus('FAILED').tone).toBe('danger');
     expect(presentDocumentStatus('EXTRACTION_FAILED').tone).toBe('danger');
+  });
+
+  it('formats rule evidence in Portuguese without [object Object]', () => {
+    const entries = formatRuleEvidenceEntries({
+      matched_keywords: ['CERTIDÃO NEGATIVA', 'RFB'],
+      missing_keywords: [],
+      validity_date: '15/05/2027',
+      hallucination_detected: false,
+      nested_detail: { page: 1 },
+    });
+
+    expect(entries).toEqual([
+      {
+        key: 'matched_keywords',
+        label: 'Palavras-chave encontradas',
+        displayValue: 'CERTIDÃO NEGATIVA, RFB',
+      },
+      {
+        key: 'validity_date',
+        label: 'Validade extraída',
+        displayValue: '15/05/2027',
+      },
+      {
+        key: 'hallucination_detected',
+        label: 'Inconsistência detectada',
+        displayValue: 'Não',
+      },
+      {
+        key: 'nested_detail',
+        label: 'nested_detail',
+        displayValue: '{"page":1}',
+      },
+    ]);
   });
 });

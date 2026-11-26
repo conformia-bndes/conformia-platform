@@ -92,3 +92,57 @@ export function presentDocumentStatus(status: string): StatusPresentation {
     }
   );
 }
+
+const RULE_EVIDENCE_LABELS: Record<string, string> = {
+  matched_keywords: 'Palavras-chave encontradas',
+  matched_anti_keywords: 'Termos impeditivos',
+  missing_keywords: 'Termos ausentes',
+  matched_regex_patterns: 'Padrões validados',
+  validity_date: 'Validade extraída',
+  document_type: 'Tipologia',
+  evidence: 'Citação literal',
+  reasoning: 'Fundamentação',
+  hallucination_detected: 'Inconsistência detectada',
+};
+
+function formatEvidenceValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => formatEvidenceValue(item)).join(', ');
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'Sim' : 'Não';
+  }
+  if (typeof value === 'object' && value !== null) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
+export interface FormattedRuleEvidence {
+  key: string;
+  label: string;
+  displayValue: string;
+}
+
+/** Formata o dicionário de evidência por regra para exibição legível sem [object Object]. */
+export function formatRuleEvidenceEntries(
+  evidence: Record<string, unknown> | null | undefined,
+): FormattedRuleEvidence[] {
+  if (!evidence) return [];
+
+  return Object.entries(evidence)
+    .filter(([, value]) => {
+      if (value === null || value === undefined) return false;
+      if (Array.isArray(value) && value.length === 0) return false;
+      return true;
+    })
+    .map(([key, value]) => ({
+      key,
+      label: RULE_EVIDENCE_LABELS[key] ?? key,
+      displayValue: formatEvidenceValue(value),
+    }));
+}

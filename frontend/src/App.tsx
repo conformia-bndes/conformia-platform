@@ -213,6 +213,19 @@ export default function App() {
       return;
     }
 
+    if (file.size === 0) {
+      setErrorMessage('O arquivo PDF selecionado está vazio.');
+      event.target.value = '';
+      return;
+    }
+
+    const MAX_PDF_BYTES = 50 * 1024 * 1024;
+    if (file.size > MAX_PDF_BYTES) {
+      setErrorMessage('O arquivo excede o limite máximo de 50 MB.');
+      event.target.value = '';
+      return;
+    }
+
     if (uploadTimerRef.current !== null) {
       window.clearTimeout(uploadTimerRef.current);
       uploadTimerRef.current = null;

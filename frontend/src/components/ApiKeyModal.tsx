@@ -11,6 +11,7 @@ interface ApiKeyModalProps {
 export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModalProps) {
   const [draftKey, setDraftKey] = useState<string>(currentKey ?? '');
   const [showKey, setShowKey] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -35,7 +36,21 @@ export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModal
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = draftKey.trim();
-    onSave(trimmed.length > 0 ? trimmed : null);
+    if (trimmed.length === 0) {
+      setValidationError(null);
+      onSave(null);
+      onClose();
+      return;
+    }
+
+    const sepIdx = trimmed.indexOf(':');
+    if (sepIdx <= 0 || sepIdx === trimmed.length - 1) {
+      setValidationError('Formato inválido. Use user_id:segredo (ex.: analista1:sua-chave).');
+      return;
+    }
+
+    setValidationError(null);
+    onSave(trimmed);
     onClose();
   };
 
@@ -93,7 +108,10 @@ export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModal
                 id="analyst-api-key"
                 type={showKey ? 'text' : 'password'}
                 value={draftKey}
-                onChange={(e) => setDraftKey(e.target.value)}
+                onChange={(e) => {
+                  setDraftKey(e.target.value);
+                  if (validationError) setValidationError(null);
+                }}
                 placeholder="ex.: analista-1:seu-segredo"
                 autoComplete="off"
                 autoCapitalize="none"
@@ -111,6 +129,11 @@ export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModal
                 {showKey ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
               </button>
             </div>
+            {validationError && (
+              <p role="alert" className="mt-1.5 text-xs font-medium text-bndes-orange-ink">
+                {validationError}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between pt-2">
