@@ -26,10 +26,10 @@ export function presentStatus(status: string): StatusPresentation {
 }
 
 export const TONE_CLASSES: Record<StatusTone, string> = {
-  success: 'bg-emerald-100 text-emerald-800',
-  danger: 'bg-rose-100 text-rose-800',
-  warning: 'bg-amber-100 text-amber-800',
-  neutral: 'bg-slate-100 text-slate-600',
+  success: 'bg-bndes-green-tint text-bndes-green-ink border border-bndes-green-border',
+  danger: 'bg-bndes-orange-tint text-bndes-orange-ink border border-bndes-orange-border',
+  warning: 'bg-bndes-ochre-tint text-bndes-ochre-ink border border-bndes-ochre-border',
+  neutral: 'bg-bndes-surface-muted text-bndes-ink-secondary border border-bndes-border',
 };
 
 /** Mensagem legível para o analista a partir de uma falha de chamada à API. */

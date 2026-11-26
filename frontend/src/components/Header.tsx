@@ -1,5 +1,4 @@
 import {
-  ShieldCheck,
   RefreshCw,
   UploadCloud,
   ListFilter,
@@ -7,6 +6,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { HealthResponse } from '../services/api';
+import logoBndesConformia from '../assets/logo-bndes-conformia.svg';
 
 export type ActiveTab = 'upload' | 'checklist' | 'audit';
 
@@ -31,117 +31,149 @@ export function Header({
   apiKeyLabel,
   onOpenApiKeyModal,
 }: HeaderProps) {
+  const statusBadgeClasses = healthLoading
+    ? 'bg-bndes-ochre-tint border-bndes-ochre-border text-bndes-ochre-ink'
+    : healthError
+      ? 'bg-bndes-orange-tint border-bndes-orange-border text-bndes-orange-ink'
+      : health?.status === 'healthy'
+        ? 'bg-bndes-green-tint border-bndes-green-border text-bndes-green-ink'
+        : 'bg-bndes-ochre-tint border-bndes-ochre-border text-bndes-ochre-ink';
+
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-4">
-            <div className="w-11 h-11 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-md">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xl font-bold tracking-tight text-white">Conform.IA</span>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-800 text-emerald-200 uppercase">
-                  BNDES
-                </span>
+    <header className="bg-white shadow-(--shadow-bndes-card)">
+      {/* Faixa institucional do sistema visual BNDES */}
+      <div className="h-1 w-full bndes-brand-bar" aria-hidden="true" />
+
+      {/* Barra principal em fundo branco (0% preto - Seção 1.5 do Manual) para máximo contraste da marca em cores */}
+      <div className="border-b border-bndes-border bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap justify-between items-center min-h-[5.25rem] py-2 gap-4">
+            <div className="flex items-center">
+              {/* Área de proteção equivalente à altura da letra "B" (Seção 1.9) sem distorção ou sombra (Seção 1.11) */}
+              <div className="py-2.5 pr-5 sm:pr-6 shrink-0">
+                <img
+                  src={logoBndesConformia}
+                  alt="BNDES Conform.IA"
+                  className="h-10 sm:h-11 w-auto object-contain select-none"
+                />
               </div>
-              <p className="text-xs text-slate-400">
-                Consulta Pública nº 01/2025 • Verificação Inteligente de Conformidade
-              </p>
+
+              <div className="hidden md:flex flex-col justify-center border-l border-bndes-border pl-5 py-1">
+                <div className="flex items-center space-x-2">
+                  <span className="px-2 py-0.5 text-[11px] font-bold tracking-wider rounded bg-bndes-blue text-white uppercase">
+                    BNDES
+                  </span>
+                  <span className="text-xs font-semibold text-bndes-blue">
+                    Plataforma de Conformidade Documental
+                  </span>
+                </div>
+                <p className="text-xs text-bndes-ink-secondary mt-0.5">
+                  Consulta Pública nº 01/2025 • Verificação Inteligente de Conformidade
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Chave do Analista e Indicador de Status da API */}
-          <div className="flex items-center space-x-3">
-            <button
-              type="button"
-              onClick={onOpenApiKeyModal}
-              title={
-                apiKeyLabel
-                  ? `Chave de sessão ativa (${apiKeyLabel}). Clique para alterar ou remover.`
-                  : 'Informar chave pessoal (X-API-Key) para operações autenticadas'
-              }
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-full border text-xs font-medium transition-colors ${
-                apiKeyLabel
-                  ? 'bg-emerald-950/60 border-emerald-700 text-emerald-200 hover:bg-emerald-900/70'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:border-slate-500'
-              }`}
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>{apiKeyLabel ? `Analista: ${apiKeyLabel}` : 'Informar Chave'}</span>
-            </button>
-
-            <div className="flex items-center space-x-2 bg-slate-800 px-3.5 py-1.5 rounded-full border border-slate-700">
-              <span className="relative flex h-2.5 w-2.5">
-                {healthLoading ? (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                ) : !healthError ? (
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                ) : (
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-                )}
-              </span>
-              <span className="text-xs font-medium text-slate-300">
-                {healthLoading
-                  ? 'Conectando...'
-                  : healthError
-                    ? 'API Offline'
-                    : health?.status === 'healthy'
-                      ? `API Online (v${health.version})`
-                      : 'API Degradada'}
-              </span>
+            {/* Chave do Analista e Indicador de Status da API */}
+            <div className="flex flex-wrap items-center gap-2.5">
               <button
-                onClick={onRefreshHealth}
-                title="Atualizar Status"
-                className="text-slate-400 hover:text-white transition-colors ml-1"
+                type="button"
+                onClick={onOpenApiKeyModal}
+                title={
+                  apiKeyLabel
+                    ? `Chave de sessão ativa (${apiKeyLabel}). Clique para alterar ou remover.`
+                    : 'Informar chave pessoal (X-API-Key) para operações autenticadas'
+                }
+                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded border text-xs font-semibold transition-colors cursor-pointer ${
+                  apiKeyLabel
+                    ? 'bg-bndes-green-tint border-bndes-green-border text-bndes-green-ink hover:bg-[#D8EFE2]'
+                    : 'bg-bndes-surface-muted border-bndes-border-strong text-bndes-blue hover:bg-bndes-blue-tint hover:border-bndes-blue'
+                }`}
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${healthLoading ? 'animate-spin' : ''}`} />
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>{apiKeyLabel ? `Analista: ${apiKeyLabel}` : 'Informar Chave'}</span>
               </button>
+
+              <div
+                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded border ${statusBadgeClasses}`}
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  {healthLoading ? (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bndes-ochre opacity-75"></span>
+                  ) : !healthError && health?.status === 'healthy' ? (
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-bndes-green"></span>
+                  ) : !healthError ? (
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-bndes-ochre"></span>
+                  ) : (
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-bndes-orange"></span>
+                  )}
+                </span>
+                <span className="text-xs font-semibold">
+                  {healthLoading
+                    ? 'Conectando...'
+                    : healthError
+                      ? 'API Offline'
+                      : health?.status === 'healthy'
+                        ? `API Online (v${health.version})`
+                        : 'API Degradada'}
+                </span>
+                <button
+                  type="button"
+                  onClick={onRefreshHealth}
+                  title="Atualizar Status"
+                  className="opacity-75 hover:opacity-100 transition-opacity ml-1 cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${healthLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Abas de Navegação */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex space-x-8 -mb-px">
-          <button
-            onClick={() => onTabChange('upload')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-              activeTab === 'upload'
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-            }`}
-          >
-            <UploadCloud className="w-4 h-4" />
-            <span>Ingestão Documental (IDP)</span>
-          </button>
+      {/* Barra de Navegação Institucional em Azul 1 (#004A8F) */}
+      <div className="bg-bndes-blue text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto" aria-label="Módulos da plataforma">
+            <button
+              type="button"
+              onClick={() => onTabChange('upload')}
+              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer ${
+                activeTab === 'upload'
+                  ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
+                  : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
+              }`}
+            >
+              <UploadCloud className="w-4 h-4" />
+              <span>Ingestão Documental (IDP)</span>
+            </button>
 
-          <button
-            onClick={() => onTabChange('checklist')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-              activeTab === 'checklist'
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-            }`}
-          >
-            <ListFilter className="w-4 h-4" />
-            <span>Checklist de Conformidade</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onTabChange('checklist')}
+              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer ${
+                activeTab === 'checklist'
+                  ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
+                  : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
+              }`}
+            >
+              <ListFilter className="w-4 h-4" />
+              <span>Checklist de Conformidade</span>
+            </button>
 
-          <button
-            onClick={() => onTabChange('audit')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-              activeTab === 'audit'
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            <span>Trilha de Auditoria</span>
-          </button>
-        </nav>
+            <button
+              type="button"
+              onClick={() => onTabChange('audit')}
+              className={`py-3.5 px-4 border-b-[3px] text-sm flex items-center space-x-2 whitespace-nowrap transition-colors cursor-pointer ${
+                activeTab === 'audit'
+                  ? 'border-bndes-green-2 bg-bndes-blue-deep/70 text-white font-semibold'
+                  : 'border-transparent text-white/85 hover:text-white hover:bg-bndes-blue-3/70 font-medium'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              <span>Trilha de Auditoria</span>
+            </button>
+          </nav>
+        </div>
       </div>
     </header>
   );

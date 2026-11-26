@@ -255,7 +255,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+    <div className="min-h-screen flex flex-col bg-bndes-bg text-bndes-ink">
       <Header
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -282,24 +282,34 @@ export default function App() {
         {errorMessage && (
           <div
             role="alert"
-            className="mb-6 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm"
+            className="mb-6 p-4 rounded-md bg-bndes-orange-tint border border-bndes-orange-border border-l-4 border-l-bndes-orange text-bndes-orange-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)"
           >
-            <div className="flex items-center space-x-2">
-              <XCircle className="w-5 h-5 text-rose-600" />
-              <span>{errorMessage}</span>
+            <div className="flex items-center space-x-2.5">
+              <XCircle className="w-5 h-5 text-bndes-orange shrink-0" />
+              <span className="font-medium">{errorMessage}</span>
             </div>
-            <button onClick={() => setErrorMessage(null)} className="text-rose-600 hover:text-rose-800" title="Fechar">
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="text-bndes-orange-ink/80 hover:text-bndes-orange-ink p-1 rounded transition-colors cursor-pointer"
+              title="Fechar"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
         {uploadMessage && (
-          <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-sm">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <span>{uploadMessage}</span>
+          <div className="mb-6 p-4 rounded-md bg-bndes-green-tint border border-bndes-green-border border-l-4 border-l-bndes-green text-bndes-green-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)">
+            <div className="flex items-center space-x-2.5">
+              <CheckCircle2 className="w-5 h-5 text-bndes-green shrink-0" />
+              <span className="font-medium">{uploadMessage}</span>
             </div>
-            <button onClick={() => setUploadMessage(null)} className="text-emerald-600 hover:text-emerald-800" title="Fechar">
+            <button
+              type="button"
+              onClick={() => setUploadMessage(null)}
+              className="text-bndes-green-ink/80 hover:text-bndes-green-ink p-1 rounded transition-colors cursor-pointer"
+              title="Fechar"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
