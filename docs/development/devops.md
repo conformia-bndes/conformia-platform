@@ -91,17 +91,53 @@ execução manual e na execução semanal (segunda, 06:00 UTC) tudo roda.
 
 O estágio de deploy é o `cd.yml`. Quando você mergeia o PR de release do release-please, o
 `release-please.yml` cria a tag `vX.Y.Z` e chama o CD, que constrói as imagens de produção do
-backend e do frontend **a partir da tag** e as publica no GitHub Container Registry:
+backend (`target: runtime`) e do frontend (`target: production`, Nginx na porta `8080`) **a partir
+da tag** e as publica no GitHub Container Registry:
 
-| Imagem | Tags |
-| :-- | :-- |
-| `ghcr.io/conformia-bndes/conformia-platform/backend` | `vX.Y.Z`, `latest` |
-| `ghcr.io/conformia-bndes/conformia-platform/frontend` | `vX.Y.Z`, `latest` |
+| Imagem | Tags | Visibilidade |
+| :-- | :-- | :-- |
+| `ghcr.io/conformia-bndes/conformia-platform/backend` | `vX.Y.Z`, `latest` | Pública (vinculada ao repositório) |
+| `ghcr.io/conformia-bndes/conformia-platform/frontend` | `vX.Y.Z`, `latest` | Pública (vinculada ao repositório) |
 
-As imagens saem com provenance e SBOM anexados e com os rótulos OCI de origem, commit e versão.
-O CD também roda manualmente (Actions → CD → Run workflow) com `push` desligado por padrão, o
-que só constrói e valida a imagem de uma tag, sem publicar. A chamada vem do `release-please.yml`
-porque tags criadas com o `GITHUB_TOKEN` não disparam outros workflows.
+As imagens saem com provenance SLSA (`mode=max`) e SBOM anexados, rótulos OCI de origem, commit e
+versão, e passam por validação em contêiner durante o próprio job (`import app.main` no backend e
+resposta HTTP no Nginx do frontend). A chamada vem do `release-please.yml` porque tags criadas com
+o `GITHUB_TOKEN` não disparam outros workflows.
+
+**Validação pré-release (`workflow_dispatch` com `push=false`)**
+
+Antes de publicar uma release ou ao alterar os `Dockerfile`s/`cd.yml`, execute **Actions → CD →
+Run workflow** informando `tag=v0.2.0` (ou a tag alvo) com `push` desligado (`false`, padrão). Os
+dois jobs da matriz (`Deploy (backend)` e `Deploy (frontend)`) constroem as imagens com provenance
+e SBOM, carregam a imagem localmente no runner e validam a inicialização do contêiner sem publicar
+no registro.
+
+**Visibilidade dos pacotes no GHCR**
+
+No GitHub Container Registry, novos pacotes **nascem privados por padrão** na primeira publicação
+feita com `GITHUB_TOKEN`. Como o repositório `conformia-bndes/conformia-platform` é público e as
+imagens não contêm segredos nem credenciais (toda configuração sensível é injetada via `.env` em
+tempo de execução), a decisão adotada para o projeto é configurar os pacotes `backend` e `frontend`
+como **públicos** logo após a primeira publicação (**Package settings → Danger Zone → Change
+visibility → Public**, mantendo *Inherit access from repository* habilitado). Isso permite que a
+máquina de demonstração e auditores externos executem `docker pull` sem exigir Personal Access
+Token (`read:packages`).
+
+**Subindo as imagens publicadas com Docker Compose (frontend na porta 8080)**
+
+O arquivo `infra/docker-compose.ghcr.yml` substitui o build local pelas imagens publicadas no GHCR,
+remove os bind-mounts de código-fonte e o `--reload`, e expõe o frontend de produção (Nginx como
+usuário não-root `101`) na porta **`8080`**:
+
+```bash
+make env
+IMAGE_TAG=v0.3.0 docker compose --env-file .env \
+  -f infra/docker-compose.yml \
+  -f infra/docker-compose.ghcr.yml pull
+IMAGE_TAG=v0.3.0 docker compose --env-file .env \
+  -f infra/docker-compose.yml \
+  -f infra/docker-compose.ghcr.yml up -d --wait
+```
 
 ### Relatórios de qualidade
 
@@ -174,7 +210,20 @@ detecção de chaves privadas e validação de YAML/JSON.
 | :-- | :-- | :-- |
 | Local | `make up` + `make smoke` | `.env` gerado por `make env` com segredos aleatórios; nada versionado |
 | CI | Serviços efêmeros do GitHub Actions | `.env` gerado a cada execução |
-| Demonstração | `make up` na máquina de demo, a partir da tag da release | `ENVIRONMENT=production`, `DEBUG=False`, `ALLOW_ANONYMOUS_ACCESS=false`; usuários em `API_USERS` |
+| Demonstração / Produção | `docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d --wait` | Sem `--reload`, com `WEB_CONCURRENCY`, `CELERY_CONCURRENCY`, pool de conexões e frontend Nginx na porta `8080` |
+
+### Concorrência, Pool de Conexões e Limites de Recursos
+
+O `infra/docker-compose.yml` define limites explícitos de CPU e memória (`deploy.resources.limits`) para `backend`, `worker` e `frontend`, além de parametrizar a concorrência da API e do Celery:
+
+| Variável | Padrão | Papel |
+| :-- | :-- | :-- |
+| `WEB_CONCURRENCY` | `2` | Processos do `uvicorn` por réplica no perfil de produção (`infra/docker-compose.prod.yml`, sem `--reload`) |
+| `CELERY_CONCURRENCY` | `2` | Processos concorrentes do worker Celery (`--concurrency=${CELERY_CONCURRENCY:-2}`) |
+| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | `5` / `5` | Pool de conexões SQLAlchemy **por processo**; total máximo = `(WEB_CONCURRENCY + CELERY_CONCURRENCY) x (DB_POOL_SIZE + DB_MAX_OVERFLOW)` (40 conexões no padrão, abaixo do `max_connections=100` do PostgreSQL) |
+| `BACKEND_CPU_LIMIT` / `BACKEND_MEMORY_LIMIT` | `2.0` / `1024M` | Limite de recursos do contêiner `backend` |
+| `WORKER_CPU_LIMIT` / `WORKER_MEMORY_LIMIT` | `2.0` / `2048M` | Limite de recursos do contêiner `worker` (dimensionado para ~900 MB por processo OCR) |
+| `FRONTEND_CPU_LIMIT` / `FRONTEND_MEMORY_LIMIT` | `1.0` / `512M` | Limite de recursos do contêiner `frontend` |
 
 !!! danger "Antes da demonstração"
     O `.env` gerado por `make env` vem do perfil de desenvolvimento local (`ENVIRONMENT=development`,

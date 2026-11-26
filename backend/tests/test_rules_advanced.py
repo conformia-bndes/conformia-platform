@@ -163,3 +163,48 @@ def test_anti_keyword_still_non_compliant_even_when_text_is_incomplete():
     result = engine.evaluate({"full_text": text}, document_type="CND_FEDERAL")
     cnd_check = next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-001")
     assert cnd_check["status"] == "NON_COMPLIANT"
+
+
+class _FakeMakerChecker:
+    """Maker-Checker de teste: registra as chamadas e devolve um veredito fixo."""
+
+    def __init__(self, status="MANUAL_REVIEW_REQUIRED"):
+        self.status = status
+        self.calls = 0
+
+    def evaluate_rule(self, rule, full_text):
+        self.calls += 1
+        return {"status": self.status, "final_confidence": 0.5, "reasoning": "teste"}
+
+
+_CEIS = "CADASTRO NACIONAL DE EMPRESAS INIDONEAS E SUSPENSAS (CEIS)"
+_CNEP = "CADASTRO NACIONAL DE EMPRESAS PUNIDAS (CNEP)"
+
+
+def _rule_006(text, maker_checker):
+    engine = RulesEngine(maker_checker=maker_checker)
+    result = engine.evaluate({"full_text": text, "metadata": {}})
+    return next(r for r in result["results"] if r["rule_id"] == "RULE-BNDES-006")
+
+
+def test_rule_006_does_not_auto_approve_ceis_nada_consta():
+    """CEIS + 'nada consta' nao aprova sozinho: falta o CNEP e vai a revisao."""
+    checker = _FakeMakerChecker()
+    res = _rule_006(f"{_CEIS}\nNADA CONSTA", checker)
+    assert res["status"] == "MANUAL_REVIEW_REQUIRED"
+    assert checker.calls == 0
+
+
+def test_rule_006_cnep_sanction_is_non_compliant():
+    """Sancao do CNEP (multa) com 'nada consta' do CEIS reprova."""
+    checker = _FakeMakerChecker()
+    text = f"{_CEIS}\nNADA CONSTA\n{_CNEP}\nMULTA APLICADA: R$ 50.000,00"
+    assert _rule_006(text, checker)["status"] == "NON_COMPLIANT"
+
+
+def test_rule_006_both_registries_goes_through_maker_checker():
+    """Com os dois cadastros citados, a decisao passa pelo Maker-Checker."""
+    checker = _FakeMakerChecker(status="COMPLIANT")
+    res = _rule_006(f"{_CEIS}\nNADA CONSTA\n{_CNEP}\nNADA CONSTA", checker)
+    assert checker.calls == 1
+    assert res["checker_type"] == "MAKER_CHECKER"

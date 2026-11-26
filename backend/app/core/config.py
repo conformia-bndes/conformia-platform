@@ -53,7 +53,7 @@ class Settings(BaseSettings):
 
     # Informações do Projeto
     PROJECT_NAME: str = "Conform.IA BNDES Platform"
-    VERSION: str = "0.2.1"  # x-release-please-version
+    VERSION: str = "0.4.1"  # x-release-please-version
     API_V1_STR: str = "/api/v1"
     # Padroes seguros: sem .env explicito a aplicacao sobe como producao, sem DEBUG e sem
     # acesso anonimo. Desenvolvimento local liga cada um deles de forma explicita (.env.example).
@@ -72,7 +72,10 @@ class Settings(BaseSettings):
     @classmethod
     def parse_api_users(cls, v: Union[str, List]) -> List:
         if isinstance(v, str):
-            return json.loads(v) if v.strip() else []
+            raw = v.strip()
+            if len(raw) >= 2 and raw[0] == "'" and raw[-1] == "'":
+                raw = raw[1:-1].strip()
+            return json.loads(raw) if raw else []
         return v
 
     @field_validator("API_USERS")
@@ -140,6 +143,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
     CELERY_BROKER_URL: Union[str, None] = None
     CELERY_RESULT_BACKEND: Union[str, None] = None
+    WEB_CONCURRENCY: int = Field(default=2, ge=1, le=32)
+    CELERY_CONCURRENCY: int = Field(default=2, ge=1, le=32)
 
     @field_validator("CELERY_BROKER_URL", mode="before")
     @classmethod
@@ -170,6 +175,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Union[str, None] = None
     ANTHROPIC_API_KEY: Union[str, None] = None
     LLM_MODEL: str = "gpt-4o-mini"
+    LLM_BASE_URL: str = "https://api.openai.com/v1"
+    LLM_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0, le=300)
+    LLM_MAX_RETRIES: int = Field(default=2, ge=0, le=5)
     LLM_TEMPERATURE: float = 0.0
 
     @model_validator(mode="after")

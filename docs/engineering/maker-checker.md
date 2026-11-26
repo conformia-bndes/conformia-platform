@@ -70,6 +70,49 @@ timeout de 30 segundos por chamada.
 
 ---
 
+## 3.1 Provedor de LLM
+
+O cliente fala a API de chat da OpenAI e funciona com qualquer provedor compatível. A escolha é
+feita por variáveis de ambiente, sem mudar código: `LLM_BASE_URL`, `LLM_MODEL`,
+`OPENAI_API_KEY` (a chave do provedor configurado), `LLM_TIMEOUT_SECONDS` e `LLM_MAX_RETRIES`.
+A requisição pede `response_format: json_object`, aceita JSON dentro de cerca de código e repete
+a chamada com espera crescente em 429 e 5xx. Sem chave ou com falha, a regra vai para revisão
+manual; nunca há resposta simulada.
+
+**Modelo gratuito avaliado (OpenRouter, 13/11/2026).** Cinco modelos gratuitos foram comparados na
+regra RULE-BNDES-004 com quatro casos (nada consta, falência decretada, texto ilegível e sem
+resultado informado), medindo o veredito final do Maker-Checker:
+
+| Modelo | Resultado | Observação |
+| :-- | :-- | :-- |
+| `particle-ai/particle-1:free` | 4 de 4 corretos | 5 a 11 s por avaliação; escolhido |
+| `nvidia/nemotron-3.5-super-vl:free` | 3 de 4 corretos | ~20 s; decide sem evidência no caso "sem resultado" |
+| `openrouter/free` | Checker não aprovou os casos | Maker correto, mas o veredito caiu em revisão manual |
+| `inclusionai/ling-3.2-flash:free` | falhou | 115 s no primeiro caso e 429 no segundo |
+| `google/gemma-4-31b-it:free`, `gemma-4-26b-a4b-it:free` | indisponíveis | 429 do provedor upstream nas três tentativas |
+
+Limites desta avaliação: quatro casos sintéticos por modelo e uma única rodada. A disponibilidade
+dos modelos gratuitos muda e a conta gratuita tem teto diário de requisições. Dados enviados a
+modelos gratuitos podem ser retidos pelo provedor: usar apenas documentos sintéticos ou
+anonimizados nesse modo.
+
+**Decisão por ambiente e validação reproduzida (Issue #129):**
+
+- **Ambiente de demonstração (05/12/2026):** OpenRouter (`LLM_BASE_URL=https://openrouter.ai/api/v1`,
+  `LLM_MODEL=particle-ai/particle-1:free`) com **exclusivamente documentos fictícios** de
+  `docs/samples/`. Em nova verificação em 22/11/2026 sobre `RULE-BNDES-004` (com retry automático após
+  `HTTP 429`), o ciclo Maker-Checker retornou `COMPLIANT` com confiança `0.96` e citação literal
+  verificada no texto para certidão "NADA CONSTA", e degradou para `MANUAL_REVIEW_REQUIRED`
+  (`is_verified=False`) quando o Checker detectou extrapolação de regra externa pelo Maker.
+  Recomenda-se rotacionar a `OPENAI_API_KEY` de teste antes do uso em ambiente compartilhado.
+- **Ambiente de produção (documentos reais):** **proibido** usar tier gratuito público com dados
+  reais de proponentes (RNF05 / LGPD). A entrada em produção exige decisão contratual por provedor
+  corporativo sem retenção ou modelo auto-hospedado compatível com OpenAI (via `LLM_BASE_URL`).
+- **Instruções de configuração:** ver seção 5.1 de [Início Rápido](../development/quickstart.md) e o
+  [Roteiro de Demonstração](../planning/demo-script.md).
+
+---
+
 ## 4. Harness de desenvolvimento
 
 O mesmo princípio vale para agentes de IA que ajudam a construir o software. As regras ficam
