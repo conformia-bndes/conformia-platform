@@ -11,9 +11,20 @@
 #   (DB_POOL_SIZE + DB_MAX_OVERFLOW), mantendo-se abaixo do max_connections=100).
 # - frontend usa o estagio "production" (Nginx sem privilegio na porta 8080).
 # - codigo da aplicacao vem da imagem imutavel (sem bind mount de ../backend ou ../frontend).
+# - servicos de dados (postgres, redis, minio) nao publicam portas no host (ports: !reset []),
+#   ficando acessiveis apenas dentro da rede interna conformia-net.
 # ==============================================================================
 
 services:
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  minio:
+    ports: !reset []
+
   migrate:
     image: ${BACKEND_IMAGE:-conformia/backend:local}
     volumes: !reset

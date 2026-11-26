@@ -140,25 +140,36 @@ class Settings(BaseSettings):
         )
 
     # Cache e Filas - Redis & Celery
-    REDIS_URL: str = "redis://redis:6379/0"
+    REDIS_PASSWORD: Union[str, None] = None
+    REDIS_URL: Union[str, None] = None
     CELERY_BROKER_URL: Union[str, None] = None
     CELERY_RESULT_BACKEND: Union[str, None] = None
     WEB_CONCURRENCY: int = Field(default=2, ge=1, le=32)
     CELERY_CONCURRENCY: int = Field(default=2, ge=1, le=32)
+
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def assemble_redis_url(cls, v: Union[str, None], info) -> str:
+        if isinstance(v, str) and v:
+            return v
+        password = info.data.get("REDIS_PASSWORD")
+        if password:
+            return f"redis://:{password}@redis:6379/0"
+        return "redis://redis:6379/0"
 
     @field_validator("CELERY_BROKER_URL", mode="before")
     @classmethod
     def assemble_broker_url(cls, v: Union[str, None], info) -> str:
         if isinstance(v, str) and v:
             return v
-        return info.data.get("REDIS_URL", "redis://redis:6379/0")
+        return info.data.get("REDIS_URL") or "redis://redis:6379/0"
 
     @field_validator("CELERY_RESULT_BACKEND", mode="before")
     @classmethod
     def assemble_backend_url(cls, v: Union[str, None], info) -> str:
         if isinstance(v, str) and v:
             return v
-        return info.data.get("REDIS_URL", "redis://redis:6379/0")
+        return info.data.get("REDIS_URL") or "redis://redis:6379/0"
 
     # Armazenamento de Objetos - MinIO
     MINIO_ENDPOINT: str = "minio:9000"
@@ -209,6 +220,8 @@ class Settings(BaseSettings):
             "MINIO_ROOT_USER": self.MINIO_ROOT_USER,
             "MINIO_ROOT_PASSWORD": self.MINIO_ROOT_PASSWORD,
         }
+        if self.REDIS_PASSWORD is not None:
+            secrets["REDIS_PASSWORD"] = self.REDIS_PASSWORD
         pending = [name for name, value in secrets.items() if not value or "CHANGE_ME" in value]
         if pending:
             raise ValueError(
