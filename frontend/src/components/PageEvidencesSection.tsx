@@ -1,5 +1,6 @@
 import { FileSearch, Quote } from 'lucide-react';
 import { ExtractionResult } from '../services/api';
+import { formatConfidence, formatExtractedValue } from '../services/presentation';
 
 interface PageEvidencesSectionProps {
   extraction: ExtractionResult | null | undefined;
@@ -69,8 +70,13 @@ export function PageEvidencesSection({
                     )}
                   </div>
                   <p className="text-xs font-semibold text-slate-900 break-words">
-                    {String(field.value ?? field.raw_value ?? '-')}
+                    {formatExtractedValue(field.value, field.raw_value)}
                   </p>
+                  {formatConfidence(field.evidence?.confidence ?? field.confidence) && (
+                    <p className="text-[10px] font-medium text-amber-700">
+                      {formatConfidence(field.evidence?.confidence ?? field.confidence)}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -88,9 +94,16 @@ export function PageEvidencesSection({
                       <Quote className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
                       <p className="text-xs font-mono text-slate-700 break-words">{ev.text}</p>
                     </div>
-                    <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Pág. {ev.page}
-                    </span>
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Pág. {ev.page}
+                      </span>
+                      {formatConfidence(ev.confidence) && (
+                        <span className="text-[10px] font-medium text-amber-700">
+                          {formatConfidence(ev.confidence)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

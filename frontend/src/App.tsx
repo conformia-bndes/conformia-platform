@@ -11,6 +11,7 @@ import {
   AuditLogItem,
 } from './services/api';
 import { describeApiError } from './services/presentation';
+import { createDocumentPoller, PollingSnapshot } from './services/polling';
 import { Header, ActiveTab } from './components/Header';
 import { Footer } from './components/Footer';
 import { DocumentUploadTab } from './components/DocumentUploadTab';
@@ -45,6 +46,8 @@ export default function App() {
 
   // Falhas sao exibidas como erro; a interface nunca substitui a resposta da API por dados simulados.
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pollingState, setPollingState] = useState<PollingSnapshot | null>(null);
+  const [pollingResetCount, setPollingResetCount] = useState<number>(0);
   const uploadTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -62,21 +65,26 @@ export default function App() {
   useEffect(() => {
     if (!hasProcessingDocs) return;
 
-    const intervalId = window.setInterval(() => {
-      apiService
-        .listDocuments()
-        .then((res) => {
-          setDocuments(res.items || []);
-        })
-        .catch(() => {
-          // Polling silencioso; falhas explícitas continuam visíveis ao atualizar manualmente.
-        });
-    }, 2500);
+    const poller = createDocumentPoller({
+      poll: () => apiService.listDocuments(),
+      onSuccess: (res) => {
+        setDocuments(res.items || []);
+      },
+      onStateChange: (snapshot) => {
+        setPollingState(snapshot);
+      },
+    });
+
+    const onVisibilityChange = () => poller.handleVisibilityChange();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    poller.start();
 
     return () => {
-      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      poller.stop();
+      setPollingState(null);
     };
-  }, [hasProcessingDocs]);
+  }, [hasProcessingDocs, pollingResetCount]);
 
   const handleSaveApiKey = (newKey: string | null) => {
     setApiKey(newKey);
@@ -113,6 +121,12 @@ export default function App() {
     } finally {
       setLoadingDocs(false);
     }
+  };
+
+  const handleManualRefreshDocuments = async () => {
+    setPollingState(null);
+    setPollingResetCount((prev) => prev + 1);
+    await loadDocuments();
   };
 
   useEffect(() => {
@@ -211,6 +225,7 @@ export default function App() {
       setUploadMessage('Enviando documento para a fila de processamento OCR/IDP...');
       await apiService.uploadDocument(file);
       setUploadMessage('Documento recebido e enviado para processamento. O status será atualizado automaticamente.');
+      setPollingResetCount((prev) => prev + 1);
       await loadDocuments();
       uploadTimerRef.current = window.setTimeout(() => {
         setUploadMessage(null);
@@ -300,8 +315,9 @@ export default function App() {
             verifyingId={verifyingId}
             activeReport={activeReport}
             apiKeyLabel={getApiKeyLabel(sessionKey)}
+            pollingState={hasProcessingDocs ? pollingState : null}
             onFileUpload={handleFileUpload}
-            onRefreshDocuments={loadDocuments}
+            onRefreshDocuments={handleManualRefreshDocuments}
             onVerifyCompliance={handleVerifyCompliance}
             onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
             onCloseReport={() => setActiveReport(null)}

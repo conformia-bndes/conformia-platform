@@ -1,6 +1,7 @@
 import React from 'react';
-import { FileText, UploadCloud, ShieldCheck, RefreshCw } from 'lucide-react';
+import { FileText, UploadCloud, ShieldCheck, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
 import { DocumentItem, ComplianceReport } from '../services/api';
+import { PollingSnapshot } from '../services/polling';
 import { presentDocumentStatus, TONE_CLASSES } from '../services/presentation';
 import { ComplianceReportPanel } from './ComplianceReportPanel';
 
@@ -11,6 +12,7 @@ interface DocumentUploadTabProps {
   verifyingId: string | null;
   activeReport: ComplianceReport | null;
   apiKeyLabel: string | null;
+  pollingState?: PollingSnapshot | null;
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRefreshDocuments: () => void;
   onVerifyCompliance: (docId: string, filename: string) => void;
@@ -25,6 +27,7 @@ export function DocumentUploadTab({
   verifyingId,
   activeReport,
   apiKeyLabel,
+  pollingState,
   onFileUpload,
   onRefreshDocuments,
   onVerifyCompliance,
@@ -78,6 +81,57 @@ export function DocumentUploadTab({
             <RefreshCw className={`w-4 h-4 ${loadingDocs ? 'animate-spin' : ''}`} />
           </button>
         </div>
+
+        {pollingState?.exhausted && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="px-5 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-xs flex flex-wrap items-center justify-between gap-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                O processamento está demorando mais que o esperado. A atualização automática foi pausada após{' '}
+                {pollingState.maxAttempts} tentativas.
+                {pollingState.consecutiveErrors >= 2 && (
+                  <>
+                    {' '}As últimas {pollingState.consecutiveErrors} consultas de status falharam.
+                  </>
+                )}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onRefreshDocuments}
+              className="px-3 py-1 rounded-md font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+            >
+              Atualizar manualmente
+            </button>
+          </div>
+        )}
+
+        {pollingState && !pollingState.exhausted && pollingState.consecutiveErrors >= 2 && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="px-5 py-3 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs flex flex-wrap items-center justify-between gap-2"
+          >
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>
+                Falha ao atualizar o status automaticamente ({pollingState.consecutiveErrors} tentativas
+                consecutivas falharam). Nova tentativa em andamento ou atualize manualmente.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onRefreshDocuments}
+              className="px-3 py-1 rounded-md font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors"
+            >
+              Atualizar manualmente
+            </button>
+          </div>
+        )}
 
         {documents.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-sm">
