@@ -82,6 +82,7 @@ export default function App() {
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       poller.stop();
+      setPollingState(null);
     };
   }, [hasProcessingDocs, pollingResetCount]);
 
@@ -224,6 +225,7 @@ export default function App() {
       setUploadMessage('Enviando documento para a fila de processamento OCR/IDP...');
       await apiService.uploadDocument(file);
       setUploadMessage('Documento recebido e enviado para processamento. O status será atualizado automaticamente.');
+      setPollingResetCount((prev) => prev + 1);
       await loadDocuments();
       uploadTimerRef.current = window.setTimeout(() => {
         setUploadMessage(null);
