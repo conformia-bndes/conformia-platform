@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import InterfaceError, OperationalError
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.upload_timeout import upload_operation_runner
 
 # Configuração de logging estruturado
 logging.basicConfig(
@@ -24,8 +25,12 @@ async def lifespan(app: FastAPI):
     (`python -m app.db.migrate`, executado antes da API e do worker), nunca de create_all.
     """
     logger.info(f"Iniciando {settings.PROJECT_NAME} v{settings.VERSION} [{settings.ENVIRONMENT}]")
+    upload_operation_runner.start()
 
-    yield
+    try:
+        yield
+    finally:
+        upload_operation_runner.shutdown()
 
     logger.info(f"Finalizando conexões e encerrando {settings.PROJECT_NAME}.")
 
