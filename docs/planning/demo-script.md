@@ -1,4 +1,6 @@
-# Roteiro de Demonstração do MVP (Entrega 05/12/2026)
+# Roteiro de Demonstração do MVP (Entrega 27/11/2026)
+
+> A entrega, prevista originalmente para 05/12/2026, foi antecipada para 27/11/2026 (M6).
 
 Este roteiro cobre a demonstração ponta a ponta do MVP (Issue `#63`), alinhado aos critérios de
 aceite de `DELIVERY_PLAN_2026_12_05.md` (seção 5) e à integração de provedor LLM (`#129`).
