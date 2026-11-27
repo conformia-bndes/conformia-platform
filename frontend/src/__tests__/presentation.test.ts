@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
 import {
   describeApiError,
+  formatConfidence,
+  formatExtractedValue,
   presentDocumentStatus,
   presentReviewDecision,
   presentReviewState,
@@ -74,5 +76,36 @@ describe('review presentation helpers', () => {
     expect(presentDocumentStatus('COMPLETED')).toEqual({ label: 'Concluído', tone: 'success' });
     expect(presentDocumentStatus('FAILED').tone).toBe('danger');
     expect(presentDocumentStatus('EXTRACTION_FAILED').tone).toBe('danger');
+  });
+});
+
+describe('formatExtractedValue', () => {
+  it('usa o texto bruto quando o valor está ausente ou vazio', () => {
+    expect(formatExtractedValue(null, '12/2026')).toBe('12/2026');
+    expect(formatExtractedValue('  ', 'bruto')).toBe('bruto');
+    expect(formatExtractedValue(undefined, null)).toBe('-');
+  });
+
+  it('formata números, booleanos e objetos sem "[object Object]"', () => {
+    expect(formatExtractedValue(42)).toBe('42');
+    expect(formatExtractedValue(false)).toBe('false');
+    expect(formatExtractedValue({ uf: 'DF' })).toBe('{"uf":"DF"}');
+    expect(formatExtractedValue(['a', 'b'])).toBe('["a","b"]');
+  });
+});
+
+describe('formatConfidence', () => {
+  it('mostra a confiança só quando é menor que 100%', () => {
+    expect(formatConfidence(0.734)).toBe('Confiança 73%');
+    expect(formatConfidence(0)).toBe('Confiança 0%');
+    expect(formatConfidence(1)).toBeNull();
+  });
+
+  it('ignora valores ausentes ou fora de [0, 1]', () => {
+    expect(formatConfidence(undefined)).toBeNull();
+    expect(formatConfidence(null)).toBeNull();
+    expect(formatConfidence(Number.NaN)).toBeNull();
+    expect(formatConfidence(-0.1)).toBeNull();
+    expect(formatConfidence(1.5)).toBeNull();
   });
 });
