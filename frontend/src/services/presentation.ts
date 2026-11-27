@@ -92,3 +92,31 @@ export function presentDocumentStatus(status: string): StatusPresentation {
     }
   );
 }
+
+/**
+ * Texto de exibição do valor de um campo extraído. Valores ausentes caem no texto bruto
+ * (`raw_value`) e, sem ele, em "-"; objetos e listas viram JSON em vez de "[object Object]".
+ */
+export function formatExtractedValue(value: unknown, rawValue?: string | null): string {
+  if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) {
+    return rawValue && rawValue.trim() ? rawValue : '-';
+  }
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+/**
+ * Rótulo de confiança da extração, mostrado só quando ela é menor que 100% (OCR ou
+ * heurística): sinaliza ao analista o trecho que merece conferência. Valor ausente ou
+ * fora de [0, 1] não é exibido.
+ */
+export function formatConfidence(confidence: number | null | undefined): string | null {
+  if (typeof confidence !== 'number' || !Number.isFinite(confidence)) return null;
+  if (confidence < 0 || confidence >= 1) return null;
+  return `Confiança ${Math.round(confidence * 100)}%`;
+}
