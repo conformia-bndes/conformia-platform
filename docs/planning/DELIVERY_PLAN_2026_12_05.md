@@ -158,9 +158,9 @@ sem segregação, com a restrição declarada no roteiro e aceita formalmente pe
 - **Release Candidate RC1 (`v1.0.0-rc.1`):** gerada pelo fluxo automatizado do `release-please`
   (`release-please-config.json` com `prerelease: true`, `prerelease-type: "rc"` e
   `release-as: "1.0.0-rc.1"`), acionando o `cd.yml` para construir e validar as imagens do backend
-  e do frontend a partir da tag `v1.0.0-rc.1`. Depois de publicada a RC, remover `prerelease`,
-  `prerelease-type` e `release-as` do `release-please-config.json`; caso contrário o release-please
-  continua gerando versões `rc` e tenta repetir a `1.0.0-rc.1`.
+  e do frontend a partir da tag `v1.0.0-rc.1`. Publicada em 27/11/2026 (PR #192); em seguida
+  `prerelease`, `prerelease-type` e `release-as` foram removidos do `release-please-config.json`
+  para que a próxima release não repita a `1.0.0-rc.1`.
 - Release: tag anotada no commit aprovado; imagens construidas a partir do mesmo commit;
   `.env` gerado por `make env` (sem segredos versionados).
 - Rollback de aplicação: subir a tag anterior (`git checkout <tag>` + `make up`).

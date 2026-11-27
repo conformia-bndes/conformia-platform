@@ -7,16 +7,19 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_release_please_configured_for_rc1():
-    """Garante que o release-please esta configurado para gerar a tag v1.0.0-rc.1."""
+def test_release_please_not_pinned_after_rc1():
+    """Apos publicar a v1.0.0-rc.1, o release-please nao pode continuar fixado na RC."""
     config_path = REPO_ROOT / "release-please-config.json"
     data = json.loads(config_path.read_text(encoding="utf-8"))
 
     assert data.get("include-component-in-tag") is False
     pkg = data["packages"]["."]
-    assert pkg["prerelease"] is True
-    assert pkg["prerelease-type"] == "rc"
-    assert pkg["release-as"] == "1.0.0-rc.1"
+    assert "prerelease" not in pkg
+    assert "prerelease-type" not in pkg
+    assert "release-as" not in pkg
+
+    manifest = json.loads((REPO_ROOT / ".release-please-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["."] == "1.0.0-rc.1"
 
 
 def test_code_freeze_policy_enforced_in_pr_title_workflow():
