@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Testa uploads quando MinIO ou Redis ficam indisponiveis e confirma a recuperacao.
+# Teste de resiliencia: derruba MinIO, Redis e PostgreSQL com a stack no ar e confere que a API
+#   - responde 503 no upload dentro do prazo total quando MinIO ou Redis estao parados;
+#   - responde 503 na listagem quando o PostgreSQL esta parado;
+#   - mantem o healthcheck respondendo rapido (200 degradado, sem travar);
+#   - se recupera sozinha quando a dependencia volta.
 #
 # Uso: scripts/resilience_test.sh            (stack ja no ar, API em http://127.0.0.1:8000)
 # Variaveis: API_KEY (obrigatoria), API_URL, COMPOSE, UPLOAD_TOTAL_TIMEOUT_SECONDS
@@ -24,8 +28,11 @@ MINIO_WAS_RUNNING=0
 REDIS_WAS_RUNNING=0
 MINIO_STOPPED_BY_TEST=0
 REDIS_STOPPED_BY_TEST=0
+POSTGRES_WAS_RUNNING=0
+POSTGRES_STOPPED_BY_TEST=0
 
 fail() { echo "  FALHA: $*"; failures=$((failures + 1)); }
+code() { curl -s -o /dev/null -w '%{http_code}' --max-time "$1" "${@:2}"; }
 
 health_status() {
   curl -s --max-time 10 "$API_URL/api/v1/health" | grep -o '"status":"[a-z]*"' | head -1 | cut -d'"' -f4
@@ -37,6 +44,15 @@ wait_healthy() {
     sleep 1
   done
   return 1
+}
+
+check_health_fast() {
+  local started code_health elapsed
+  started=$(date +%s)
+  code_health=$(code 12 "$API_URL/api/v1/health")
+  elapsed=$(( $(date +%s) - started ))
+  [ "$code_health" = "200" ] || fail "health respondeu $code_health (esperado 200 degradado)"
+  [ "$elapsed" -le 8 ] || fail "health levou ${elapsed}s (limite 8s): o healthcheck nao pode travar"
 }
 
 service_running() {
@@ -57,6 +73,7 @@ restore_service() {
 cleanup() {
   restore_service minio "$MINIO_WAS_RUNNING" MINIO_STOPPED_BY_TEST
   restore_service redis "$REDIS_WAS_RUNNING" REDIS_STOPPED_BY_TEST
+  restore_service postgres "$POSTGRES_WAS_RUNNING" POSTGRES_STOPPED_BY_TEST
   rm -f -- "$PDF"
 }
 
@@ -67,11 +84,11 @@ trap 'exit 143' TERM
 stop_service() {
   local service="$1"
   echo "[$service parado]"
-  if [ "$service" = "minio" ]; then
-    MINIO_STOPPED_BY_TEST=1
-  else
-    REDIS_STOPPED_BY_TEST=1
-  fi
+  case "$service" in
+    minio) MINIO_STOPPED_BY_TEST=1 ;;
+    redis) REDIS_STOPPED_BY_TEST=1 ;;
+    postgres) POSTGRES_STOPPED_BY_TEST=1 ;;
+  esac
   $COMPOSE stop "$service" > /dev/null 2>&1 || fail "nao foi possivel parar $service"
 }
 
@@ -79,11 +96,11 @@ start_service() {
   local service="$1"
   echo "[$service de volta]"
   if $COMPOSE start "$service" > /dev/null 2>&1; then
-    if [ "$service" = "minio" ]; then
-      MINIO_STOPPED_BY_TEST=0
-    else
-      REDIS_STOPPED_BY_TEST=0
-    fi
+    case "$service" in
+      minio) MINIO_STOPPED_BY_TEST=0 ;;
+      redis) REDIS_STOPPED_BY_TEST=0 ;;
+      postgres) POSTGRES_STOPPED_BY_TEST=0 ;;
+    esac
   else
     fail "nao foi possivel iniciar $service"
   fi
@@ -93,6 +110,7 @@ start_service() {
 scenario() {
   local service="$1" result curl_rc status elapsed curl_max
   stop_service "$service"
+  check_health_fast
   curl_max=$(awk -v timeout="$UPLOAD_TOTAL_TIMEOUT_SECONDS" 'BEGIN { printf "%.3f", timeout + 3 }')
   result=$(curl -s -o /dev/null -w '%{http_code} %{time_total}' \
     --max-time "$curl_max" -H "X-API-Key: $API_KEY" \
@@ -118,9 +136,21 @@ service_running redis && REDIS_WAS_RUNNING=1
 [ "$MINIO_WAS_RUNNING" -eq 1 ] || { echo "MinIO nao estava ativo inicialmente; abortando."; exit 2; }
 [ "$REDIS_WAS_RUNNING" -eq 1 ] || { echo "Redis nao estava ativo inicialmente; abortando."; exit 2; }
 
+postgres_scenario() {
+  local got
+  stop_service postgres
+  check_health_fast
+  got=$(code 20 -H "X-API-Key: $API_KEY" "$API_URL/api/v1/documents")
+  [ "$got" = "503" ] || fail "listagem sem Postgres respondeu $got (esperado 503)"
+  start_service postgres
+}
+
 for service in minio redis; do
   scenario "$service"
 done
+service_running postgres && POSTGRES_WAS_RUNNING=1
+[ "$POSTGRES_WAS_RUNNING" -eq 1 ] || { echo "PostgreSQL nao estava ativo; abortando."; exit 2; }
+postgres_scenario
 
 if [ "$failures" -gt 0 ]; then
   echo "Resiliencia: $failures falha(s)."
