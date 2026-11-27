@@ -210,7 +210,27 @@ detecção de chaves privadas e validação de YAML/JSON.
 | :-- | :-- | :-- |
 | Local | `make up` + `make smoke` | `.env` gerado por `make env` com segredos aleatórios; nada versionado |
 | CI | Serviços efêmeros do GitHub Actions | `.env` gerado a cada execução |
-| Demonstração / Produção | `docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d --wait` | Sem `--reload`, com `WEB_CONCURRENCY`, `CELERY_CONCURRENCY`, pool de conexões e frontend Nginx na porta `8080` |
+| Demonstração / Produção | `docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d --wait` | Sem `--reload`, com `WEB_CONCURRENCY`, `CELERY_CONCURRENCY`, pool de conexões e frontend Nginx na porta `8080`; PostgreSQL, Redis e MinIO **sem portas publicadas no host** |
+
+### Isolamento dos serviços de dados e autenticação do Redis (#164)
+
+| Item | Desenvolvimento (`docker-compose.yml`) | Produção (`+ docker-compose.prod.yml`) |
+| :-- | :-- | :-- |
+| PostgreSQL `5432`, Redis `6380`, MinIO `9000`/`9001` | Publicados no host para depuração | `ports: !reset []`: acessíveis só pela rede interna `conformia-net` |
+| Autenticação do Redis | `requirepass` com `REDIS_PASSWORD` | Igual |
+| Imagem do Redis | Fixada por digest (`redis:7-alpine@sha256:...`) | Igual |
+
+- `REDIS_PASSWORD` vem do `.env` (gerado por `make env`, nunca versionado) e entra em `REDIS_URL`,
+  `CELERY_BROKER_URL` e `CELERY_RESULT_BACKEND`. Em um `.env` criado antes desta mudança, rode
+  `bash scripts/setup-env.sh --sync` para acrescentar a variável sem trocar as demais senhas.
+- O job **Infra / Stack** confirma que `redis-cli ping` sem senha responde `NOAUTH`, e o job
+  **Infra / Lint** valida `docker compose config` do perfil de produção.
+- Para inspecionar o banco em produção, use `docker compose exec postgres psql ...` em vez de
+  publicar a porta.
+- A tarefa Celery `process_document` não confia no caminho recebido pelo broker: `file_path` precisa
+  estar dentro de `UPLOAD_DIR` e pertencer ao `document_id`, e o `object_name` do MinIO é derivado
+  do documento persistido.
+- Fora do escopo do repositório (não verificado): regras de firewall/NAT do host.
 
 ### Concorrência, Pool de Conexões e Limites de Recursos
 

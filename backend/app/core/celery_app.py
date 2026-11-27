@@ -31,6 +31,11 @@ def _validate_document_id(document_id: str) -> str:
     return document_id
 
 
+def _belongs_to_document(filename: str, document_id: str) -> bool:
+    """Nome gerado pelo upload: '<document_id>_<nome>' (ou '<document_id>.pdf')."""
+    return filename.startswith(f"{document_id}_") or filename == f"{document_id}.pdf"
+
+
 def _validate_and_resolve_task_paths(
     document_id: str,
     file_path: Optional[str] = None,
@@ -53,7 +58,7 @@ def _validate_and_resolve_task_paths(
         if (
             base_doc_name != doc_filename
             or ".." in base_doc_name
-            or not base_doc_name.startswith(safe_doc_id)
+            or not _belongs_to_document(base_doc_name, safe_doc_id)
         ):
             raise ValueError(
                 f"Nome de arquivo do documento invalido para {safe_doc_id}: {doc_filename!r}"
@@ -71,7 +76,7 @@ def _validate_and_resolve_task_paths(
 
         if candidate == upload_root or candidate.parent != upload_root:
             raise ValueError(f"file_path fora de UPLOAD_DIR rejeitado: {file_path!r}")
-        if not candidate.name.startswith(safe_doc_id):
+        if not _belongs_to_document(candidate.name, safe_doc_id):
             raise ValueError(
                 f"file_path ({candidate.name!r}) nao corresponde ao document_id ({safe_doc_id!r})"
             )
