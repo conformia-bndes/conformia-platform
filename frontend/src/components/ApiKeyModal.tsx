@@ -13,6 +13,12 @@ export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModal
   const [showKey, setShowKey] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  // O pai pode recriar onClose a cada render (ex.: durante o polling). Guardar a funcao
+  // em ref evita reexecutar o efeito e devolver o foco com o modal ainda aberto.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -20,7 +26,7 @@ export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModal
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -29,7 +35,7 @@ export function ApiKeyModal({ isOpen, currentKey, onSave, onClose }: ApiKeyModal
       document.removeEventListener('keydown', handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -125,6 +125,7 @@ describe('review presentation helpers', () => {
       tone: 'danger',
     });
     expect(presentReviewSummary('FINAL', 'EXCEPTION').tone).toBe('warning');
+    expect(presentReviewSummary('FINAL', 'NOVA_DECISAO').tone).toBe('warning');
     expect(presentReviewSummary('PENDING_CHECK', null).tone).toBe('warning');
   });
 

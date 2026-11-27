@@ -71,11 +71,12 @@ export function presentReviewSummary(
     return base;
   }
 
-  let tone: StatusTone = 'success';
-  if (finalDecision === 'REJECT') {
+  // Somente APPROVE e exibido como sucesso; decisao desconhecida nunca parece conforme.
+  let tone: StatusTone = 'warning';
+  if (finalDecision === 'APPROVE') {
+    tone = 'success';
+  } else if (finalDecision === 'REJECT') {
     tone = 'danger';
-  } else if (finalDecision === 'EXCEPTION') {
-    tone = 'warning';
   }
 
   return {
@@ -192,6 +193,7 @@ export function presentDocumentStatus(status: string): StatusPresentation {
 const RULE_EVIDENCE_LABELS: Record<string, string> = {
   matched_keywords: 'Palavras-chave encontradas',
   matched_anti_keywords: 'Termos impeditivos',
+  matched_manual_review_keywords: 'Termos para revisão manual',
   missing_keywords: 'Termos ausentes',
   matched_regex_patterns: 'Padrões validados',
   validity_date: 'Validade extraída',
