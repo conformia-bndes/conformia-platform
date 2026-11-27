@@ -251,7 +251,75 @@ O `infra/docker-compose.yml` define limites explícitos de CPU e memória (`depl
     revisão humana). No ambiente de demonstração, ajuste esses três valores
     (`ENVIRONMENT=production`, `DEBUG=False`, `ALLOW_ANONYMOUS_ACCESS=false`) e cadastre os
     analistas em `API_USERS` (`python backend/scripts/create_api_user.py <user_id> ANALISTA`).
-    Em `production`, a aplicação recusa iniciar com `DEBUG` ou acesso anônimo ativos.
+    Em `production`, a aplicação recusa iniciar com `DEBUG` ou acesso anônimo ativos e oculta
+    a documentação interativa (`/docs`, `/redoc` e `/api/v1/openapi.json` retornam HTTP 404).
+
+### Runbook: Documentação Interativa da API e Terminação TLS 1.3 (#172 / RNF01)
+
+#### 1. Ocultação de `/docs`, `/redoc` e `/api/v1/openapi.json` em Produção (AUD-18b)
+
+- **Decisão registrada:** com `ENVIRONMENT=production`, a fábrica `create_app()` em `backend/app/main.py` define `docs_url=None`, `redoc_url=None` e `openapi_url=None` (além de bloqueio em middleware HTTP retornando `404 Not Found` para `/docs`, `/redoc` e `/api/v1/openapi.json`).
+- **Ambientes de desenvolvimento e CI (`development` e `test`):** os três endpoints permanecem ativos (`200 OK`), garantindo que a etapa **Fuzz de contrato da API (Schemathesis)** do workflow `ci-infra.yml` continue consumindo `http://127.0.0.1:8000/api/v1/openapi.json`.
+
+#### 2. Localização e Administração da Terminação TLS 1.3 (AUD-18c / RNF01)
+
+O Nginx interno do contêiner `frontend` (`infra/nginx.conf`) escuta somente HTTP na porta `8080` sem privilégio (`UID 101`) e não realiza terminação TLS. A terminação TLS 1.3 (requisito **RNF01**) ocorre na camada de borda externa conforme a topologia de cada ambiente:
+
+| Ambiente / Superfície | Onde termina o TLS 1.3 | Quem administra | Destino interno (upstream) |
+| :-- | :-- | :-- | :-- |
+| **Portal de Documentação e Relatórios de Qualidade** (`https://conformia-bndes.github.io/conformia-platform/`) | Proxy/CDN de borda gerenciado do GitHub Pages (Fastly / certificado Let's Encrypt `CN=*.github.io` na porta `443/tcp`) | Time `@conformia-bndes/maintainers` (Tech Lead: `pedrohpsantos`) | Artefato estático publicado pelo workflow `docs.yml` |
+| **Implantação / Demonstração Remota da Aplicação** (`docker-compose.yml` + `docker-compose.prod.yml`) | Proxy reverso / balanceador de borda externo do host ou nuvem (Nginx/Caddy/ALB na porta `443/tcp` com `ssl_protocols TLSv1.3;`) | Time `@conformia-bndes/devops` (`pedrohpsantos`, `arthurmgl99`) | `http://127.0.0.1:8080` (SPA) e `http://127.0.0.1:8000` (API FastAPI) |
+| **Demonstração Local em Estação Única** ([Roteiro de Demonstração](../planning/demo-script.md)) | Sem tráfego em rede externa; comunicação restrita à interface de loopback (`127.0.0.1:8080` e `127.0.0.1:8000`) | Operador da estação / `@conformia-bndes/devops` | `127.0.0.1` (loopback local) |
+
+#### 3. Procedimento de Verificação e Evidência (`openssl s_client`)
+
+Para comprovar a negociação estrita de **TLS 1.3** em qualquer endpoint publicado na porta `443`:
+
+```bash
+openssl s_client -connect <host>:443 -servername <host> -tls1_3 </dev/null
+```
+
+Critérios de aprovação na saída do comando:
+
+- `Protocol  : TLSv1.3` (ou `New, TLSv1.3, Cipher is TLS_AES_...`);
+- `Verify return code: 0 (ok)`.
+
+Evidência coletada contra o endpoint público publicado do projeto (`conformia-bndes.github.io:443`, sem segredos ou tickets de sessão):
+
+```text
+$ openssl s_client -connect conformia-bndes.github.io:443 -servername conformia-bndes.github.io -tls1_3 </dev/null
+CONNECTED(0000019C)
+depth=3 C=US, O=Internet Security Research Group, CN=ISRG Root X1
+verify return:1
+depth=2 C=US, O=ISRG, CN=Root YR
+verify return:1
+depth=1 C=US, O=Let's Encrypt, CN=YR1
+verify return:1
+depth=0 CN=*.github.io
+verify return:1
+---
+Certificate chain
+ 0 s:CN=*.github.io
+   i:C=US, O=Let's Encrypt, CN=YR1
+   a:PKEY: RSA, 2048 (bit); sigalg: sha256WithRSAEncryption
+   v:NotBefore: Sep 30 23:44:46 2026 GMT; NotAfter: Dec 29 23:44:45 2026 GMT
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: rsa_pss_rsae_sha256
+Negotiated TLS1.3 group: X25519MLKEM768
+---
+SSL handshake has read 5772 bytes and written 1556 bytes
+Verification: OK
+---
+New, TLSv1.3, Cipher is TLS_AES_128_GCM_SHA256
+Protocol: TLSv1.3
+Server public key is 2048 bit
+This TLS version forbids renegotiation.
+Compression: NONE
+Expansion: NONE
+Verify return code: 0 (ok)
+```
 
 ---
 

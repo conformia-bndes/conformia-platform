@@ -18,6 +18,8 @@ Dependabot, rulesets) está em [Governança do repositório](../development/gove
 | **Fail-closed** | LLM indisponível, resposta inválida, citação ausente ou validade ilegível resultam em `MANUAL_REVIEW_REQUIRED`, nunca em aprovação |
 | **Segredos fora do código** | `.env` gerado por `make env` com valores aleatórios e fora do Git; gitleaks no pre-commit e no CI; secret scanning com push protection no GitHub |
 | **CORS restrito** | Origens permitidas definidas em `ALLOWED_ORIGINS` |
+| **Ocultação do OpenAPI em produção** | Com `ENVIRONMENT=production`, `/docs`, `/redoc` e `/api/v1/openapi.json` ficam desativados (HTTP 404); permanecem ativos em `development` e `test` para depuração e fuzzing de contrato (Schemathesis) |
+| **Terminação TLS 1.3 na borda (RNF01)** | Documentada no [Runbook de TLS 1.3 em DevOps](../development/devops.md): o Nginx do contêiner `frontend` opera em HTTP interno (`8080/tcp`) e a terminação TLS 1.3 ocorre no proxy/balanceador de borda externo (`:443`), administrado por `@conformia-bndes/devops` (e na borda do GitHub Pages por `@conformia-bndes/maintainers`) |
 | **Dados sintéticos** | Desenvolvimento, CI e benchmarks usam apenas documentos fictícios |
 
 !!! danger "Acesso anônimo e DEBUG"
