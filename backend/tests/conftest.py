@@ -51,7 +51,7 @@ def _no_network(monkeypatch):
     monkeypatch.setattr(
         storage_module.storage_service,
         "upload_file",
-        lambda file_data, object_name, content_type="application/pdf": (
+        lambda file_data, object_name, content_type="application/pdf", cancellation_event=None: (
             f"s3://{bucket}/{object_name}"
         ),
     )

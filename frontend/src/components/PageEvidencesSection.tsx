@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { FileSearch, Quote, ChevronDown, ChevronUp } from 'lucide-react';
 import { ExtractionResult } from '../services/api';
-import { presentExtractedFieldName } from '../services/presentation';
+import {
+  formatConfidence,
+  formatExtractedValue,
+  presentExtractedFieldName,
+} from '../services/presentation';
 
 interface PageEvidencesSectionProps {
   extraction: ExtractionResult | null | undefined;
@@ -92,8 +96,13 @@ export function PageEvidencesSection({
                     )}
                   </div>
                   <p className="text-xs font-semibold text-bndes-ink break-words">
-                    {String(field.value ?? field.raw_value ?? '-')}
+                    {formatExtractedValue(field.value, field.raw_value)}
                   </p>
+                  {formatConfidence(field.evidence?.confidence ?? field.confidence) && (
+                    <p className="text-[10px] font-medium text-amber-700">
+                      {formatConfidence(field.evidence?.confidence ?? field.confidence)}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -111,9 +120,16 @@ export function PageEvidencesSection({
                       <Quote className="w-3.5 h-3.5 text-bndes-green mt-0.5 shrink-0" />
                       <p className="text-xs font-mono text-bndes-ink break-words">{ev.text}</p>
                     </div>
-                    <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded bg-bndes-green-tint text-bndes-green-ink border border-bndes-green-border">
-                      Pág. {ev.page}
-                    </span>
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-bndes-green-tint text-bndes-green-ink border border-bndes-green-border">
+                        Pág. {ev.page}
+                      </span>
+                      {formatConfidence(ev.confidence) && (
+                        <span className="text-[10px] font-medium text-amber-700">
+                          {formatConfidence(ev.confidence)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

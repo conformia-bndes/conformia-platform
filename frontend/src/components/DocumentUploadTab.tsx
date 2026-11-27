@@ -135,6 +135,11 @@ export function DocumentUploadTab({
               <span>
                 O processamento está demorando mais que o esperado. A atualização automática foi pausada após{' '}
                 {pollingState.maxAttempts} tentativas.
+                {pollingState.consecutiveErrors >= 2 && (
+                  <>
+                    {' '}As últimas {pollingState.consecutiveErrors} consultas de status falharam.
+                  </>
+                )}
               </span>
             </div>
             <button
