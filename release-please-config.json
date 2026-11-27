@@ -5,6 +5,9 @@
     ".": {
       "release-type": "simple",
       "package-name": "conformia-platform",
+      "prerelease": true,
+      "prerelease-type": "rc",
+      "release-as": "1.0.0-rc.1",
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
         { "type": "feat", "section": "Adicionado" },

@@ -96,6 +96,27 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 | Docs | `mkdocs build --strict` | OK |
 | Script de chave | `python backend/scripts/create_api_user.py ana.silva ANALISTA` | Gera chave e entrada JSON; argumentos inválidos retornam 2 |
 
+### Regressão Completa — Release Candidate RC1 (`v1.0.0-rc.1`, Issue #62)
+
+Regressão completa executada pelo CI sobre `dev` imediatamente antes deste PR (que altera apenas a configuração de release, o workflow de título e documentação)
+([`abc4a22`](https://github.com/conformia-bndes/conformia-platform/commit/abc4a22adfdf9f020f243e26efe64f52fb3dcffe),
+run [46049692868](https://github.com/conformia-bndes/conformia-platform/actions/runs/46049692868), 27/11/2026),
+com todas as entregas do MVP integradas (#138, #146, #147, #160, #161, #176, #177, #189 e #190). A RC
+`v1.0.0-rc.1` é configurada em `release-please-config.json` e protegida pelo Code Freeze de `26/11/2026`
+no `pr-title.yml`.
+
+| Suíte | Job do CI | Resultado |
+| :-- | :-- | :-- |
+| **Backend (`pytest`)** | `Backend / Test (3.11)` e `(3.12)` | Sucesso nas duas versões. Cobertura global **92%** (`1635` statements, `123` miss) |
+| **Backend Lint / Format** | `Backend / Lint` (`black --check`, `flake8`) | Sucesso |
+| **Frontend (`vitest` + `eslint` + `build`)** | `Frontend / Lint`, `Test`, `Build` | **24 passed** em 3 arquivos; lint sem warnings; build e imagem gerados |
+| **Evals (`eval_pipeline.py`)** | `Backend / Evals` | **PASS**: **48** verificações, **100,00%** de acurácia (mínimo 90%), **0 falsos positivos**, sem regressão contra a linha de base. LLM desativada: regras HYBRID terminam em revisão manual |
+| **Smoke (`smoke_test.py`)** | `Infra / Stack` | **6/6**: health, upload, worker (`PENDING -> SUCCESS`), documento `COMPLETED`, laudo e revisão Maker-Checker `FINAL` |
+| **Resiliência (`resilience_test.sh`)** | `Infra / Stack` | MinIO, Redis e PostgreSQL parados: degradação controlada e recuperação automática |
+| **Segurança** | `Backend / Security`, `Frontend / Security`, Trivy em `Build`, CodeQL | Sucesso (Trivy `HIGH,CRITICAL` com `--exit-code 1`) |
+| **Fuzz** | `Backend / Fuzz` | Sucesso |
+| **Documentação (`mkdocs`)** | `Docs` (`mkdocs build --strict`) | Sucesso |
+
 Não validado: migration 002 em PostgreSQL; concorrência real (o lock `with_for_update` e a
 restrição única foram verificados apenas por leitura de código e teste sequencial).
 
