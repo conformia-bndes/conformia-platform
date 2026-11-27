@@ -147,6 +147,7 @@ def test_redis_image_is_pinned_by_digest_and_requires_password():
         "/etc/passwd",
         "/tmp/other_dir/doc-1_cnd.pdf",
         "other-doc_cnd.pdf",
+        "doc-10_cnd.pdf",  # prefixo de outro document_id nao pode ser aceito
     ],
 )
 def test_process_document_task_rejects_file_path_outside_upload_dir_without_downloading(
