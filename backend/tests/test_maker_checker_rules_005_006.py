@@ -156,16 +156,47 @@ def test_rule_006_ceis_nada_consta_with_cnep_multa_aplicada_is_non_compliant():
     assert client.calls == 0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Lacuna conhecida da RULE-BNDES-006: multa no CNEP sem a frase exata 'MULTA APLICADA' "
-        "nao e bloqueada; o 'NADA CONSTA' do CEIS cumpre o termo obrigatorio e, com o "
-        "Maker-Checker aprovando a citacao 'NADA CONSTA', hoje o resultado e COMPLIANT."
-    ),
-)
-def test_rule_006_ceis_nada_consta_with_cnep_multa_in_other_words_is_not_compliant():
+def test_rule_006_ceis_nada_consta_with_cnep_multa_in_other_words_is_manual_review():
+    """Multa no CNEP sem a frase exata 'MULTA APLICADA' vai para revisao sem chamar o LLM."""
     client = _ScriptedClient(_maker("NADA CONSTA"), _checker())
     text = f"{_CEIS}\nNADA CONSTA\n{_CNEP}\nTIPO DE SANÇÃO: MULTA\nVALOR: R$ 50.000,00\n"
     res = _evaluate("RULE-BNDES-006", "INTEGRIDADE_CEIS_CNEP", text, client)
     assert res["status"] == "MANUAL_REVIEW_REQUIRED"
+    assert res["checker_type"] == "DETERMINISTIC"
+    assert "MULTA" in res["evidence"]["matched_manual_review_keywords"]
+    assert client.calls == 0
+
+
+@pytest.mark.parametrize(
+    "sanction_line",
+    [
+        "PENALIDADE: SUSPENSAO",
+        "SANÇÃO APLICADA EM 10/01/2026",
+        "PUNIÇÃO REGISTRADA",
+        "PROCESSO ADMINISTRATIVO DE RESPONSABILIZAÇÃO Nº 1/2026",
+    ],
+)
+def test_rule_006_sanction_terms_force_manual_review(sanction_line):
+    client = _ScriptedClient(_maker("NADA CONSTA"), _checker())
+    res = _evaluate(
+        "RULE-BNDES-006", "INTEGRIDADE_CEIS_CNEP", f"{CEIS_CNEP_TEXT}{sanction_line}\n", client
+    )
+    assert res["status"] == "MANUAL_REVIEW_REQUIRED"
+    assert client.calls == 0
+
+
+def test_rule_005_without_validity_date_is_manual_review_even_if_llm_approves():
+    """Licenca sem data de validade legivel nunca e aprovada pelo Maker-Checker."""
+    client = _ScriptedClient(_maker("LICENÇA AMBIENTAL DE OPERAÇÃO Nº 123/2025"), _checker())
+    text = LICENCA_TEXT.replace("VÁLIDA ATÉ: 31/12/2027", "VÁLIDA ATÉ: ILEGÍVEL")
+    res = _evaluate("RULE-BNDES-005", "LICENCA_AMBIENTAL", text, client)
+    assert res["status"] == "MANUAL_REVIEW_REQUIRED"
+    assert client.calls == 0
+
+
+def test_rule_005_expired_license_is_non_compliant():
+    client = _ScriptedClient(_maker("LICENÇA AMBIENTAL DE OPERAÇÃO Nº 123/2025"), _checker())
+    text = LICENCA_TEXT.replace("31/12/2027", "31/12/2025")
+    res = _evaluate("RULE-BNDES-005", "LICENCA_AMBIENTAL", text, client)
+    assert res["status"] == "NON_COMPLIANT"
+    assert client.calls == 0
