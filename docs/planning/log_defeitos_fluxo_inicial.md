@@ -12,7 +12,7 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 
 | ID       | Título                                                  | Req. Afetados | Gravidade | Status     |
 |:---------|:--------------------------------------------------------|:--------------|:----------|:-----------|
-| DEF-FI-001 | RF01 (Autenticação/RBAC) não implementado no fluxo de upload | RF01          | Alta      | Aberto     |
+| DEF-FI-001 | RF01 (Autenticação/RBAC) não implementado no fluxo de upload | RF01          | Alta      | Parcialmente resolvido (ver #163) |
 | DEF-FI-002 | PDF ilegível (digitalizado) não gera texto via OCR quando Tesseract está ausente | RF03          | Média     | Aberto     |
 | DEF-FI-005 | Requisitos RF05, RF07, RF09, RF10 não cobertos pelo fluxo inicial de teste | RF05, RF07, RF09, RF10 | Baixa | Aberto     |
 
@@ -23,9 +23,17 @@ Formato de identificador: `DEF-FI-###` (Fluxo Inicial).
 ### DEF-FI-001 — RF01 (Autenticação/RBAC) não implementado no fluxo de upload
 
 **Requisito Afetado:** RF01 — Autenticação e RBAC  
-**Status no Repositório:** Planejado (Sprint 7) — ainda não implementado  
+**Status no Repositório:** Autenticação por chave de API pessoal implementada (decisão D1); RBAC por rota pendente  
 **Gravidade:** Alta  
-**Status:** Aberto  
+**Status:** Parcialmente resolvido (atualizado em 26/11/2026)  
+
+**Atualização (auditoria de 23/11/2026):** o upload não é mais anônimo fora do perfil local. As rotas
+de `documents`, `compliance` e `compliance/reviews` exigem `X-API-Key` (`verify_api_key` em
+`backend/app/api/v1/api.py`), com chaves pessoais e perfis ANALISTA/AUDITOR/ADMIN (PRs #45 e #68) e
+padrão seguro sem acesso anônimo (PR #110); a revisão humana exige perfil `ANALISTA`. Continuam
+pendentes, na issue #163: o RBAC por rota (perfil exigido em cada endpoint), o executor real na
+trilha de auditoria e a decisão sobre a divergência entre o texto do RF01 (JWT) e a implementação
+(chaves de API). O texto abaixo é o registro original.
 
 **Passos de Reprodução:**
 1. Acessar o endpoint `POST /api/v1/documents/upload` sem qualquer token de autenticação.

@@ -141,7 +141,12 @@ jobs:
       # Derruba Redis, MinIO e Postgres, um por vez: a API deve degradar com 503, manter o
       # healthcheck rapido e se recuperar sozinha. Roda por ultimo porque mexe na stack.
       - name: Resiliencia (queda e recuperacao das dependencias)
-        run: bash scripts/resilience_test.sh
+        # O script exige API_KEY: usa a chave de servico do .env efemero gerado acima.
+        run: |
+          API_KEY="$(grep '^API_KEY=' .env | cut -d= -f2-)"
+          echo "::add-mask::$API_KEY"
+          export API_KEY
+          bash scripts/resilience_test.sh
 
       - name: Estado e logs em caso de falha
         if: failure()

@@ -15,7 +15,7 @@ _Documento de Direcionamento Estratégico e Técnico_
 
 - ### Data de Conclusão
 
-    **05/12/2026** — Milestones M1 a M6, detalhados no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md).
+    **27/11/2026** — Milestones M1 a M6 (M7 pós-entrega até 10/12/2026), detalhados no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md). A data original de 05/12/2026 foi antecipada na auditoria de 23/11/2026.
 
 - ### Modalidade Proposta
 
@@ -59,7 +59,7 @@ Para aprofundar, siga para os capítulos:
 
 - ### [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md)
 
-    Escopo do MVP, caminho crítico, cronograma até 05/12/2026 e critérios de Go/No-Go.
+    Escopo do MVP, caminho crítico, cronograma até 27/11/2026 (antes 05/12/2026) e critérios de Go/No-Go.
 
 - ### [Segurança, LGPD e Auditoria](governance-security.md)
 

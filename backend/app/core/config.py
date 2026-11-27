@@ -166,6 +166,7 @@ class Settings(BaseSettings):
     MINIO_ROOT_PASSWORD: str
     MINIO_BUCKET_NAME: str = "documents"
     MINIO_USE_SSL: bool = False
+    UPLOAD_TOTAL_TIMEOUT_SECONDS: float = Field(default=8.0, gt=0)
 
     # Motor de Regras e IDP
     RULES_PATH: str = "/rules/schemas"
