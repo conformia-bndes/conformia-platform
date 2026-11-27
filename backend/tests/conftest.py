@@ -13,6 +13,8 @@ os.environ.setdefault("ENVIRONMENT", "test")
 # Os testes usam o cliente sem chave; testes de autenticacao desligam este opt-in.
 os.environ.setdefault("ALLOW_ANONYMOUS_ACCESS", "true")
 
+from types import SimpleNamespace  # noqa: E402
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402
@@ -31,6 +33,38 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+@pytest.fixture(autouse=True, scope="function")
+def _no_network(monkeypatch):
+    """Desliga chamadas de rede reais (MinIO, Redis, Postgres) em todos os testes.
+
+    Nenhum teste unitario depende de servicos externos. Assim o health endpoint e os
+    uploads nao esperam timeouts de MinIO/Redis.
+    """
+    from app.core import storage as storage_module
+    from app.api.v1.endpoints import health as health_module
+
+    bucket = storage_module.storage_service.bucket_name
+
+    monkeypatch.setattr(storage_module.storage_service, "ping", lambda: True)
+    monkeypatch.setattr(
+        storage_module.storage_service,
+        "upload_file",
+        lambda file_data, object_name, content_type="application/pdf": (
+            f"s3://{bucket}/{object_name}"
+        ),
+    )
+    monkeypatch.setattr(
+        storage_module.storage_service,
+        "download_file",
+        lambda object_name, destination_path: None,
+    )
+    monkeypatch.setattr(
+        health_module,
+        "_redis_client",
+        lambda: SimpleNamespace(ping=lambda: True),
+    )
 
 
 @pytest.fixture(scope="function")

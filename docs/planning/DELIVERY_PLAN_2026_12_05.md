@@ -3,8 +3,10 @@
 Data de referência: 29/10/2026. Base auditada: branch `developer`, commit `d76f41c` (contém `e39217b`).
 
 Este plano substitui hipóteses da análise preliminar por fatos verificados no código. O backlog
-detalhado está em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) e as evidências de
-execução em [VALIDATION_REPORT.md](VALIDATION_REPORT.md).
+detalhado está em [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md), as evidências de
+execução em [VALIDATION_REPORT.md](VALIDATION_REPORT.md), o roteiro da apresentação em
+[demo-script.md](demo-script.md) e o checklist operacional da decisão final em
+[go-no-go-checklist.md](go-no-go-checklist.md).
 
 > Prazo confirmado em 01/11: entrega em **05/12/2026**. As apresentações são em 07 ou 09/12, e os
 > dias entre a entrega e a apresentação servem de folga para ensaio e correção de defeitos críticos.
