@@ -109,6 +109,7 @@
         "LICENÇA SUSPENSA",
         "EMBARGADO"
       ],
+      "requires_validity": true,
       "regex_patterns": [],
       "failure_message": "Licença ambiental vencida, suspensa ou não anexada para empreendimento elegível."
     },
@@ -132,6 +133,15 @@
         "PROIBIÇÃO DE CONTRATAR COM O PODER PÚBLICO",
         "MULTA APLICADA",
         "ACORDO DE LENIÊNCIA"
+      ],
+      "manual_review_keywords": [
+        "MULTA",
+        "PENALIDADE",
+        "TIPO DE SANÇÃO",
+        "SANÇÃO APLICADA",
+        "LENIÊNCIA",
+        "PUNIÇÃO",
+        "PROCESSO ADMINISTRATIVO DE RESPONSABILIZAÇÃO"
       ],
       "regex_patterns": [],
       "failure_message": "Constatada sanção impeditiva vigente de inidoneidade ou suspensão nos cadastros de integridade pública."
