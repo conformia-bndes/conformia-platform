@@ -82,7 +82,9 @@ def test_upload_pdf_valido_retorna_201(client, monkeypatch, pdf_valido):
     """RF02: Upload de PDF valido deve retornar 201 e iniciar processamento."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
@@ -104,7 +106,9 @@ def test_upload_pdf_vencido_retorna_201(client, monkeypatch, pdf_vencido):
     """RF02: Upload de certidao vencida deve ser aceito (a regra temporal e avaliada depois)."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
@@ -124,7 +128,9 @@ def test_upload_pdf_pendente_retorna_201(client, monkeypatch, pdf_pendente):
     """RF02: Upload de certidao com pendencia deve ser aceito."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
@@ -186,7 +192,9 @@ def test_processamento_pdf_valido_fluxo_completo(client, monkeypatch, pdf_valido
     """RF02 + RF03 + RF04: Upload + extracao nativa + entidades + evidencias."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
@@ -218,7 +226,9 @@ def test_processamento_certidao_vencida_nao_conforme(client, monkeypatch, pdf_ve
     """RF06: Certidao vencida deve resultar em NON_COMPLIANT no motor de regras."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
@@ -263,7 +273,9 @@ def test_processamento_certidao_pendente_nao_conforme(client, monkeypatch, pdf_p
     """RF06: Certidao com pendencia deve resultar em NON_COMPLIANT."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())
@@ -314,7 +326,9 @@ def test_processamento_pdf_ilegivel_extração_falha(client, monkeypatch, pdf_il
     """RF03: PDF digitalizado sem texto legível deve resultar em EXTRACTION_FAILED."""
 
     class _FakeStorage:
-        def upload_file(self, file_data, object_name, content_type="application/pdf"):
+        def upload_file(
+            self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+        ):
             return f"s3://documents/{object_name}"
 
     monkeypatch.setattr("app.api.v1.endpoints.documents.storage_service", _FakeStorage())

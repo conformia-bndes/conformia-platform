@@ -109,6 +109,7 @@
         "LICENÇA SUSPENSA",
         "EMBARGADO"
       ],
+      "requires_validity": true,
       "regex_patterns": [],
       "failure_message": "Licença ambiental vencida, suspensa ou não anexada para empreendimento elegível."
     },
@@ -117,16 +118,30 @@
       "code": "INTEGRIDADE_CEIS_CNEP",
       "title": "Consulta de Idoneidade nos Cadastros CEIS e CNEP (Portal da Transparência)",
       "category": "INTEGRIDADE",
-      "type": "DETERMINISTIC",
+      "type": "HYBRID",
       "severity": "CRITICAL",
       "legal_basis": "Lei nº 12.846/2013 (Lei Anticorrupção) e Diretrizes de Compliance BNDES",
       "required_keywords": [
         "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS",
+        "CADASTRO NACIONAL DE EMPRESAS PUNIDAS",
         "NADA CONSTA"
       ],
       "anti_keywords": [
         "IMPEDIMENTO DE LICITAR",
-        "DECLARAÇÃO DE INIDONEIDADE"
+        "DECLARAÇÃO DE INIDONEIDADE",
+        "SUSPENSÃO TEMPORÁRIA DE PARTICIPAÇÃO EM LICITAÇÃO",
+        "PROIBIÇÃO DE CONTRATAR COM O PODER PÚBLICO",
+        "MULTA APLICADA",
+        "ACORDO DE LENIÊNCIA"
+      ],
+      "manual_review_keywords": [
+        "MULTA",
+        "PENALIDADE",
+        "TIPO DE SANÇÃO",
+        "SANÇÃO APLICADA",
+        "LENIÊNCIA",
+        "PUNIÇÃO",
+        "PROCESSO ADMINISTRATIVO DE RESPONSABILIZAÇÃO"
       ],
       "regex_patterns": [],
       "failure_message": "Constatada sanção impeditiva vigente de inidoneidade ou suspensão nos cadastros de integridade pública."

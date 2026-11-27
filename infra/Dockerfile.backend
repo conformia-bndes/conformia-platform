@@ -54,6 +54,7 @@ ARG UPGRADE_STAMP=local
 # hadolint ignore=DL3008
 RUN echo "apt em ${UPGRADE_STAMP}" \
     && apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-por \
@@ -80,8 +81,9 @@ COPY --from=builder /opt/venv /opt/venv
 RUN useradd -m -u 1000 conformia && \
     chown -R conformia:conformia /app
 
-# Copia o código da aplicação
+# Copia o código da aplicação e os checklists normativos
 COPY --chown=conformia:conformia ./backend /app
+COPY --chown=conformia:conformia ./rules /rules
 
 # Porta padrão FastAPI
 EXPOSE 8000

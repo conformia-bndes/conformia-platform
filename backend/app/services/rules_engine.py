@@ -263,6 +263,24 @@ class RulesEngine:
                 "evidence": {"matched_anti_keywords": matched_anti},
             }
 
+        # 1b. Termos que exigem analise humana (ex.: sancao descrita sem a frase exata de um
+        # anti_keyword). Nao provam irregularidade, mas impedem a aprovacao automatica.
+        manual_review_keywords = rule.get("manual_review_keywords", [])
+        matched_manual = [kw for kw in manual_review_keywords if self._normalize(kw) in text_norm]
+        if matched_manual:
+            return {
+                "rule_id": rule["id"],
+                "rule_title": rule["title"],
+                "category": rule["category"],
+                "status": "MANUAL_REVIEW_REQUIRED",
+                "findings": (
+                    "Termos que exigem analise humana no texto: " f"{', '.join(matched_manual)}"
+                ),
+                "confidence_score": 1.0,
+                "checker_type": "DETERMINISTIC",
+                "evidence": {"matched_manual_review_keywords": matched_manual},
+            }
+
         # 2. Avaliacao de palavras-chave requeridas
         required_keywords = rule.get("required_keywords", [])
         matched_required = [kw for kw in required_keywords if self._normalize(kw) in text_norm]

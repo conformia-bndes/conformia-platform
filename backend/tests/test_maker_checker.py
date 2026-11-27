@@ -12,7 +12,7 @@ from app.ai.llm_client import (
     _parse_json_object,
     is_grounded_in_document,
 )
-from app.core.config import settings
+from app.core.config import Settings, settings
 
 RULE = {
     "id": "RULE-BNDES-004",
@@ -100,6 +100,16 @@ def test_generate_defaults_to_openai_base_url(monkeypatch):
         captured["url"] = url
         return _ok_response()
 
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    default_cfg = Settings(
+        _env_file=None,
+        SECRET_KEY="s",
+        API_KEY="k",
+        POSTGRES_PASSWORD="p",
+        MINIO_ROOT_USER="u",
+        MINIO_ROOT_PASSWORD="mp",
+    )
+    monkeypatch.setattr(settings, "LLM_BASE_URL", default_cfg.LLM_BASE_URL)
     monkeypatch.setattr(httpx, "post", fake_post)
     LLMClient(api_key="test-key").generate("prompt")
     assert captured["url"] == "https://api.openai.com/v1/chat/completions"

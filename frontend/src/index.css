@@ -1,17 +1,95 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bndes-blue: #002B49;
-  --color-bndes-blue-light: #004A80;
-  --color-bndes-blue-dark: #001A2C;
-  --color-bndes-green: #008542;
-  --color-bndes-green-light: #00A854;
-  --color-bndes-green-dark: #005E2E;
-  --color-bndes-gold: #C49A45;
+  /* Tipografias recomendadas para web e sistema (Manual de Marca BNDES Fev/2026 - Seção 1.10) */
+  --font-sans: "Fira Sans", Arial, sans-serif;
+  --font-serif: "Lora", "Cormorant Garamond", "Times New Roman", serif;
+  --font-mono: "Fira Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Cores Primárias BNDES (Seção 1.8) */
+  --color-bndes-blue: #004A8F;
+  --color-bndes-blue-1: #004A8F;
+  --color-bndes-green: #00984A;
+  --color-bndes-green-1: #00984A;
+  --color-bndes-white: #FFFFFF;
+
+  /* Cores Secundárias BNDES - destaque digital (Seção 1.8) */
+  --color-bndes-blue-2: #0077C0;
+  --color-bndes-green-2: #62BB46;
+
+  /* Cores Terciárias BNDES (Seção 1.8) */
+  --color-bndes-blue-3: #005687;
+  --color-bndes-green-3: #00947D;
+  --color-bndes-blue-4: #6493B2;
+  --color-bndes-green-4: #49C0B6;
+
+  /* Cores de Apoio BNDES - matizes quentes e neutros (Seção 1.8) */
+  --color-bndes-orange: #C15C29;
+  --color-bndes-ochre: #CD8627;
+  --color-bndes-purple: #83227A;
+  --color-bndes-silver: #D9DDE2;
+  --color-bndes-silver-green: #B7C9BF;
+
+  /* Tokens Semânticos e de Contraste Acessível (WCAG AA / AAA) */
+  --color-bndes-bg: #F4F7FA;
+  --color-bndes-surface: #FFFFFF;
+  --color-bndes-surface-muted: #EDF2F7;
+  --color-bndes-border: #D4DFE9;
+  --color-bndes-border-strong: #B3C6D9;
+
+  --color-bndes-ink: #142638;
+  --color-bndes-ink-secondary: #3B5166;
+  --color-bndes-ink-muted: #546A7E;
+
+  --color-bndes-blue-deep: #00386E;
+  --color-bndes-blue-tint: #EBF3FA;
+  --color-bndes-blue-border: #B6CFE8;
+
+  --color-bndes-green-tint: #E7F6EE;
+  --color-bndes-green-border: #9AD6B7;
+  --color-bndes-green-ink: #006631;
+
+  --color-bndes-orange-tint: #FDF2EC;
+  --color-bndes-orange-border: #E5B8A1;
+  --color-bndes-orange-ink: #873912;
+
+  --color-bndes-ochre-tint: #FCF5E8;
+  --color-bndes-ochre-border: #E6C891;
+  --color-bndes-ochre-ink: #784B0B;
+
+  --color-bndes-purple-tint: #F6ECF5;
+  --color-bndes-purple-border: #D9B3D5;
+  --color-bndes-purple-ink: #66195F;
+
+  --shadow-bndes-card: 0 1px 3px 0 rgba(0, 42, 82, 0.06), 0 1px 2px -1px rgba(0, 42, 82, 0.04);
+  --shadow-bndes-elevated: 0 6px 16px -4px rgba(0, 42, 82, 0.12), 0 2px 6px -2px rgba(0, 42, 82, 0.06);
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-bndes-bg text-bndes-ink font-sans;
   }
+
+  a {
+    @apply text-bndes-blue-2 hover:text-bndes-blue underline-offset-2 transition-colors;
+  }
+}
+
+/* Faixa gráfica institucional derivada do sistema visual BNDES (Manual p. 2 e Seção 1.8) */
+.bndes-brand-bar {
+  background: linear-gradient(
+    90deg,
+    #6493B2 0%,
+    #6493B2 8%,
+    #0077C0 8%,
+    #0077C0 22%,
+    #004A8F 22%,
+    #004A8F 58%,
+    #00984A 58%,
+    #00984A 82%,
+    #62BB46 82%,
+    #62BB46 93%,
+    #49C0B6 93%,
+    #49C0B6 100%
+  );
 }
