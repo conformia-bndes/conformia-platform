@@ -1,14 +1,17 @@
 # Relatório de Validação
 
-Ambiente: Windows 11, Git Bash, `uv 0.11.18`, Python do venv 3.13.13 (CI usa 3.11), Node 24.20.0,
-npm 11.19.0. Docker 29.8.2 instalado, **daemon parado**. Tesseract **não instalado**.
-Base: branch `developer`, commit `d76f41c`, working tree limpa no início.
+Execução mais recente registrada: **13/11/2026**, branch de integração `dev` (seção 4). A validação
+de infraestrutura, fila e OCR integrada em 22/11 (PR #123) está na seção 5.
 
+As seções 1 a 3 são **histórico da auditoria de 29/10/2026**: base `d76f41c` na antiga branch
+de integração `developer` (hoje `dev`), working tree limpa no início. Ambiente daquela execução:
+Windows 11, Git Bash, `uv 0.11.18`, Python do venv 3.13.13 (CI usa 3.11), Node 24.20.0,
+npm 11.19.0. Docker 29.8.2 instalado, **daemon parado**. Tesseract **não instalado**.
 Os comandos foram executados na raiz do repositório com `PYTHONIOENCODING=utf-8`.
 
 ---
 
-## 1. Linha de base (antes das alterações)
+## 1. Linha de base (antes das alterações) - histórico, 29/10/2026
 
 | Verificação | Comando | Resultado |
 | :-- | :-- | :-- |
@@ -46,7 +49,7 @@ D3 clean CND overall: NON_COMPLIANT {'RULE-BNDES-001': 'COMPLIANT', 'RULE-BNDES-
 
 ---
 
-## 2. Após as alterações
+## 2. Após as alterações - histórico, 29/10/2026 (PR #44)
 
 | Verificação | Comando | Resultado |
 | :-- | :-- | :-- |
@@ -81,7 +84,7 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 
 ---
 
-## 3. Incremento: identidade por chave pessoal e revisão humana (T05a, T05b)
+## 3. Incremento: identidade por chave pessoal e revisão humana (T05a, T05b) - histórico, 29/10/2026 (PRs #45 e #68)
 
 | Verificação | Comando | Resultado |
 | :-- | :-- | :-- |
@@ -98,7 +101,29 @@ restrição única foram verificados apenas por leitura de código e teste seque
 
 ---
 
-## 4. Validação de Infraestrutura Conteinerizada, Fila e OCR (T09a / Issue #46)
+## 4. Execução de 13/11/2026
+
+Base: `dev` em `627a95a` (último merge do dia, 13/11 20:58 -03). Entre 29/10 e 13/11 entraram
+em `dev`, entre outros, os PRs #82 (T03c), #92 (T04c/D2), #95 (pipeline com smoke em
+Compose), #108 (T11), #109 (T05d) e #110 (T05c).
+
+| Verificação | Onde | Resultado registrado |
+| :-- | :-- | :-- |
+| Smoke em Compose com PostgreSQL, Redis, MinIO e worker reais | Job `smoke` de `.github/workflows/ci-infra.yml` (PR #95), em `main` e `dev` | Executado pelo CI a cada push/PR; saída nos logs do GitHub Actions, não versionada |
+| `make env` / `API_USERS` no Compose | Commit `e431400` (branch `feat/smoke-estendido`, refs #127) | Defeito reproduzido com Compose: sem aspas, o `$` do `key_hash` era interpolado e o serviço `migrate` falhava. Corrigido com aspas simples; `test_smoke.py` cobre o formato. Não integrado em `dev` em 13/11 |
+| OCR no container (`tesseract-ocr-por`) | Commits `e7ac57a` e `e73cde9` (branch `docs/validar-compose-smoke-ocr`, issue #46) | Passo de OCR do `ci-backend.yml` corrigido (variáveis obrigatórias e SC2155). Não integrado em `dev` em 13/11 |
+| Varredura de imagens (Trivy) | Commits `7093d82` e `4dc0724` (PR #136, integrado em 16/11) | Cache do `apk upgrade` (frontend) e do `apt-get install` (backend) invalidado para o Trivy ver os pacotes atuais |
+| Atualizações de dependências | PRs #118 (frontend) e #119 (backend), integrados em `dev` em 13/11 | Integrados via PR; estado do CI nos logs do GitHub Actions |
+| LLM real (Maker-Checker) | `docs/engineering/maker-checker.md`, seção 3 | Cinco modelos gratuitos do OpenRouter avaliados na RULE-BNDES-004 com quatro casos; `particle-ai/particle-1:free` acertou 4 de 4 e foi escolhido |
+
+Lacuna: a saída dos comandos locais de 13/11 (`pytest`, evals, lint, `make smoke`) não foi
+versionada; a tabela registra apenas o que o histórico do git e os documentos comprovam. A saída
+do `make smoke` e da validação de OCR no container foi integrada depois (PR #123, 22/11) e está na
+seção 5.
+
+---
+
+## 5. Validação de Infraestrutura Conteinerizada, Fila e OCR (T09a / Issue #46) - PR #123, 22/11/2026
 
 Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml` e `ci-backend.yml`:
 
@@ -127,8 +152,14 @@ Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml`
 
 ---
 
-## 5. Limitações desta validação
+## 6. Limitações desta validação
 
-1. Integração LLM real não testada no pipeline padrão (sem chave `OPENAI_API_KEY`); exercitada apenas sob demanda via `make llm-eval` e com clientes falsos roteirizados na suíte unitária.
-2. Evals padrão usam textos e PDFs sintéticos; resultados medem regressão determinística do motor e do parser, não qualidade estatística sobre acervo real.
-3. Segurança verificada no CI via `gitleaks`, `pip-audit`, `CodeQL` e `Trivy` (`HIGH`/`CRITICAL`). Nenhuma certificação formal OWASP/NIST é declarada.
+1. Histórico (29/10): nenhum teste com serviços reais. Desde o PR #95 o smoke do CI exercita
+   PostgreSQL, Redis, MinIO e o worker pela fila; o registro manual está na seção 5 (PR #123).
+2. OCR no container validado em máquina da equipe e no CI (PR #123, issue #46).
+3. Integração LLM real avaliada só de forma pontual (13/11, quatro casos sintéticos por modelo,
+   uma rodada); o pipeline padrão roda sem chave.
+4. Evals usam textos sintéticos; o resultado não é evidência estatística de qualidade (T08b).
+5. Histórico (29/10): venv local com Python 3.13; o CI e a imagem usam 3.11.
+6. Segurança: revisão manual de código e, no CI, gitleaks, pip-audit, CodeQL e Trivy. Nenhuma
+   conformidade com OWASP/NIST é declarada.
