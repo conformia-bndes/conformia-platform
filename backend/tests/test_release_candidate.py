@@ -20,7 +20,7 @@ def test_release_please_configured_for_rc1():
 
 
 def test_code_freeze_policy_enforced_in_pr_title_workflow():
-    """Garante que o workflow pr-title.yml aplica o Code Freeze a partir de 01/12/2026."""
+    """Garante que o workflow pr-title.yml aplica o Code Freeze de 26/11/2026 a 09/12/2026."""
     workflow_path = REPO_ROOT / ".github" / "workflows" / "pr-title.yml"
     data = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
 
@@ -28,7 +28,8 @@ def test_code_freeze_policy_enforced_in_pr_title_workflow():
     freeze_steps = [s for s in steps if "Code Freeze" in s.get("name", "")]
     assert len(freeze_steps) == 1
     freeze_step = freeze_steps[0]
-    assert freeze_step["env"]["CODE_FREEZE_DATE"] == "2026-12-01"
+    assert freeze_step["env"]["CODE_FREEZE_DATE"] == "2026-11-26"
+    assert freeze_step["env"]["FREEZE_END_DATE"] == "2026-12-09"
     assert "feat" in freeze_step["run"]
 
 
@@ -44,5 +45,5 @@ def test_validation_report_records_complete_rc1_regression():
     assert "vitest" in report
     assert "eval_pipeline.py" in report
     assert "smoke_test.py" in report
-    assert "Code Freeze (01/12/2026)" in delivery_plan
+    assert "Code Freeze (26/11/2026)" in delivery_plan
     assert "v1.0.0-rc.1" in delivery_plan

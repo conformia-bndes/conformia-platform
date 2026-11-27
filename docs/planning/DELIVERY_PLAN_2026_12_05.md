@@ -152,13 +152,15 @@ sem segregação, com a restrição declarada no roteiro e aceita formalmente pe
 
 ## 7. Release e rollback
 
-- **Code Freeze (01/12/2026):** a partir de `2026-12-01` entra em vigor o congelamento de código
-  (`pr-title.yml` bloqueia PRs do tipo `feat:` até `2026-12-05`); apenas correções de defeitos
-  bloqueadores (`fix`, `sec`, `revert`) e ajustes de documentação/testes são aceitos após essa data.
+- **Code Freeze (26/11/2026):** de `2026-11-26` (M5) a `2026-12-09` (última apresentação, D4) o
+  `pr-title.yml` bloqueia PRs do tipo `feat:`; seguem aceitos correções (`fix`, `sec`, `revert`),
+  documentação, testes, `chore` e `refactor` sem funcionalidade nova.
 - **Release Candidate RC1 (`v1.0.0-rc.1`):** gerada pelo fluxo automatizado do `release-please`
   (`release-please-config.json` com `prerelease: true`, `prerelease-type: "rc"` e
   `release-as: "1.0.0-rc.1"`), acionando o `cd.yml` para construir e validar as imagens do backend
-  e do frontend a partir da tag `v1.0.0-rc.1`.
+  e do frontend a partir da tag `v1.0.0-rc.1`. Depois de publicada a RC, remover `prerelease`,
+  `prerelease-type` e `release-as` do `release-please-config.json`; caso contrário o release-please
+  continua gerando versões `rc` e tenta repetir a `1.0.0-rc.1`.
 - Release: tag anotada no commit aprovado; imagens construidas a partir do mesmo commit;
   `.env` gerado por `make env` (sem segredos versionados).
 - Rollback de aplicação: subir a tag anterior (`git checkout <tag>` + `make up`).

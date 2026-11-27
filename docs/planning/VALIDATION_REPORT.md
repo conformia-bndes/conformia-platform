@@ -98,16 +98,24 @@ D2 hybrid without LLM key: MANUAL_REVIEW_REQUIRED LLM_UNAVAILABLE maker_output= 
 
 ### Regressão Completa — Release Candidate RC1 (`v1.0.0-rc.1`, Issue #62)
 
-Execução consolidada da bateria de regressão para a Release Candidate `v1.0.0-rc.1` (configurada em `release-please-config.json` e protegida pela política de Code Freeze em `01/12/2026` no `pr-title.yml`):
+Regressão completa executada pelo CI sobre `dev` imediatamente antes deste PR (que altera apenas a configuração de release, o workflow de título e documentação)
+([`abc4a22`](https://github.com/conformia-bndes/conformia-platform/commit/abc4a22adfdf9f020f243e26efe64f52fb3dcffe),
+run [46049692868](https://github.com/conformia-bndes/conformia-platform/actions/runs/46049692868), 27/11/2026),
+com todas as entregas do MVP integradas (#138, #146, #147, #160, #161, #176, #177, #189 e #190). A RC
+`v1.0.0-rc.1` é configurada em `release-please-config.json` e protegida pelo Code Freeze de `26/11/2026`
+no `pr-title.yml`.
 
-| Suíte | Comando | Resultado |
+| Suíte | Job do CI | Resultado |
 | :-- | :-- | :-- |
-| **Backend (`pytest`)** | `pytest backend/tests/ -q --cov=backend/app` | **225 passed, 11 skipped**, código 0. Cobertura global **91%** (`1447` statements, `136` miss; `security.py` 100%, `compliance_service.py` 100%, `review_service.py` 99%, `documents.py` 98%, `llm_client.py` 95%, `config.py` 94%, `rules_engine.py` 92%) |
-| **Backend Lint / Format** | `black --check backend/ && flake8 backend/ --count --max-line-length=100` | **OK** (`0` erros em todos os arquivos) |
-| **Frontend (`vitest` + `eslint` + `build`)** | `npm run lint && npm test && npm run build` | **8 passed** em 2 arquivos (`presentation.test.ts`: 6 testes; `api.test.ts`: 2 testes), `0` warnings no ESLint, bundle de produção gerado em 273 ms (`302.74 kB` JS / `96.57 kB` gzip) |
-| **Evals (`eval_pipeline.py`)** | `python evals/eval_pipeline.py` | **PASS**: **14/14** verificações aprovadas, **100,00%** de acurácia (mínimo exigido: 90%), **0 falsos positivos** (tolerância máxima: 0), tempo `0,004s` |
-| **Smoke (`make smoke`)** | `python backend/scripts/smoke_test.py` | **Código 0**: fluxo ponta a ponta validado (health -> upload PDF -> fila Celery/worker -> `COMPLETED` -> laudo `/compliance/results` -> proposta e confirmação por dois analistas em `/reviews`) |
-| **Documentação (`mkdocs`)** | `mkdocs build --strict` | **OK** (build estrito concluído sem warnings) |
+| **Backend (`pytest`)** | `Backend / Test (3.11)` e `(3.12)` | Sucesso nas duas versões. Cobertura global **92%** (`1635` statements, `123` miss) |
+| **Backend Lint / Format** | `Backend / Lint` (`black --check`, `flake8`) | Sucesso |
+| **Frontend (`vitest` + `eslint` + `build`)** | `Frontend / Lint`, `Test`, `Build` | **24 passed** em 3 arquivos; lint sem warnings; build e imagem gerados |
+| **Evals (`eval_pipeline.py`)** | `Backend / Evals` | **PASS**: **48** verificações, **100,00%** de acurácia (mínimo 90%), **0 falsos positivos**, sem regressão contra a linha de base. LLM desativada: regras HYBRID terminam em revisão manual |
+| **Smoke (`smoke_test.py`)** | `Infra / Stack` | **6/6**: health, upload, worker (`PENDING -> SUCCESS`), documento `COMPLETED`, laudo e revisão Maker-Checker `FINAL` |
+| **Resiliência (`resilience_test.sh`)** | `Infra / Stack` | MinIO, Redis e PostgreSQL parados: degradação controlada e recuperação automática |
+| **Segurança** | `Backend / Security`, `Frontend / Security`, Trivy em `Build`, CodeQL | Sucesso (Trivy `HIGH,CRITICAL` com `--exit-code 1`) |
+| **Fuzz** | `Backend / Fuzz` | Sucesso |
+| **Documentação (`mkdocs`)** | `Docs` (`mkdocs build --strict`) | Sucesso |
 
 Não validado: migration 002 em PostgreSQL; concorrência real (o lock `with_for_update` e a
 restrição única foram verificados apenas por leitura de código e teste sequencial).
