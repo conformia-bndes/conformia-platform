@@ -104,13 +104,16 @@ versão, e passam por validação em contêiner durante o próprio job (`import 
 resposta HTTP no Nginx do frontend). A chamada vem do `release-please.yml` porque tags criadas com
 o `GITHUB_TOKEN` não disparam outros workflows.
 
-**Validação pré-release (`workflow_dispatch` com `push=false`)**
+**Validação pré-release (`workflow_dispatch` com `push=false` e gate de CI)**
 
 Antes de publicar uma release ou ao alterar os `Dockerfile`s/`cd.yml`, execute **Actions → CD →
-Run workflow** informando `tag=v0.2.0` (ou a tag alvo) com `push` desligado (`false`, padrão). Os
-dois jobs da matriz (`Deploy (backend)` e `Deploy (frontend)`) constroem as imagens com provenance
-e SBOM, carregam a imagem localmente no runner e validam a inicialização do contêiner sem publicar
-no registro.
+Run workflow** informando `tag=v1.0.0-rc.1` (ou a tag alvo), `push=false` e `verify_ci=true`
+(padrão). O job `Gate de CI da tag` (`verify-ci`, via `scripts/verify_release_ci.py`) consulta a
+API de check-runs do GitHub e **bloqueia o workflow se o check `CI OK` do SHA exato da tag não
+estiver verde (`conclusion == "success"`)**. Com `push=true`, esse gate é obrigatório e não pode
+ser desativado. Em seguida, os dois jobs da matriz (`Deploy (backend)` e `Deploy (frontend)`)
+constroem as imagens com provenance e SBOM, carregam a imagem localmente no runner e validam a
+inicialização do contêiner sem publicar no registro.
 
 **Visibilidade dos pacotes no GHCR**
 
@@ -235,14 +238,26 @@ O `infra/docker-compose.yml` define limites explícitos de CPU e memória (`depl
 
 ---
 
-## 5. Release e rollback
+## 5. Runbook Reproduzível de Release e Rollback
 
-**Release**
+**Runbook Reproduzível de Release**
 
-1. Promover `dev` para `main` por PR.
-2. O release-please atualiza o PR de release (versão em `pyproject.toml`,
-   `backend/pyproject.toml`, `frontend/package.json` e `config.py`, mais o CHANGELOG).
-3. Merge do PR de release → tag `vX.Y.Z` e GitHub Release.
+1. **Conferir PRs e qualidade em `dev`:** garantir `gh pr list --state open` sem PRs bloqueadores
+   pendentes e `CI OK` verde no HEAD de `dev`.
+2. **Promover `dev` → `main` por PR:** abrir PR de `dev` para `main`, aguardar `CI OK` verde e
+   obter aprovação de par (ou registrar exceção conforme [Governança](governance.md)).
+3. **Revisar o PR automático do `release-please`:** conferir versão semântica (`pyproject.toml`,
+   `backend/pyproject.toml`, `frontend/package.json`, `backend/app/core/config.py`) e `CHANGELOG.md`;
+   confirmar `CI OK` verde no PR.
+4. **Fazer merge do PR de release:** o `release-please.yml` cria a tag `vX.Y.Z`, publica o GitHub
+   Release e aciona `cd.yml` com `push: true` e `verify_ci: true`.
+5. **Validar gate de CI e publicação no GHCR:**
+   - Confirmar job `Gate de CI da tag` (`verify-ci`) verde para o SHA exato da tag `vX.Y.Z`.
+   - Confirmar `Deploy (backend)` e `Deploy (frontend)` verdes (build, validação em contêiner e
+     `docker pull` das tags `vX.Y.Z` e `latest`).
+   - Em simulação sem publicação (`workflow_dispatch`), executar `gh workflow run cd.yml -f tag=v1.0.0-rc.1 -f push=false -f verify_ci=true`.
+6. **Sincronizar `main` → `dev`:** abrir PR de sincronização para manter versão e `CHANGELOG.md`
+   alinhados em `dev`.
 
 **Rollback**
 
