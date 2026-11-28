@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import hashlib
 import logging
 import os
+import time
 from typing import Any, Dict
 import uuid
 
@@ -12,7 +13,9 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy.orm import Session
 
 from app.core.celery_app import celery, process_document_task
+from app.core.config import settings
 from app.core.storage import storage_service
+from app.core.upload_timeout import UploadDependencyTimeout, upload_operation_runner
 from app.db.models.compliance import AuditLog
 from app.db.models.document import Document
 from app.db.session import get_db
@@ -38,6 +41,29 @@ logger = logging.getLogger(__name__)
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/tmp/conformia_uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+
+
+def _log_upload_dependency_failure(dependency: str, exc: Exception, started_at: float) -> None:
+    failure_type = type(exc).__name__
+    is_timeout = isinstance(exc, (TimeoutError, UploadDependencyTimeout)) or "Timeout" in (
+        failure_type
+    )
+    if is_timeout:
+        logger.warning(
+            "Upload dependency timeout: dependency=%s elapsed_seconds=%.3f "
+            "timeout_seconds=%.3f failure_type=%s",
+            dependency,
+            time.monotonic() - started_at,
+            settings.UPLOAD_TOTAL_TIMEOUT_SECONDS,
+            failure_type,
+        )
+    else:
+        logger.warning(
+            "Upload dependency unavailable: dependency=%s failure_type=%s",
+            dependency,
+            failure_type,
+        )
+
 
 PROCESSING_EXAMPLES: Dict[str, Dict[str, Any]] = {
     "sucesso": {
@@ -164,6 +190,9 @@ def upload_document(
     async_process=false). O estado pode ser consultado em GET /documents/{id} ou
     GET /documents/tasks/{task_id}.
     """
+    deadline_started = time.monotonic()
+    deadline = deadline_started + settings.UPLOAD_TOTAL_TIMEOUT_SECONDS
+
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -211,24 +240,24 @@ def upload_document(
     # Upload para o MinIO / S3 com fallback para armazenamento local
     storage_path = destination_path
     try:
-        storage_path = storage_service.upload_file(
-            file_data=content,
-            object_name=safe_filename,
-            content_type=file.content_type or "application/pdf",
+        storage_path = upload_operation_runner.run(
+            lambda cancellation_event: storage_service.upload_file(
+                file_data=content,
+                object_name=safe_filename,
+                content_type=file.content_type or "application/pdf",
+                cancellation_event=cancellation_event,
+            ),
+            deadline,
         )
     except Exception as storage_err:
+        _log_upload_dependency_failure("minio", storage_err, deadline_started)
         if async_process:
             # O worker roda em outro container e so enxerga o arquivo via MinIO.
             os.remove(destination_path)
-            logger.error(f"Falha no upload para o MinIO: {str(storage_err)}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Armazenamento de objetos (MinIO) indisponivel. Tente novamente.",
+                detail="Servico temporariamente indisponivel. Tente novamente em instantes.",
             )
-        logger.warning(
-            f"Falha no upload para o MinIO: {str(storage_err)}. "
-            f"Mantendo copia local em {destination_path}"
-        )
 
     # Criacao do registro no banco
     initial_status = (
@@ -265,17 +294,21 @@ def upload_document(
     task_id = None
     if async_process:
         try:
-            task_id = process_document_task.delay(doc.id, destination_path, safe_filename).id
+            # The worker does not guard EXTRACTION_FAILED; a publish may arrive after timeout.
+            def dispatch_task(cancellation_event):
+                if cancellation_event.is_set():
+                    raise UploadDependencyTimeout
+                return process_document_task.delay(doc.id, destination_path, safe_filename)
+
+            task_id = upload_operation_runner.run(dispatch_task, deadline).id
         except Exception as task_err:
-            # Sem fallback silencioso: um broker fora do ar deve aparecer como erro,
-            # e nao como "sucesso" processado fora da fila.
-            logger.error(f"Falha ao despachar tarefa ao Celery: {str(task_err)}")
+            _log_upload_dependency_failure("redis", task_err, deadline_started)
             doc.status = "EXTRACTION_FAILED"
             doc.extracted_metadata = {"error": "Fila de processamento indisponivel."}
             db.commit()
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Fila de processamento (Redis/Celery) indisponivel.",
+                detail="Servico temporariamente indisponivel. Tente novamente em instantes.",
             )
     else:
         try:

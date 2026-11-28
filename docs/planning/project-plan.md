@@ -4,7 +4,8 @@
     Planejamento elaborado no início do projeto, mantido como registro. O escopo, as datas e o
     estado atual estão no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md), no
     [Backlog](IMPLEMENTATION_BACKLOG.md) e no [Relatório de Validação](VALIDATION_REPORT.md).
-    A data de entrega adotada é **05/12/2026**.
+    A data de entrega vigente é **27/11/2026** (auditoria de 23/11/2026; antes 05/12/2026).
+    As datas de sprints e de encerramento abaixo (07/12/2026) são históricas.
 
 **Plataforma de Intelligent Document Processing para Verificação Automatizada de Conformidade**
 _Documento Inicial de Direcionamento Técnico_

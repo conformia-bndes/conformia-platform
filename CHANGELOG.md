@@ -5,6 +5,42 @@ Todas as mudancas notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semantico](https://semver.org/lang/pt-BR/).
 
+## [1.0.0-rc.1](https://github.com/conformia-bndes/conformia-platform/compare/v0.4.1...v1.0.0-rc.1) (2026-11-27)
+
+
+### Adicionado
+
+* **frontend:** adicionar backoff, limite e pausa por visibilidade no polling ([#175](https://github.com/conformia-bndes/conformia-platform/issues/175)) ([ba7fc18](https://github.com/conformia-bndes/conformia-platform/commit/ba7fc18937e3537b041bb668180bba1f29ebb375))
+* **frontend:** aplicar identidade visual institucional BNDES ([a59a9c2](https://github.com/conformia-bndes/conformia-platform/commit/a59a9c238f4121f966e63cd776142e50a29ab869))
+* **frontend:** confianca da extracao e valores nao textuais nas evidencias por pagina ([5e70e7e](https://github.com/conformia-bndes/conformia-platform/commit/5e70e7e17dc3b463f9c0c8a9813177d917662712))
+* **frontend:** confianca da extracao e valores nao textuais nas evidencias por pagina ([d8a33f1](https://github.com/conformia-bndes/conformia-platform/commit/d8a33f1aa385510955bb6fed99aa9ae058719206))
+* **frontend:** drag-and-drop, dropdowns no laudo e menu mobile responsivo ([3e000e5](https://github.com/conformia-bndes/conformia-platform/commit/3e000e55b2bd50a5057e6be851b0e0626917bc5a))
+* **frontend:** identidade visual BNDES, acessibilidade, UX responsiva e traducao PT-BR ([632aa18](https://github.com/conformia-bndes/conformia-platform/commit/632aa18977b53688fefdca504df27c630b294c6c))
+* **frontend:** melhorar acessibilidade WAI-ARIA, foco e atalhos de teclado ([9f751d5](https://github.com/conformia-bndes/conformia-platform/commit/9f751d5b53730658107937b3b71350631031f6be))
+* **frontend:** polling backoff 175 ([af23387](https://github.com/conformia-bndes/conformia-platform/commit/af23387eba45809b5659f6ce89283d2602bb7d1d))
+* **frontend:** validar upload e formato da chave e formatar evidencias ([2c0eaf4](https://github.com/conformia-bndes/conformia-platform/commit/2c0eaf40b86535536247d339ebaf6cf686a27967))
+* **idp:** detectar licenca ambiental e CEIS/CNEP no parser ([8bb2283](https://github.com/conformia-bndes/conformia-platform/commit/8bb22834914bef7ec12803e1d1e85ae9c96a6c03))
+
+
+### Corrigido
+
+* **backend:** total upload deadline for MinIO and Redis calls ([9bfad81](https://github.com/conformia-bndes/conformia-platform/commit/9bfad817f255eddd265cee3d9911196ca86785c6))
+* **frontend:** avisar falhas consecutivas apos esgotar o polling ([ab9972c](https://github.com/conformia-bndes/conformia-platform/commit/ab9972c86c61f15d3d277efb1adf5b5c476c6857))
+* **frontend:** foco estavel no modal da chave e tom seguro na revisao final ([81f72f8](https://github.com/conformia-bndes/conformia-platform/commit/81f72f8c5e7f0fa8824dde2f2f124a09bd3752e7))
+* **frontend:** traduzir rotulos para PT-BR e corrigir cores semanticas de status ([a1ab3c9](https://github.com/conformia-bndes/conformia-platform/commit/a1ab3c9ae89214f8f44d468da9c57a7133e4c9d5))
+* **rules:** revisao manual para sancao descrita sem termo exato na RULE-006 ([c4dba07](https://github.com/conformia-bndes/conformia-platform/commit/c4dba073decdc40d8c3c152ae2c1fe5eacde6871))
+
+
+### Documentacao
+
+* alinhar RULE-BNDES-006 ao [#143](https://github.com/conformia-bndes/conformia-platform/issues/143) e registrar lacuna da multa ([8e9211e](https://github.com/conformia-bndes/conformia-platform/commit/8e9211e48337917905d122a226e7ed4d4f4ddb10))
+* **planning:** atualizar branch, datas e status para 13/11 ([abc4a22](https://github.com/conformia-bndes/conformia-platform/commit/abc4a22adfdf9f020f243e26efe64f52fb3dcffe))
+* **planning:** atualizar documentos com a auditoria de 23/11 ([36c5d4a](https://github.com/conformia-bndes/conformia-platform/commit/36c5d4a283e07ac0d01b1646687010565e4affc1)), closes [#130](https://github.com/conformia-bndes/conformia-platform/issues/130)
+* **planning:** marcar datas antigas de entrega como historicas ([9d7bd34](https://github.com/conformia-bndes/conformia-platform/commit/9d7bd346946c377097607b0127bae5757d81ee5a))
+* **planning:** vincular itens T-ID concluidos a issues e PRs de origem ([740b395](https://github.com/conformia-bndes/conformia-platform/commit/740b3957fa61983e3aa7e6258838ae96758eb34d))
+* **planning:** vincular itens T-ID concluidos a issues e PRs de origem ([72206c8](https://github.com/conformia-bndes/conformia-platform/commit/72206c89b1350ee07ad6a16197bdaabc7c598643)), closes [#131](https://github.com/conformia-bndes/conformia-platform/issues/131)
+* **samples:** adicionar dossie digitalizado multipagina para testes de OCR lento ([87d5f37](https://github.com/conformia-bndes/conformia-platform/commit/87d5f37da9840fcd0b62162c51cd385bb81762f1))
+
 ## [0.4.1](https://github.com/conformia-bndes/conformia-platform/compare/v0.4.0...v0.4.1) (2026-11-22)
 
 

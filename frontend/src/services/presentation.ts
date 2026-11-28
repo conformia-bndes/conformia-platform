@@ -26,10 +26,10 @@ export function presentStatus(status: string): StatusPresentation {
 }
 
 export const TONE_CLASSES: Record<StatusTone, string> = {
-  success: 'bg-emerald-100 text-emerald-800',
-  danger: 'bg-rose-100 text-rose-800',
-  warning: 'bg-amber-100 text-amber-800',
-  neutral: 'bg-slate-100 text-slate-600',
+  success: 'bg-bndes-green-tint text-bndes-green-ink border border-bndes-green-border',
+  danger: 'bg-bndes-orange-tint text-bndes-orange-ink border border-bndes-orange-border',
+  warning: 'bg-bndes-ochre-tint text-bndes-ochre-ink border border-bndes-ochre-border',
+  neutral: 'bg-bndes-surface-muted text-bndes-ink-secondary border border-bndes-border',
 };
 
 /** Mensagem legível para o analista a partir de uma falha de chamada à API. */
@@ -56,6 +56,103 @@ const REVIEW_STATE_PRESENTATION: Record<ReviewState, StatusPresentation> = {
 
 export function presentReviewState(state: string): StatusPresentation {
   return REVIEW_STATE_PRESENTATION[state as ReviewState] ?? REVIEW_STATE_PRESENTATION.NO_REVIEW;
+}
+
+/**
+ * Rótulo e tom semântico do resumo da revisão humana.
+ * Quando FINAL, o tom reflete a decisão final (REJEITAR = danger, EXCEÇÃO = warning, APROVAR = success).
+ */
+export function presentReviewSummary(
+  state: string,
+  finalDecision: string | null | undefined,
+): StatusPresentation {
+  const base = presentReviewState(state);
+  if (state !== 'FINAL' || !finalDecision) {
+    return base;
+  }
+
+  // Somente APPROVE e exibido como sucesso; decisao desconhecida nunca parece conforme.
+  let tone: StatusTone = 'warning';
+  if (finalDecision === 'APPROVE') {
+    tone = 'success';
+  } else if (finalDecision === 'REJECT') {
+    tone = 'danger';
+  }
+
+  return {
+    label: `${base.label} • ${presentReviewDecision(finalDecision)}`,
+    tone,
+  };
+}
+
+const REVIEW_EVENT_PRESENTATION: Record<string, StatusPresentation> = {
+  PROPOSED: { label: 'Proposta', tone: 'neutral' },
+  CONFIRMED: { label: 'Confirmada', tone: 'success' },
+  RETURNED: { label: 'Devolvida', tone: 'danger' },
+};
+
+export function presentReviewEventType(eventType: string): StatusPresentation {
+  return REVIEW_EVENT_PRESENTATION[eventType] ?? { label: eventType, tone: 'neutral' };
+}
+
+const RULE_TYPE_LABELS: Record<string, string> = {
+  DETERMINISTIC: 'Determinística',
+  HYBRID: 'Híbrida (IA + Regras)',
+};
+
+export function presentRuleType(ruleType: string): string {
+  return RULE_TYPE_LABELS[ruleType] ?? ruleType;
+}
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  CND_FEDERAL: 'CND Federal (RFB / PGFN)',
+  CRF_FGTS: 'CRF FGTS (Caixa)',
+  CNDT_TRABALHISTA: 'CNDT Trabalhista (TST)',
+  FALENCIA_RECUPERACAO: 'Certidão de Falência e Recuperação',
+  LICENCA_AMBIENTAL: 'Licença Ambiental',
+  INTEGRIDADE_CEIS_CNEP: 'Consulta CEIS / CNEP',
+};
+
+export function presentDocumentType(docType: string | null | undefined): string {
+  if (!docType) return 'Não identificada (revisão manual)';
+  return DOCUMENT_TYPE_LABELS[docType] ?? docType;
+}
+
+const EXTRACTED_FIELD_LABELS: Record<string, string> = {
+  document_type: 'Tipo de Documento',
+  cnpj: 'CNPJ',
+  razao_social: 'Razão Social',
+  data_validade: 'Data de Validade',
+  data_emissao: 'Data de Emissão',
+  numero_certidao: 'Número da Certidão',
+  codigo_controle: 'Código de Controle',
+  situacao: 'Situação',
+};
+
+export function presentExtractedFieldName(name: string): string {
+  return EXTRACTED_FIELD_LABELS[name] ?? name;
+}
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  DOCUMENT_UPLOADED: 'Documento Enviado',
+  COMPLIANCE_VERIFIED: 'Conformidade Avaliada',
+  REVIEW_PROPOSED: 'Revisão Proposta',
+  REVIEW_CONFIRMED: 'Revisão Confirmada',
+  REVIEW_RETURNED: 'Revisão Devolvida',
+};
+
+export function presentAuditAction(action: string): string {
+  return AUDIT_ACTION_LABELS[action] ?? action;
+}
+
+const AUDIT_ENTITY_LABELS: Record<string, string> = {
+  DOCUMENT: 'Documento',
+  COMPLIANCE: 'Laudo',
+  REVIEW: 'Revisão',
+};
+
+export function presentAuditEntity(entityType: string): string {
+  return AUDIT_ENTITY_LABELS[entityType] ?? entityType;
 }
 
 const REVIEW_DECISION_LABELS: Record<ReviewDecision, string> = {
@@ -91,4 +188,87 @@ export function presentDocumentStatus(status: string): StatusPresentation {
       tone: 'neutral',
     }
   );
+}
+
+const RULE_EVIDENCE_LABELS: Record<string, string> = {
+  matched_keywords: 'Palavras-chave encontradas',
+  matched_anti_keywords: 'Termos impeditivos',
+  matched_manual_review_keywords: 'Termos para revisão manual',
+  missing_keywords: 'Termos ausentes',
+  matched_regex_patterns: 'Padrões validados',
+  validity_date: 'Validade extraída',
+  document_type: 'Tipologia',
+  evidence: 'Citação literal',
+  reasoning: 'Fundamentação',
+  hallucination_detected: 'Inconsistência detectada',
+};
+
+function formatEvidenceValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => formatEvidenceValue(item)).join(', ');
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'Sim' : 'Não';
+  }
+  if (typeof value === 'object' && value !== null) {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
+export interface FormattedRuleEvidence {
+  key: string;
+  label: string;
+  displayValue: string;
+}
+
+/** Formata o dicionário de evidência por regra para exibição legível sem [object Object]. */
+export function formatRuleEvidenceEntries(
+  evidence: Record<string, unknown> | null | undefined,
+): FormattedRuleEvidence[] {
+  if (!evidence) return [];
+
+  return Object.entries(evidence)
+    .filter(([, value]) => {
+      if (value === null || value === undefined) return false;
+      if (Array.isArray(value) && value.length === 0) return false;
+      return true;
+    })
+    .map(([key, value]) => ({
+      key,
+      label: RULE_EVIDENCE_LABELS[key] ?? key,
+      displayValue: formatEvidenceValue(value),
+    }));
+}
+
+/**
+ * Texto de exibição do valor de um campo extraído. Valores ausentes caem no texto bruto
+ * (`raw_value`) e, sem ele, em "-"; objetos e listas viram JSON em vez de "[object Object]".
+ */
+export function formatExtractedValue(value: unknown, rawValue?: string | null): string {
+  if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) {
+    return rawValue && rawValue.trim() ? rawValue : '-';
+  }
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+/**
+ * Rótulo de confiança da extração, mostrado só quando ela é menor que 100% (OCR ou
+ * heurística): sinaliza ao analista o trecho que merece conferência. Valor ausente ou
+ * fora de [0, 1] não é exibido.
+ */
+export function formatConfidence(confidence: number | null | undefined): string | null {
+  if (typeof confidence !== 'number' || !Number.isFinite(confidence)) return null;
+  if (confidence < 0 || confidence >= 1) return null;
+  return `Confiança ${Math.round(confidence * 100)}%`;
 }
