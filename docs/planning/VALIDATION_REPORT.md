@@ -176,17 +176,19 @@ Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml`
 
 ## 6. Consolidação Pré-Go/No-Go (Issue #64) — 27/11/2026
 
-Base verificada em **27/11/2026**: `origin/main` em `78e65a5` (tag `v1.0.0-rc.1`, PR `#192`) e
-`origin/dev` em `035c255` (PR `#194`), com **0 PRs abertos** no repositório.
+Base verificada em **27/11/2026**: `origin/main` em `78e65a5` (tag `v1.0.0-rc.1`, PR `#192`),
+`origin/dev` em `035c255` (PR `#194`) e PRs de endurecimento/validação `#195` (`#162`), `#196`
+(`#163`), `#197` (`#167`), `#198` (`#174`), `#200` (`#171`) e `#201` (`#63`).
 
 | Verificação | Referência / Origem | Resultado |
 | :-- | :-- | :-- |
 | **CI completo em `dev` (`035c255`)** | GitHub Actions run [46093243049](https://github.com/conformia-bndes/conformia-platform/actions/runs/46093243049) | **Sucesso** (`CI OK` verde) |
 | **CodeQL em `dev` (`035c255`)** | GitHub Actions run [46093242982](https://github.com/conformia-bndes/conformia-platform/actions/runs/46093242982) | **Sucesso** |
 | **Release Candidate `v1.0.0-rc.1`** | `origin/main` (`78e65a5`, PR `#192`) + sincronização `dev` (PR `#193`) | **Publicada** (regressão completa verde no run `46049692868`) |
-| **Evals (`eval_pipeline.py`)** | Gate `Backend / Evals` + execução local | **PASS**: `48/48`, `100,00%`, **0 falsos positivos** |
-| **Smoke e Resiliência em Compose** | Gate `Infra / Stack` (CI) | **PASS** (6/6 etapas + resiliência + k6 + Schemathesis); execução local pendente de Docker ativo na estação de demo |
-| **Issues P1 restantes (Critério Go 6)** | `gh issue list --state open` (27/11/2026) | **Pendente**: `#162`, `#163`, `#167` com branches prontas para PR; `#55`, `#164`, `#165`, `#166`, `#168` abertas sob outros responsáveis |
+| **Evals (`eval_pipeline.py`)** | Gate `Backend / Evals` + execução local (PR `#195`) | **PASS**: `48/48`, `100,00%`, **0 falsos positivos** |
+| **Migrations `001`–`003` em PostgreSQL 16 real (`#167`)** | `MIGRATION_TEST_DATABASE_URL=postgresql+psycopg2://... pytest backend/tests/test_migrations.py -q` (PR `#197`) | **PASS**: `23 passed, 0 skipped` (triggers PL/pgSQL `audit_logs` / `review_events` + `CHECK` constraints comprovados em `postgres:16-alpine`) |
+| **Smoke e OCR em Docker Compose local (`#63`)** | `make up && make smoke` + `validate_ocr_container.py` + ensaio dos 5 atos (PR `#201`) | **PASS**: `make smoke` 6/6 (`STARTED -> SUCCESS`, `COMPLIANT`, revisão `FINAL`); `[ocr-check] OK - method=ocr type=CND_FEDERAL`; 5 atos ao vivo (`200` UI, `COMPLIANT`, `NON_COMPLIANT`, `MANUAL_REVIEW_REQUIRED`, `201 -> 403 -> 201 FINAL`, `audit-trail`) |
+| **Issues P1 restantes (Critério Go 6)** | `gh issue list --state open` (27/11/2026) | **Em consolidação**: `#162` (PR `#195`), `#163` (PR `#196`), `#167` (PR `#197`), `#63` (PR `#201`) com CI verde; `#55`, `#164`, `#165`, `#166`, `#168` abertas sob outros responsáveis |
 
 ---
 
