@@ -53,7 +53,7 @@ class Settings(BaseSettings):
 
     # Informações do Projeto
     PROJECT_NAME: str = "Conform.IA BNDES Platform"
-    VERSION: str = "0.4.1"  # x-release-please-version
+    VERSION: str = "1.0.0-rc.1"  # x-release-please-version
     API_V1_STR: str = "/api/v1"
     # Padroes seguros: sem .env explicito a aplicacao sobe como producao, sem DEBUG e sem
     # acesso anonimo. Desenvolvimento local liga cada um deles de forma explicita (.env.example).
@@ -177,6 +177,7 @@ class Settings(BaseSettings):
     MINIO_ROOT_PASSWORD: str
     MINIO_BUCKET_NAME: str = "documents"
     MINIO_USE_SSL: bool = False
+    UPLOAD_TOTAL_TIMEOUT_SECONDS: float = Field(default=8.0, gt=0)
 
     # Motor de Regras e IDP
     RULES_PATH: str = "/rules/schemas"

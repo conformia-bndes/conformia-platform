@@ -102,6 +102,7 @@ nav:
       - Avaliação Contínua (Evals): engineering/harness-evals.md
       - Testes e Robustez: engineering/testing.md
       - MLOps: engineering/mlops.md
+      - Identidade Visual (Frontend): engineering/identidade-visual.md
   - Operação:
       - DevOps e CI/CD: development/devops.md
       - Segurança, LGPD e Auditoria: planning/governance-security.md

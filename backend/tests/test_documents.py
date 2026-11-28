@@ -11,7 +11,9 @@ VALID_PDF = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
 class _FakeStorage:
     """Substitui o MinIO nos testes de upload."""
 
-    def upload_file(self, file_data, object_name, content_type="application/pdf"):
+    def upload_file(
+        self, file_data, object_name, content_type="application/pdf", cancellation_event=None
+    ):
         return f"s3://documents/{object_name}"
 
 
@@ -99,7 +101,10 @@ def test_upload_returns_503_when_queue_is_down(client, monkeypatch):
         files={"file": ("certidao.pdf", io.BytesIO(VALID_PDF), "application/pdf")},
     )
     assert response.status_code == 503
-    assert "Fila" in response.json()["detail"]
+    assert (
+        response.json()["detail"]
+        == "Servico temporariamente indisponivel. Tente novamente em instantes."
+    )
 
 
 def test_upload_returns_503_when_storage_is_down(client, monkeypatch):

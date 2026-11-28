@@ -4,7 +4,8 @@
     Planejamento elaborado no início do projeto, mantido como registro. O escopo, as datas e o
     estado atual estão no [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md), no
     [Backlog](IMPLEMENTATION_BACKLOG.md) e no [Relatório de Validação](VALIDATION_REPORT.md).
-    A data de entrega adotada é **05/12/2026**.
+    A data de entrega vigente é **27/11/2026** (auditoria de 23/11/2026; milestones M4 25/11,
+    M5 26/11, M6 27/11 e M7 10/12). As datas de sprints abaixo são históricas.
 
 Este documento detalha o planejamento operacional das 8 sprints de desenvolvimento da plataforma Conform.IA BNDES até a data final de encerramento em **07/12/2026**, incluindo o catálogo de épicos e a Definition of Done (DoD) formal.
 

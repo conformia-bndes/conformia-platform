@@ -1,10 +1,12 @@
-# Checklist Go/No-Go - Entrega 05/12/2026
+# Checklist Go/No-Go - Entrega 27/11/2026
 
 Documento operacional da **Issue #64** (`M6 - Go/No-Go e entrega`), derivado dos critérios da
-seção 5 de [Plano de Entrega (05/12/2026)](DELIVERY_PLAN_2026_12_05.md) e consolidado a partir de
+seção 5 de [Plano de Entrega (27/11/2026)](DELIVERY_PLAN_2026_12_05.md) e consolidado a partir de
 [Relatório de Validação](VALIDATION_REPORT.md).
 
-> **Data limite da decisão:** `04/12/2026` (após Code Freeze em `01/12/2026`, RC1 `#62` e ensaio `#63`).
+> **Data limite da decisão:** `27/11/2026` (M6), após o code freeze de `26/11/2026` (M5) e a RC1 `#62`.
+> Cronograma da auditoria de 23/11/2026; as datas anteriores (freeze em 01/12, decisão em 04/12)
+> são históricas.
 > **Estado em 22/11/2026:** pré-avaliação em andamento — decisão formal ainda **não emitida** até
 > conclusão dos itens pendentes abaixo.
 
@@ -23,7 +25,7 @@ seção 5 de [Plano de Entrega (05/12/2026)](DELIVERY_PLAN_2026_12_05.md) e cons
 
 ---
 
-## 2. Bloqueadores e Riscos Residuais a Avaliar em 04/12
+## 2. Bloqueadores e Riscos Residuais a Avaliar em 27/11
 
 - **Sincronização `main` <-> `dev` e PRs pendentes:** garantir que `T06b`/`T06c` (`#145`), `ADR-004` (`#144`), `#138` e a decisão sobre `#146`/`#134` estejam consolidados em `main` antes do corte da tag final.
 - **Provedor LLM na demo (`#129`):** OpenRouter `:free` (`particle-ai/particle-1:free`) validado com dados sintéticos, porém sujeito a `HTTP 429` e retenção de dados; manter estritamente dados fictícios na demo, rotacionar a chave antes do evento e manter o plano B fail-closed preparado. Para uso com documentos reais em produção, permanece necessária decisão contratual/infraestrutura por endpoint corporativo sem retenção (LGPD / RNF05).
@@ -32,14 +34,14 @@ seção 5 de [Plano de Entrega (05/12/2026)](DELIVERY_PLAN_2026_12_05.md) e cons
 
 ---
 
-## 3. Ata de Decisão (Preencher em 04/12/2026)
+## 3. Ata de Decisão (Preencher em 27/11/2026)
 
-- **Data da reunião:** `____/12/2026`
+- **Data da reunião:** `____/11/2026`
 - **Commit / Tag candidata avaliada:** `________________`
 - **Veredito:**
   - `[ ]` **GO** — Todos os 6 critérios obrigatórios comprovados no commit candidato.
   - `[ ]` **GO COM RESTRIÇÕES** — Critérios 1–4 e 6 comprovados; item 5 substituído ou restrição formalmente aceita e documentada abaixo.
   - `[ ]` **NO-GO** — Falso positivo em evals, falha de smoke ou fluxo essencial sem comprovação.
 - **Riscos residuais aceitos e responsáveis:**
-  - *(Registrar na reunião de 04/12/2026)*
+  - *(Registrar na reunião de 27/11/2026)*
 - **Aprovadores:** Tech Lead (`pedrohpsantos`) e integrantes presentes.

@@ -2,6 +2,7 @@
 
 import io
 import logging
+import threading
 from typing import Optional
 
 import urllib3
@@ -9,6 +10,11 @@ from minio import Minio
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+class UploadCancelled(Exception):
+    """Raised when an upload is cancelled before the object write starts."""
+
 
 # Timeouts e tentativas curtos: com o MinIO fora do ar, a politica padrao de reintentos do
 # cliente prende a requisicao (e o healthcheck) por dezenas de segundos. Falhar rapido deixa a
@@ -44,27 +50,43 @@ class StorageService:
 
     @property
     def client(self) -> Minio:
+        return self._get_client()
+
+    def _get_client(self, cancellation_event: Optional[threading.Event] = None) -> Minio:
         if self._client is None:
             self._client = self._build_client(OPERATION_TIMEOUT, OPERATION_RETRIES)
         if not self._bucket_ready:
-            self._ensure_bucket()
+            self._ensure_bucket(cancellation_event)
         return self._client
 
-    def _ensure_bucket(self) -> None:
+    def _ensure_bucket(self, cancellation_event: Optional[threading.Event] = None) -> None:
         """Verifica se o bucket existe; cria se necessario.
 
         So marca o bucket como pronto apos sucesso, para tentar de novo caso o MinIO
         ainda estivesse subindo na primeira chamada.
         """
         try:
-            if not self._client.bucket_exists(self.bucket_name):
+            bucket_exists = self._client.bucket_exists(self.bucket_name)
+            self._raise_if_upload_cancelled(cancellation_event)
+            if not bucket_exists:
                 self._client.make_bucket(self.bucket_name)
-                logger.info(f"Bucket MinIO '{self.bucket_name}' criado com sucesso.")
+                logger.info("Bucket MinIO criado com sucesso.")
+            self._raise_if_upload_cancelled(cancellation_event)
             self._bucket_ready = True
+        except UploadCancelled:
+            raise
         except Exception as exc:
             logger.warning(
-                f"Nao foi possivel verificar/criar bucket '{self.bucket_name}': {str(exc)}"
+                "Nao foi possivel verificar/criar bucket MinIO: failure_type=%s",
+                type(exc).__name__,
             )
+
+    @staticmethod
+    def _raise_if_upload_cancelled(
+        cancellation_event: Optional[threading.Event],
+    ) -> None:
+        if cancellation_event is not None and cancellation_event.is_set():
+            raise UploadCancelled
 
     def ping(self) -> bool:
         """Retorna True se o MinIO responde e o bucket esta disponivel."""
@@ -83,11 +105,17 @@ class StorageService:
             return False
 
     def upload_file(
-        self, file_data: bytes, object_name: str, content_type: str = "application/pdf"
+        self,
+        file_data: bytes,
+        object_name: str,
+        content_type: str = "application/pdf",
+        cancellation_event: Optional[threading.Event] = None,
     ) -> str:
         """Faz upload de arquivo para o MinIO e retorna o storage_path."""
         data_stream = io.BytesIO(file_data)
-        self.client.put_object(
+        client = self._get_client(cancellation_event)
+        self._raise_if_upload_cancelled(cancellation_event)
+        client.put_object(
             bucket_name=self.bucket_name,
             object_name=object_name,
             data=data_stream,
@@ -95,7 +123,7 @@ class StorageService:
             content_type=content_type,
         )
         storage_path = f"s3://{self.bucket_name}/{object_name}"
-        logger.info(f"Arquivo enviado ao MinIO: {storage_path}")
+        logger.info("Arquivo enviado ao MinIO.")
         return storage_path
 
     def download_file(self, object_name: str, destination_path: str) -> None:
