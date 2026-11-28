@@ -23,6 +23,7 @@ class Principal:
 
     user_id: str
     role: str
+    auth_type: str = "personal"  # "personal", "service", "anonymous"
 
 
 API_KEY_HASH_ITERATIONS = 200_000
@@ -82,27 +83,27 @@ def _is_service_key(token: Optional[str]) -> bool:
     return bool(token) and hmac.compare_digest(token, settings.API_KEY)
 
 
-def verify_api_key(
+def authenticate_principal(
     api_key: Optional[str] = Security(api_key_header),
     credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_auth),
-) -> str:
+) -> Principal:
     """
-    Valida credenciais da API via cabecalho X-API-Key ou Bearer token: a chave de servico
-    (API_KEY) ou uma chave pessoal de API_USERS.
-    O acesso sem credencial so existe com ALLOW_ANONYMOUS_ACCESS=true (opt-in explicito, nunca
-    em producao); uma credencial enviada e sempre validada.
+    Resolve a identidade autenticada via X-API-Key ou Bearer token.
+    - Chave pessoal (`API_USERS`): Principal(user_id, role, auth_type="personal").
+    - Chave de servico (`API_KEY`): Principal("service", "SERVICE", auth_type="service").
+    - Acesso anonimo: somente com ALLOW_ANONYMOUS_ACCESS=true (nunca em producao).
     """
     token = _extract_token(api_key, credentials)
 
     if settings.ALLOW_ANONYMOUS_ACCESS and not token:
-        return "dev_default_user"
+        return Principal(user_id="dev_default_user", role="ADMIN", auth_type="anonymous")
 
     if _is_service_key(token):
-        return "service"
+        return Principal(user_id="service", role="SERVICE", auth_type="service")
 
     principal = resolve_principal(token)
     if principal is not None:
-        return principal.user_id
+        return principal
 
     logger.warning("Tentativa de acesso com credencial invalida.")
     raise HTTPException(
@@ -110,6 +111,49 @@ def verify_api_key(
         detail="Credenciais de autenticacao ausentes ou invalidas.",
         headers={"WWW-Authenticate": "ApiKey"},
     )
+
+
+def verify_api_key(
+    api_key: Optional[str] = Security(api_key_header),
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_auth),
+) -> str:
+    """
+    Valida credenciais da API via cabecalho X-API-Key ou Bearer token e retorna o
+    identificador do executor (`user_id`, `"service"` ou `"dev_default_user"`).
+    """
+    return authenticate_principal(api_key=api_key, credentials=credentials).user_id
+
+
+def require_access(*roles: str, allow_service: bool = False) -> Callable[..., Principal]:
+    """
+    Dependencia de RBAC por rota: exige autenticacao e perfil autorizado.
+    - `allow_service=True` permite a chave de servico (`API_KEY`) apenas nas rotas de
+      automacao explicitamente documentadas (smoke, carga, resiliencia, leitura/ingestao).
+    - Em modo `ALLOW_ANONYMOUS_ACCESS=true` (apenas dev/test), retorna `dev_default_user`.
+    """
+
+    def dependency(
+        api_key: Optional[str] = Security(api_key_header),
+        credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_auth),
+    ) -> Principal:
+        principal = authenticate_principal(api_key=api_key, credentials=credentials)
+        if principal.auth_type == "anonymous":
+            return principal
+        if principal.auth_type == "service":
+            if allow_service:
+                return principal
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Chave de servico nao autorizada para esta operacao.",
+            )
+        if principal.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Perfil {principal.role} nao autorizado para esta operacao.",
+            )
+        return principal
+
+    return dependency
 
 
 def require_role(*roles: str) -> Callable[..., Principal]:
@@ -138,3 +182,9 @@ def require_role(*roles: str) -> Callable[..., Principal]:
         return principal
 
     return dependency
+
+
+# Matriz RBAC padrao por tipo de rota (ADR-005 / Issue #163)
+require_read_access = require_access("ANALISTA", "AUDITOR", "ADMIN", allow_service=True)
+require_write_access = require_access("ANALISTA", "ADMIN", allow_service=True)
+require_audit_access = require_access("ANALISTA", "AUDITOR", "ADMIN", allow_service=True)

@@ -94,6 +94,7 @@ nav:
           - ADR-002 Adoção do Astral uv: architecture/adr-002-astral-uv-toolchain.md
           - ADR-003 React SPA vs Next.js: architecture/adr-003-spa-vs-nextjs.md
           - ADR-004 Proteção de main e revisão: architecture/adr-004-protecao-main-e-revisao.md
+          - ADR-005 Chaves pessoais e RBAC por rota: architecture/adr-005-autenticacao-chaves-pessoais-rbac.md
           - Modelo de ADR: architecture/adr-template.md
   - Engenharia:
       - Pipeline IDP e OCR: engineering/idp-pipeline.md
@@ -101,6 +102,7 @@ nav:
       - Maker-Checker e Guardrails: engineering/maker-checker.md
       - Avaliação Contínua (Evals): engineering/harness-evals.md
       - Testes e Robustez: engineering/testing.md
+      - Diagnóstico Reavaliação × Revisão (#174): engineering/diagnostico-issue-174-reavaliacao-revisao.md
       - MLOps: engineering/mlops.md
       - Identidade Visual (Frontend): engineering/identidade-visual.md
   - Operação:

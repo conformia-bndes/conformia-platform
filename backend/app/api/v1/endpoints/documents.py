@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.celery_app import celery, process_document_task
 from app.core.config import settings
+from app.core.security import Principal, require_read_access, require_write_access
 from app.core.storage import storage_service
 from app.core.upload_timeout import UploadDependencyTimeout, upload_operation_runner
 from app.db.models.compliance import AuditLog
@@ -183,6 +184,7 @@ def upload_document(
         ),
     ),
     db: Session = Depends(get_db),
+    principal: Principal = Depends(require_write_access),
 ) -> DocumentUploadResponse:
     """
     Recebe um arquivo PDF, valida assinatura binaria (%PDF-), persiste no MinIO
@@ -273,19 +275,24 @@ def upload_document(
         status=initial_status,
     )
     db.add(doc)
-    # RF10: o hash fixa a identidade do arquivo que fundamentara o laudo.
+    # RF10: o hash fixa a identidade do arquivo e o executor real fica na trilha.
     file_sha256 = hashlib.sha256(content).hexdigest()
+    actor_id = principal.user_id if isinstance(principal, Principal) else "API_UPLOAD"
+    actor_role = principal.role if isinstance(principal, Principal) else None
+    upload_details: Dict[str, Any] = {
+        "sha256": file_sha256,
+        "file_size": file_size,
+        "content_type": doc.content_type,
+    }
+    if actor_role:
+        upload_details["actor_role"] = actor_role
     db.add(
         AuditLog(
             entity_type="DOCUMENT",
             entity_id=doc_id,
             action="DOCUMENT_UPLOADED",
-            performed_by="API_UPLOAD",
-            details={
-                "sha256": file_sha256,
-                "file_size": file_size,
-                "content_type": doc.content_type,
-            },
+            performed_by=actor_id,
+            details=upload_details,
         )
     )
     db.commit()
@@ -355,7 +362,11 @@ def upload_document(
     )
 
 
-@router.get("/tasks/{task_id}", summary="Consultar Estado de uma Tarefa de Processamento")
+@router.get(
+    "/tasks/{task_id}",
+    summary="Consultar Estado de uma Tarefa de Processamento",
+    dependencies=[Depends(require_read_access)],
+)
 def get_task_status(task_id: str):
     """
     Retorna o estado Celery da tarefa: PENDING, STARTED, RETRY, SUCCESS ou FAILURE.
@@ -390,6 +401,7 @@ def get_task_status(task_id: str):
     "",
     response_model=DocumentListResponse,
     summary="Listar Documentos Ingeridos",
+    dependencies=[Depends(require_read_access)],
 )
 def list_documents(
     skip: SkipParam = 0, limit: LimitParam = 50, db: Session = Depends(get_db)
@@ -419,6 +431,7 @@ def list_documents(
     "/{document_id}",
     response_model=DocumentDetailResponse,
     summary="Obter Detalhes do Documento e Texto Extraido",
+    dependencies=[Depends(require_read_access)],
 )
 def get_document(document_id: str, db: Session = Depends(get_db)) -> DocumentDetailResponse:
     """Retorna dados detalhados do documento pelo identificador unico."""
@@ -446,6 +459,7 @@ def get_document(document_id: str, db: Session = Depends(get_db)) -> DocumentDet
     response_model=ProcessingStatusResponse,
     status_code=status.HTTP_200_OK,
     summary="Consultar Estado Atual e Resultado da Extracao",
+    dependencies=[Depends(require_read_access)],
     description=(
         "Consulta o estado atual do processamento e o resultado detalhado da extracao IDP "
         "para um documento especifico atraves de seu identificador unico (UUID). "
@@ -472,11 +486,13 @@ def get_document(document_id: str, db: Session = Depends(get_db)) -> DocumentDet
     "/{document_id}/status",
     response_model=ProcessingStatusResponse,
     include_in_schema=False,
+    dependencies=[Depends(require_read_access)],
 )
 @router.get(
     "/{document_id}/extraction",
     response_model=ProcessingStatusResponse,
     include_in_schema=False,
+    dependencies=[Depends(require_read_access)],
 )
 def get_document_processing_status(
     document_id: str, db: Session = Depends(get_db)

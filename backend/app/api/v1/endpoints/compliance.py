@@ -1,23 +1,34 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.v1.pagination import LimitParam, SkipParam
+from app.core.security import (
+    Principal,
+    require_audit_access,
+    require_read_access,
+    require_write_access,
+)
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db.models.document import Document
 from app.db.models.compliance import ComplianceCheck, AuditLog
 from app.services.compliance_service import evaluate_and_persist
+from app.services.review_service import ReviewConflict
 from app.services.rules_engine import RulesEngine, summarize_statuses
 
 router = APIRouter()
 
 
 @router.post("/verify/{document_id}", summary="Disparar Verificação de Conformidade Documental")
-def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
+def verify_document_compliance(
+    document_id: str,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_write_access),
+):
     """
     Executa o motor de regras determinísticas e orquestração Maker-Checker no texto do documento,
     gerando o laudo de conformidade e registrando a trilha de auditoria imutável.
     """
-    doc = db.query(Document).filter(Document.id == document_id).first()
+    doc = db.query(Document).filter(Document.id == document_id).with_for_update().first()
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Documento não encontrado."
@@ -29,7 +40,18 @@ def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
             detail="O documento selecionado não possui texto extraído para validação.",
         )
 
-    evaluation, saved_checks = evaluate_and_persist(db, doc, performed_by="HARNESS_RULES_ENGINE")
+    try:
+        evaluation, saved_checks = evaluate_and_persist(
+            db,
+            doc,
+            performed_by=principal.user_id,
+            actor_role=principal.role,
+        )
+    except ReviewConflict as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=exc.message,
+        ) from exc
     db.commit()
 
     return {
@@ -57,14 +79,22 @@ def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/rules", summary="Consultar Checklist e Regras Ativas de Conformidade")
+@router.get(
+    "/rules",
+    summary="Consultar Checklist e Regras Ativas de Conformidade",
+    dependencies=[Depends(require_read_access)],
+)
 def get_active_rules():
     """Retorna o catálogo de regras ativas configuradas no motor de conformidade."""
     engine = RulesEngine()
     return {"total_rules": len(engine.rules), "rules": engine.rules}
 
 
-@router.get("/results/{document_id}", summary="Obter Relatório de Conformidade de um Documento")
+@router.get(
+    "/results/{document_id}",
+    summary="Obter Relatório de Conformidade de um Documento",
+    dependencies=[Depends(require_read_access)],
+)
 def get_compliance_results(document_id: str, db: Session = Depends(get_db)):
     """Retorna os resultados da última verificação de conformidade do documento."""
     checks = db.query(ComplianceCheck).filter(ComplianceCheck.document_id == document_id).all()
@@ -99,7 +129,11 @@ def get_compliance_results(document_id: str, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/audit-trail", summary="Consultar Trilha de Auditoria Imutável")
+@router.get(
+    "/audit-trail",
+    summary="Consultar Trilha de Auditoria Imutável",
+    dependencies=[Depends(require_audit_access)],
+)
 def get_audit_trail(skip: SkipParam = 0, limit: LimitParam = 50, db: Session = Depends(get_db)):
     """Retorna registros de auditoria em ordem cronológica reversa."""
     logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).offset(skip).limit(limit).all()

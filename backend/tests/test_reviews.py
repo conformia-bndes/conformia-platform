@@ -4,7 +4,7 @@ import pytest
 
 from app.core.config import ApiUser, settings
 from app.core.security import hash_api_key
-from app.db.models.compliance import AuditLog
+from app.db.models.compliance import AuditLog, ComplianceCheck
 from app.db.models.document import Document
 from app.db.models.review import ReviewEvent
 
@@ -21,6 +21,7 @@ COMMENT = "Conferido de forma independente; de acordo com a proposta."
 VALID_CND = (
     "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
     "CERTIDAO NEGATIVA DE DEBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E A DIVIDA ATIVA DA UNIAO\n"
+    "CNPJ: 12.345.678/0001-90\n"
     "Valida ate: 31/12/2099"
 )
 EXPIRED_CND = VALID_CND.replace("31/12/2099", "01/01/2020")
@@ -260,3 +261,69 @@ def test_personal_key_passes_router_auth_in_production(client, db_session, monke
         client.get(f"/api/v1/compliance/reviews/{doc_id}", headers=_as("carla")).status_code == 200
     )
     assert client.get("/api/v1/compliance/rules", headers=_as("ana")).status_code == 200
+
+
+# ==============================================================================
+# Issue #199 (derivada da #174 / AUD-14): bloqueio 409 de reavaliacao em revisao
+# ==============================================================================
+
+
+def test_reverify_is_blocked_with_409_when_review_is_pending_or_final(client, db_session):
+    """Issue #199 / #174: bloqueia reavaliacao em PENDING_CHECK e FINAL e permite apos RETURN."""
+    doc_id = _evaluated_document(client, db_session, text=VALID_CND, doc_id="doc-199-lifecycle")
+    proposal_id = _propose(client, doc_id, user="ana", decision="APPROVE").json()["id"]
+
+    # Em PENDING_CHECK, reavaliar mesmo apos troca do texto deve retornar 409 e preservar laudo.
+    doc = db_session.get(Document, doc_id)
+    doc.extracted_text = EXPIRED_CND
+    db_session.commit()
+
+    blocked_pending = client.post(
+        f"/api/v1/compliance/verify/{doc_id}",
+        headers=_as("ana"),
+    )
+    assert blocked_pending.status_code == 409
+    assert "PENDING_CHECK" in blocked_pending.json()["detail"]
+    assert client.get(f"/api/v1/compliance/results/{doc_id}").json()["overall_status"] == (
+        "COMPLIANT"
+    )
+
+    # Devolvendo a proposta (RETURNED), a reavaliacao volta a ser permitida.
+    assert _resolve(client, doc_id, proposal_id, user="bruno", action="return").status_code == 201
+    allowed_after_return = client.post(
+        f"/api/v1/compliance/verify/{doc_id}",
+        headers=_as("ana"),
+    )
+    assert allowed_after_return.status_code == 200
+    assert allowed_after_return.json()["overall_status"] == "NON_COMPLIANT"
+
+    # Nova proposta sobre NON_COMPLIANT deve usar EXCEPTION; confirmada -> FINAL -> 409.
+    second_proposal_id = _propose(client, doc_id, user="ana", decision="EXCEPTION").json()["id"]
+    assert (
+        _resolve(client, doc_id, second_proposal_id, user="bruno", action="confirm").status_code
+        == 201
+    )
+    blocked_final = client.post(
+        f"/api/v1/compliance/verify/{doc_id}",
+        headers=_as("ana"),
+    )
+    assert blocked_final.status_code == 409
+    assert "FINAL" in blocked_final.json()["detail"]
+
+
+def test_confirm_rejects_divergent_report_status_as_defense_in_depth(client, db_session):
+    """Issue #199: defesa em profundidade se o laudo divergir de proposal.report_status."""
+    doc_id = _evaluated_document(client, db_session)
+    proposal_id = _propose(client, doc_id, user="ana", decision="APPROVE").json()["id"]
+
+    check = db_session.query(ComplianceCheck).filter(ComplianceCheck.document_id == doc_id).first()
+    check.status = "NON_COMPLIANT"
+    db_session.commit()
+
+    confirm_resp = _resolve(client, doc_id, proposal_id, user="bruno", action="confirm")
+    assert confirm_resp.status_code == 409
+    assert "divergente" in confirm_resp.json()["detail"].lower()
+
+    # Devolucao continua permitida para destravar o fluxo.
+    return_resp = _resolve(client, doc_id, proposal_id, user="bruno", action="return")
+    assert return_resp.status_code == 201

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models.compliance import AuditLog, ComplianceCheck
 from app.db.models.document import Document
 from app.idp.parser import extract_fields_and_evidence
+from app.services.review_service import ReviewConflict, get_review_state
 from app.services.rules_engine import RulesEngine
 
 UNIDENTIFIED_TYPE_REASON = (
@@ -30,17 +31,58 @@ def resolve_document_type(doc: Document) -> Optional[str]:
     ).document_type
 
 
+def _resolve_evaluation_actor(
+    db: Session,
+    document_id: str,
+    performed_by: str,
+    actor_role: Optional[str] = None,
+) -> Tuple[str, Optional[str], Optional[str]]:
+    """
+    Resolve o executor real da avaliacao para a trilha de auditoria (RF10 / Issue #163).
+    Quando acionada pelo worker assincrono (`CELERY_WORKER`), propaga o autor gravado no
+    evento `DOCUMENT_UPLOADED` daquele documento e registra `trigger="CELERY_WORKER"`.
+    """
+    if performed_by != "CELERY_WORKER":
+        return performed_by, actor_role, None
+
+    upload_audit = (
+        db.query(AuditLog)
+        .filter(
+            AuditLog.entity_type == "DOCUMENT",
+            AuditLog.entity_id == document_id,
+            AuditLog.action == "DOCUMENT_UPLOADED",
+        )
+        .order_by(AuditLog.created_at.desc())
+        .first()
+    )
+    if upload_audit and upload_audit.performed_by:
+        upload_role = (
+            upload_audit.details.get("actor_role")
+            if isinstance(upload_audit.details, dict)
+            else None
+        )
+        return upload_audit.performed_by, upload_role, "CELERY_WORKER"
+    return performed_by, actor_role, "CELERY_WORKER"
+
+
 def evaluate_and_persist(
     db: Session,
     doc: Document,
     performed_by: str,
     engine: Optional[RulesEngine] = None,
+    actor_role: Optional[str] = None,
 ) -> Tuple[Dict[str, Any], List[ComplianceCheck]]:
     """
     Avalia o documento, substitui o laudo vigente e registra a avaliacao na trilha de
     auditoria. Nao faz commit: o chamador controla a transacao, de modo que laudo e
     auditoria sao gravados juntos ou nao sao gravados.
     """
+    review_state = get_review_state(db, doc.id)["state"]
+    if review_state in ("PENDING_CHECK", "FINAL"):
+        raise ReviewConflict(
+            f"Reavaliacao bloqueada: documento possui revisao humana em estado {review_state}."
+        )
+
     engine = engine or RulesEngine()
     document_type = resolve_document_type(doc)
     if document_type is None:
@@ -71,20 +113,29 @@ def evaluate_and_persist(
     ]
     db.add_all(checks)
 
+    resolved_actor, resolved_role, trigger = _resolve_evaluation_actor(
+        db, doc.id, performed_by, actor_role=actor_role
+    )
+    audit_details: Dict[str, Any] = {
+        "overall_status": evaluation["overall_status"],
+        "document_type": document_type,
+        "compliance_score": evaluation["compliance_score"],
+        "total_rules": evaluation["total_rules"],
+        "evaluated_rules": evaluation["evaluated_rules"],
+        "compliant_rules": evaluation["compliant_rules"],
+    }
+    if resolved_role:
+        audit_details["actor_role"] = resolved_role
+    if trigger:
+        audit_details["trigger"] = trigger
+
     db.add(
         AuditLog(
             entity_type="DOCUMENT",
             entity_id=doc.id,
             action="COMPLIANCE_EVALUATION",
-            performed_by=performed_by,
-            details={
-                "overall_status": evaluation["overall_status"],
-                "document_type": document_type,
-                "compliance_score": evaluation["compliance_score"],
-                "total_rules": evaluation["total_rules"],
-                "evaluated_rules": evaluation["evaluated_rules"],
-                "compliant_rules": evaluation["compliant_rules"],
-            },
+            performed_by=resolved_actor,
+            details=audit_details,
         )
     )
     return evaluation, checks

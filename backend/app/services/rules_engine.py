@@ -9,11 +9,17 @@ import unicodedata
 from typing import Callable, Dict, Any, List, Optional, Tuple
 
 from app.ai.llm_client import MakerCheckerValidator
+from app.idp.parser import scan_validity_dates
 
 logger = logging.getLogger(__name__)
 
 # Categorias cujas certidoes so comprovam regularidade dentro do prazo de validade.
 VALIDITY_REQUIRED_CATEGORIES = ("FISCAL", "TRABALHISTA")
+
+# Prefixos imediatos que negam um termo impeditivo positivo (ex.: "NAO CONSTAM DEBITOS").
+_NEGATION_PREFIX_RE = re.compile(
+    r"(?:^|\b)(?:NAO(?:\s+(?:CONSTAM?|EXISTEM?|HA|POSSUI))?|NENHUM[A]?|SEM|INEXISTENCIA\s+DE)\s+$"
+)
 
 
 def summarize_statuses(statuses: List[str]) -> Tuple[str, float]:
@@ -124,22 +130,17 @@ class RulesEngine:
         ]
 
     def _extract_validity_date(self, text: str) -> Optional[date]:
-        """Extrai data de validade ou vigencia do texto da certidao."""
-        patterns = [
-            (
-                r"(?:v[aá]lid[ao]\s+at[eé]|validade|vig[eê]ncia|data\s+de\s+validade)"
-                r"[\s:]+(\d{2})[/\-.](\d{2})[/\-.](\d{4})"
-            ),
-            r"at[eé]\s+(\d{2})[/\-.](\d{2})[/\-.](\d{4})",
-        ]
-        for pattern in patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                day, month, year = match.groups()
-                try:
-                    return date(int(year), int(month), int(day))
-                except ValueError:
-                    continue
+        """
+        Retorna a data de validade quando inequivoca (ou a data vencida mais antiga),
+        delegando a leitura a `scan_validity_dates` (fonte unica com o parser IDP).
+        """
+        scan = scan_validity_dates(text)
+        today = self._today()
+        expired = [d for d in scan.valid_dates if d < today]
+        if expired:
+            return min(expired)
+        if len(scan.valid_dates) == 1 and not scan.invalid_raw_dates:
+            return scan.valid_dates[0]
         return None
 
     def evaluate(
@@ -236,21 +237,48 @@ class RulesEngine:
             "checker_type": "DETERMINISTIC",
         }
 
-    def _normalize(self, text: str) -> str:
-        """Normaliza texto removendo acentos para comparacoes textuais robustas."""
+    def _strip_accents(self, text: str) -> str:
+        """Remove acentos preservando caixa (seguro para metacaracteres regex como \\b)."""
         nfkd = unicodedata.normalize("NFKD", text)
-        return nfkd.encode("ASCII", "ignore").decode("ASCII").upper()
+        return nfkd.encode("ASCII", "ignore").decode("ASCII")
+
+    def _normalize(self, text: str) -> str:
+        """Normaliza texto removendo acentos, colapsando espacos e convertendo para maiusculas."""
+        ascii_text = self._strip_accents(text).upper()
+        return re.sub(r"\s+", " ", ascii_text).strip()
+
+    def _matches_anti_keyword(self, keyword: str, text_norm: str) -> bool:
+        """
+        Verifica se um termo impeditivo ocorre de forma nao negada no texto normalizado.
+        Evita falso negativo/positivo em frases como "NAO CONSTAM DEBITOS" quando o termo
+        configurado e "CONSTAM DEBITOS", mantendo correspondencia direta para termos que
+        ja contem negacao (ex.: "NAO HABILITADO").
+        """
+        kw_norm = self._normalize(keyword)
+        if not kw_norm:
+            return False
+        pattern = re.compile(r"(?<!\w)" + re.escape(kw_norm) + r"(?!\w)")
+        starts_with_negation = kw_norm.startswith(("NAO ", "SEM "))
+        for match in pattern.finditer(text_norm):
+            if starts_with_negation:
+                return True
+            prefix = text_norm[max(0, match.start() - 32) : match.start()]
+            if _NEGATION_PREFIX_RE.search(prefix):
+                continue
+            return True
+        return False
 
     def _evaluate_single_rule(
         self, rule: Dict[str, Any], full_text: str, extracted_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Avalia uma regra individual aplicando checagem deterministica, regex e temporal."""
+        """Avalia uma regra individual aplicando checagem deterministica, temporal e regex."""
         text_norm = self._normalize(full_text)
+        text_ascii_compact = re.sub(r"\s+", " ", self._strip_accents(full_text)).strip()
         rule_type = rule.get("type", "DETERMINISTIC")
 
         # 1. Avaliacao de palavras-chave excludentes (anti-keywords)
         anti_keywords = rule.get("anti_keywords", [])
-        matched_anti = [kw for kw in anti_keywords if self._normalize(kw) in text_norm]
+        matched_anti = [kw for kw in anti_keywords if self._matches_anti_keyword(kw, text_norm)]
         if matched_anti:
             return {
                 "rule_id": rule["id"],
@@ -303,52 +331,120 @@ class RulesEngine:
                 "evidence": {"missing_keywords": missing},
             }
 
-        # 3. Avaliacao de regex_patterns
-        regex_patterns = rule.get("regex_patterns", [])
-        matched_patterns = []
-        for pattern in regex_patterns:
-            try:
-                if re.search(pattern, full_text, re.IGNORECASE):
-                    matched_patterns.append(pattern)
-            except re.error as re_err:
-                logger.warning(f"Padrao regex invalido na regra {rule['id']}: {pattern} - {re_err}")
-
-        # 4. Verificacao de validade temporal (Diretriz no 1 do AGENTS.md): sem data de
-        # validade legivel, a certidao nunca e aprovada automaticamente.
+        # 3. Verificacao de validade temporal (fonte unica com parser IDP; AGENTS.md diretriz 1).
+        # Qualquer data vencida reprova; multiplas datas vigentes distintas, datas impossiveis
+        # ou ausencia de validade (quando exigida) encaminham para revisao manual.
         requires_validity = rule.get(
             "requires_validity", rule.get("category") in VALIDITY_REQUIRED_CATEGORIES
         )
-        validity_date = self._extract_validity_date(full_text)
+        validity_scan = scan_validity_dates(full_text)
+        today = self._today()
+        expired_dates = [d for d in validity_scan.valid_dates if d < today]
+        valid_date: Optional[date] = None
 
-        if validity_date:
-            # Comparacao por data: a certidao vale ate o fim do dia de validade.
-            if validity_date < self._today():
+        if expired_dates:
+            earliest_expired = min(expired_dates)
+            return {
+                "rule_id": rule["id"],
+                "rule_title": rule["title"],
+                "category": rule["category"],
+                "status": "NON_COMPLIANT",
+                "findings": (f"Certidao expirada em {earliest_expired.strftime('%d/%m/%Y')}."),
+                "confidence_score": 1.0,
+                "checker_type": "DETERMINISTIC",
+                "evidence": {
+                    "validity_date": earliest_expired.strftime("%d/%m/%Y"),
+                    "validity_dates": [d.strftime("%d/%m/%Y") for d in validity_scan.valid_dates],
+                    "expired_dates": [d.strftime("%d/%m/%Y") for d in expired_dates],
+                    "matched_keywords": matched_required,
+                },
+            }
+
+        if requires_validity:
+            if not validity_scan.valid_dates:
+                evidence_missing: Dict[str, Any] = {"matched_keywords": matched_required}
+                if validity_scan.invalid_raw_dates:
+                    evidence_missing["invalid_validity_dates"] = list(
+                        validity_scan.invalid_raw_dates
+                    )
                 return {
                     "rule_id": rule["id"],
                     "rule_title": rule["title"],
                     "category": rule["category"],
-                    "status": "NON_COMPLIANT",
-                    "findings": (f"Certidao expirada em " f"{validity_date.strftime('%d/%m/%Y')}."),
-                    "confidence_score": 1.0,
+                    "status": "MANUAL_REVIEW_REQUIRED",
+                    "findings": (
+                        "Data de validade da certidao nao identificada de forma legivel. "
+                        "Necessita revisao manual por analista BNDES."
+                    ),
+                    "confidence_score": 0.6,
                     "checker_type": "DETERMINISTIC",
-                    "evidence": {
-                        "validity_date": validity_date.strftime("%d/%m/%Y"),
-                        "matched_keywords": matched_required,
-                    },
+                    "evidence": evidence_missing,
                 }
-        elif requires_validity:
+            if len(validity_scan.valid_dates) > 1 or validity_scan.invalid_raw_dates:
+                evidence_ambiguous: Dict[str, Any] = {
+                    "matched_keywords": matched_required,
+                    "validity_dates": [d.strftime("%d/%m/%Y") for d in validity_scan.valid_dates],
+                }
+                if validity_scan.invalid_raw_dates:
+                    evidence_ambiguous["invalid_validity_dates"] = list(
+                        validity_scan.invalid_raw_dates
+                    )
+                return {
+                    "rule_id": rule["id"],
+                    "rule_title": rule["title"],
+                    "category": rule["category"],
+                    "status": "MANUAL_REVIEW_REQUIRED",
+                    "findings": (
+                        "Multiplas datas de validade distintas ou data invalida identificadas "
+                        "no documento. Necessita revisao manual por analista BNDES."
+                    ),
+                    "confidence_score": 0.6,
+                    "checker_type": "DETERMINISTIC",
+                    "evidence": evidence_ambiguous,
+                }
+            valid_date = validity_scan.valid_dates[0]
+        elif len(validity_scan.valid_dates) == 1 and not validity_scan.invalid_raw_dates:
+            valid_date = validity_scan.valid_dates[0]
+
+        # 4. Validacao obrigatoria de regex_patterns (ex.: CNPJ, numero CRF).
+        # Ausencia de padrao estrutural nao prova irregularidade, mas impede aprovacao
+        # automatica e encaminha para revisao manual (politica D2).
+        regex_patterns = rule.get("regex_patterns", [])
+        matched_patterns: List[str] = []
+        missing_patterns: List[str] = []
+        for pattern in regex_patterns:
+            try:
+                pattern_ascii = self._strip_accents(pattern)
+                if re.search(pattern, full_text, re.IGNORECASE) or re.search(
+                    pattern_ascii, text_ascii_compact, re.IGNORECASE
+                ):
+                    matched_patterns.append(pattern)
+                else:
+                    missing_patterns.append(pattern)
+            except re.error as re_err:
+                logger.warning(f"Padrao regex invalido na regra {rule['id']}: {pattern} - {re_err}")
+                missing_patterns.append(pattern)
+
+        if missing_patterns:
+            evidence_regex: Dict[str, Any] = {
+                "matched_keywords": matched_required,
+                "matched_regex_patterns": matched_patterns,
+                "missing_regex_patterns": missing_patterns,
+            }
+            if valid_date:
+                evidence_regex["validity_date"] = valid_date.strftime("%d/%m/%Y")
             return {
                 "rule_id": rule["id"],
                 "rule_title": rule["title"],
                 "category": rule["category"],
                 "status": "MANUAL_REVIEW_REQUIRED",
                 "findings": (
-                    "Data de validade da certidao nao identificada de forma legivel. "
-                    "Necessita revisao manual por analista BNDES."
+                    "Padroes estruturais obrigatorios nao identificados no documento "
+                    "(ex.: CNPJ ou identificador da certidao). Necessita revisao manual."
                 ),
-                "confidence_score": 0.6,
+                "confidence_score": 0.8,
                 "checker_type": "DETERMINISTIC",
-                "evidence": {"matched_keywords": matched_required},
+                "evidence": evidence_regex,
             }
 
         # Determinístico aprovado
@@ -356,8 +452,8 @@ class RulesEngine:
             evidence_data: Dict[str, Any] = {"matched_keywords": matched_required}
             if matched_patterns:
                 evidence_data["matched_regex_patterns"] = matched_patterns
-            if validity_date:
-                evidence_data["validity_date"] = validity_date.strftime("%d/%m/%Y")
+            if valid_date:
+                evidence_data["validity_date"] = valid_date.strftime("%d/%m/%Y")
 
             return {
                 "rule_id": rule["id"],
