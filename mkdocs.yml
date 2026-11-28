@@ -101,6 +101,7 @@ nav:
       - Maker-Checker e Guardrails: engineering/maker-checker.md
       - Avaliação Contínua (Evals): engineering/harness-evals.md
       - Testes e Robustez: engineering/testing.md
+      - Diagnóstico Reavaliação × Revisão (#174): engineering/diagnostico-issue-174-reavaliacao-revisao.md
       - MLOps: engineering/mlops.md
       - Identidade Visual (Frontend): engineering/identidade-visual.md
   - Operação:

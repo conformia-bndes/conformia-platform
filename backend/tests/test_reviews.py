@@ -260,3 +260,72 @@ def test_personal_key_passes_router_auth_in_production(client, db_session, monke
         client.get(f"/api/v1/compliance/reviews/{doc_id}", headers=_as("carla")).status_code == 200
     )
     assert client.get("/api/v1/compliance/rules", headers=_as("ana")).status_code == 200
+
+
+# ==============================================================================
+# Issue #174 (AUD-14): reproducao de reavaliacao durante revisao pendente/final
+# ==============================================================================
+
+
+def test_issue_174_reverify_during_pending_review_reproduces_divergence(client, db_session):
+    """
+    Caracterizacao da hipotese AUD-14 (Issue #174):
+    Reexecutar POST /compliance/verify/{id} com proposta PENDING_CHECK sobrescreve
+    compliance_checks sem consultar review_events. O laudo exibido passa a NON_COMPLIANT,
+    mas a proposta APPROVE anterior (report_status=COMPLIANT) ainda pode ser confirmada.
+    """
+    doc_id = _evaluated_document(client, db_session, text=VALID_CND, doc_id="doc-174-pending")
+    proposal_resp = _propose(client, doc_id, user="ana", decision="APPROVE")
+    assert proposal_resp.status_code == 201
+    proposal_id = proposal_resp.json()["id"]
+    assert proposal_resp.json()["report_status"] == "COMPLIANT"
+
+    # Simula reavaliacao posterior cujo resultado muda (ex.: vencimento da certidao ou regra nova).
+    doc = db_session.get(Document, doc_id)
+    doc.extracted_text = EXPIRED_CND
+    db_session.commit()
+
+    reverify = client.post(f"/api/v1/compliance/verify/{doc_id}")
+    assert reverify.status_code == 200
+    assert reverify.json()["overall_status"] == "NON_COMPLIANT"
+
+    # Laudo vigente agora e NON_COMPLIANT, mas a revisao pendente segue ligada ao laudo antigo.
+    current_report = client.get(f"/api/v1/compliance/results/{doc_id}").json()
+    review_before_confirm = client.get(f"/api/v1/compliance/reviews/{doc_id}").json()
+    assert current_report["overall_status"] == "NON_COMPLIANT"
+    assert review_before_confirm["state"] == "PENDING_CHECK"
+    assert review_before_confirm["events"][0]["report_status"] == "COMPLIANT"
+
+    # Confirmacao ainda conclui APPROVE apesar de o laudo vigente ja ser NON_COMPLIANT.
+    confirm = _resolve(client, doc_id, proposal_id, user="bruno", action="confirm")
+    assert confirm.status_code == 201
+    review_after = client.get(f"/api/v1/compliance/reviews/{doc_id}").json()
+    assert review_after["state"] == "FINAL"
+    assert review_after["final_decision"] == "APPROVE"
+    assert review_after["events"][-1]["report_status"] == "COMPLIANT"
+
+
+def test_issue_174_reverify_after_final_review_reproduces_divergence(client, db_session):
+    """
+    Caracterizacao da hipotese AUD-14 (Issue #174) apos decisao FINAL:
+    Reexecutar POST /compliance/verify/{id} sobrescreve o laudo vigente para NON_COMPLIANT,
+    enquanto GET /compliance/reviews/{id} mantem FINAL/APPROVE sobre o report_status antigo.
+    """
+    doc_id = _evaluated_document(client, db_session, text=VALID_CND, doc_id="doc-174-final")
+    proposal_id = _propose(client, doc_id, user="ana", decision="APPROVE").json()["id"]
+    assert _resolve(client, doc_id, proposal_id, user="bruno", action="confirm").status_code == 201
+
+    doc = db_session.get(Document, doc_id)
+    doc.extracted_text = EXPIRED_CND
+    db_session.commit()
+
+    reverify = client.post(f"/api/v1/compliance/verify/{doc_id}")
+    assert reverify.status_code == 200
+    assert reverify.json()["overall_status"] == "NON_COMPLIANT"
+
+    current_report = client.get(f"/api/v1/compliance/results/{doc_id}").json()
+    review_state = client.get(f"/api/v1/compliance/reviews/{doc_id}").json()
+    assert current_report["overall_status"] == "NON_COMPLIANT"
+    assert review_state["state"] == "FINAL"
+    assert review_state["final_decision"] == "APPROVE"
+    assert review_state["events"][-1]["report_status"] == "COMPLIANT"
