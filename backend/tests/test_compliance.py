@@ -158,7 +158,8 @@ def test_worker_task_extracts_evaluates_and_completes(db_session, monkeypatch, t
     from tests.conftest import TestingSessionLocal
     from tests.synthetic_pdfs import build_native_pdf
 
-    pdf_path = tmp_path / "cnd.pdf"
+    monkeypatch.setenv("UPLOAD_DIR", str(tmp_path))
+    pdf_path = tmp_path / "doc-worker-1.pdf"
     pdf_path.write_bytes(build_native_pdf([VALID_CND_TEXT.splitlines()]))
     doc = _add_document(db_session, None, doc_id="doc-worker-1")
     doc.status = "PROCESSING"

@@ -201,7 +201,8 @@ def test_audit_records_real_executor_for_upload_verify_and_worker(
     assert ver.status_code == 200, ver.text
 
     # 3. Propagacao do autor do upload quando o worker Celery avalia o documento
-    doc_path = tmp_path / "worker_cnd.pdf"
+    monkeypatch.setenv("UPLOAD_DIR", str(tmp_path))
+    doc_path = tmp_path / f"{doc_id}_worker_cnd.pdf"
     doc_path.write_bytes(pdf_bytes)
     worker_res = process_document_task(doc_id, str(doc_path))
     assert worker_res["status"] == "COMPLETED"

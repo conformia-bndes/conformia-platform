@@ -25,9 +25,9 @@ x-backend: &backend
   # sobrescrevem qualquer URL pensada para execucao no host.
   environment:
     DATABASE_URL: postgresql://${POSTGRES_USER:-conformia_user}:${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env (make env)}@postgres:5432/${POSTGRES_DB:-conformia_db}
-    REDIS_URL: redis://redis:6379/0
-    CELERY_BROKER_URL: redis://redis:6379/0
-    CELERY_RESULT_BACKEND: redis://redis:6379/0
+    REDIS_URL: redis://:${REDIS_PASSWORD:?Defina REDIS_PASSWORD no .env (make env)}@redis:6379/0
+    CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:?Defina REDIS_PASSWORD no .env (make env)}@redis:6379/0
+    CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:?Defina REDIS_PASSWORD no .env (make env)}@redis:6379/0
     MINIO_ENDPOINT: minio:9000
     WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
     CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-2}
@@ -86,16 +86,29 @@ services:
   # Mensageria & Cache - Redis 7
   # ============================================================================
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
     container_name: conformia-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Defina REDIS_PASSWORD no .env (make env)}
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD:?Defina REDIS_PASSWORD no .env (make env)}",
+      ]
     volumes:
       - redis_data:/data
     ports:
       - "${REDIS_PORT:-6380}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD-SHELL",
+          "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
