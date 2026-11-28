@@ -19,6 +19,10 @@ on:
         description: "Publicar as imagens no GHCR"
         type: boolean
         default: true
+      verify_ci:
+        description: "Exigir check 'CI OK' verde no SHA exato da tag antes do deploy"
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       tag:
@@ -29,6 +33,10 @@ on:
         description: "Publicar as imagens no GHCR (falso = so construir e validar)"
         type: boolean
         default: false
+      verify_ci:
+        description: "Exigir check 'CI OK' verde no SHA exato da tag (sempre ativo com push=true)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -38,8 +46,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-ci:
+    name: Gate de CI da tag
+    if: inputs.push || inputs.verify_ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Validar check CI OK no SHA exato da tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+          PUSH_ENABLED: ${{ inputs.push }}
+        run: |
+          case "$TAG" in
+            v[0-9]*) ;;
+            *) echo "::error::Tag invalida: $TAG (esperado vX.Y.Z)"; exit 1 ;;
+          esac
+          TAG_SHA="$(git rev-parse HEAD)"
+          echo "Verificando check 'CI OK' para tag $TAG (SHA $TAG_SHA)..."
+          # Em publicacao (release-please em push para main), o CI pode estar rodando em paralelo;
+          # em dry-run manual (push=false), consulta imediatamente sem espera longa.
+          WAIT_SECONDS=0
+          if [ "$PUSH_ENABLED" = "true" ]; then
+            WAIT_SECONDS=1200
+          fi
+          python3 scripts/verify_release_ci.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --sha "$TAG_SHA" \
+            --check-name "CI OK" \
+            --wait-seconds "$WAIT_SECONDS"
+
   deploy:
     name: Deploy (${{ matrix.service }})
+    needs: verify-ci
+    if: ${{ always() && (needs.verify-ci.result == 'success' || needs.verify-ci.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
