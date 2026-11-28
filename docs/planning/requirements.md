@@ -44,12 +44,15 @@ flowchart LR
 ## 3. Catálogo de Requisitos Funcionais (RF01 a RF15)
 
 O MVP cobre RF01 a RF10. **RF11 a RF15 estão fora do MVP** (issues #148 a #152; motivos na seção 1
-do [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md)). O RF01 cita JWT, mas a implementação usa chaves
-de API pessoais (decisão D1); essa divergência é tratada na issue #163.
+do [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md)). Para o **RF01**, a arquitetura formalmente
+aprovada para o MVP é autenticação por chaves de API pessoais com hash PBKDF2-HMAC-SHA256 e RBAC
+por rota (`ADMIN`, `ANALISTA`, `AUDITOR`), conforme a decisão D1 e o
+[ADR-005](../architecture/adr-005-autenticacao-chaves-pessoais-rbac.md) (issue #163); a integração
+com JWT/OIDC corporativo permanece no roadmap pós-MVP.
 
 | ID       | Requisito Funcional                | Prioridade  | Critério de Aceite Formal                                                                                    |
 | :------- | :--------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------- |
-| **RF01** | **Autenticação e RBAC**            | Alta        | Suporte a autenticação segura por token JWT com perfis segregados: `Admin`, `Analista`, `Auditor`.           |
+| **RF01** | **Autenticação e RBAC**            | Alta        | Autenticação segura via chaves pessoais PBKDF2 (`X-API-Key` / `Bearer`) com RBAC por rota para perfis segregados (`ADMIN`, `ANALISTA`, `AUDITOR`) e executor real na auditoria ([ADR-005](../architecture/adr-005-autenticacao-chaves-pessoais-rbac.md)); evolução para JWT/OIDC pós-MVP. |
 | **RF02** | **Ingestão e Armazenamento**       | Alta        | Upload de arquivos PDF de até 50MB, validação binária (`%PDF-`) e persistência durável no MinIO S3.          |
 | **RF03** | **Pipeline IDP e OCR**             | Alta        | Extração vetorial com fallback automático para OCR Tesseract em páginas digitalizadas (`CER <= 2.5%`).       |
 | **RF04** | **Estruturação de Entidades**      | Alta        | Reconhecimento de CNPJ, razões sociais, datas de emissão, datas de validade e códigos de controle.           |
