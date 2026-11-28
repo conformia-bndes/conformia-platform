@@ -56,7 +56,7 @@
     "regex_patterns": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Expressões regulares para validação de padrões (Ex: CNPJ, certidão negativa)"
+      "description": "Expressões regulares obrigatórias para validação estrutural (Ex: CNPJ, número CRF). A ausência de qualquer padrão configurado encaminha a regra para MANUAL_REVIEW_REQUIRED (decisão D2)."
     },
     "requires_validity": {
       "type": "boolean",

@@ -19,7 +19,15 @@
       ],
       "anti_keywords": [
         "CONSTA PENDÊNCIA",
-        "DÉBITOS EXISTENTES"
+        "CONSTAM PENDÊNCIAS",
+        "DÉBITOS EXISTENTES",
+        "CONSTA DÉBITO",
+        "CONSTAM DÉBITOS",
+        "DÉBITOS EM COBRANÇA",
+        "DÉBITOS EXIGÍVEIS",
+        "EXIGIBILIDADE NÃO SUSPENSA",
+        "POSITIVA COM DÉBITOS",
+        "CERTIDÃO POSITIVA DE DÉBITOS"
       ],
       "regex_patterns": [
         "\\b[0-9]{2}\\.[0-9]{3}\\.[0-9]{3}\\/[0-9]{4}\\-[0-9]{2}\\b",
@@ -43,9 +51,17 @@
       ],
       "anti_keywords": [
         "IRREGULAR",
-        "NÃO HABILITADO"
+        "NÃO HABILITADO",
+        "NÃO REGULAR",
+        "IMPEDIMENTO PARA EMISSÃO",
+        "DÉBITOS COM O FGTS",
+        "PENDÊNCIA JUNTO AO FGTS",
+        "PENDÊNCIAS JUNTO AO FGTS",
+        "INADIMPLENTE",
+        "EM PROCESSO DE REGULARIZAÇÃO"
       ],
       "regex_patterns": [
+        "\\b[0-9]{2}\\.[0-9]{3}\\.[0-9]{3}\\/[0-9]{4}\\-[0-9]{2}\\b",
         "CRF[0-9]{8,14}"
       ],
       "requires_validity": true,
@@ -66,9 +82,15 @@
       ],
       "anti_keywords": [
         "CONSTA DÉBITO",
-        "INADIMPLÊNCIA ATIVA"
+        "CONSTAM DÉBITOS",
+        "INADIMPLÊNCIA ATIVA",
+        "POSITIVA DE DÉBITOS TRABALHISTAS",
+        "DÉBITOS TRABALHISTAS INADIMPLIDOS",
+        "DÉBITOS EM COBRANÇA"
       ],
-      "regex_patterns": [],
+      "regex_patterns": [
+        "\\b[0-9]{2}\\.[0-9]{3}\\.[0-9]{3}\\/[0-9]{4}\\-[0-9]{2}\\b"
+      ],
       "requires_validity": true,
       "failure_message": "Identificada pendência ou ausência da Certidão Negativa de Débitos Trabalhistas junto ao TST."
     },
