@@ -167,7 +167,9 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
     },
     {
         "id": "CASE-009",
-        "description": "Licença Ambiental: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)",
+        "description": (
+            "Licença Ambiental: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)"
+        ),
         "input_text": (
             "IBAMA - INSTITUTO BRASILEIRO DO MEIO AMBIENTE\n"
             "ÓRGÃO AMBIENTAL FEDERAL\n"
@@ -182,24 +184,22 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "RULE-BNDES-004": "NOT_APPLICABLE",
             # HYBRID sem LLM: Maker-Checker fail-closed
             "RULE-BNDES-005": "MANUAL_REVIEW_REQUIRED",
-            "RULE-BNDES-006": "NOT_APPLICABLE"
+            "RULE-BNDES-006": "NOT_APPLICABLE",
         },
-        "expected_overall": "MANUAL_REVIEW_REQUIRED"
+        "expected_overall": "MANUAL_REVIEW_REQUIRED",
     },
     {
         "id": "CASE-010",
         "description": "CND Federal que cita licença ambiental continua CND_FEDERAL",
         "input_text": (
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
             "Finalidade: instruir pedido de licença ambiental\n"
             "Válida até: 31/12/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-001": "COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-001": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-011",
@@ -211,10 +211,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "Finalidade: licença ambiental de operação\n"
             "Validade: 15/11/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-002": "COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-002": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-012",
@@ -227,24 +224,20 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "Finalidade: licença ambiental\n"
             "Validade: 20/12/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-003": "COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-003": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-013",
-        "description": "Certidão de falência que cita licença ambiental continua FALENCIA_RECUPERACAO",
+        "description": (
+            "Certidão de falência que cita licença ambiental continua FALENCIA_RECUPERACAO"
+        ),
         "input_text": (
             "TRIBUNAL DE JUSTIÇA DO ESTADO DO RIO DE JANEIRO\n"
             "CERTIDÃO DOS DISTRIBUIDORES CÍVEIS\n"
             "CONSTA DISTRIBUIÇÃO DE PROCESSO DE FALÊNCIA E RECUPERAÇÃO JUDICIAL\n"
             "Finalidade: renovação de licença ambiental"
         ),
-        "expected_results": {
-            "RULE-BNDES-004": "NON_COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-004": "NON_COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-014",
@@ -263,13 +256,15 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "RULE-BNDES-004": "NOT_APPLICABLE",
             "RULE-BNDES-005": "NOT_APPLICABLE",
             # HYBRID sem LLM: Maker-Checker fail-closed
-            "RULE-BNDES-006": "MANUAL_REVIEW_REQUIRED"
+            "RULE-BNDES-006": "MANUAL_REVIEW_REQUIRED",
         },
-        "expected_overall": "MANUAL_REVIEW_REQUIRED"
+        "expected_overall": "MANUAL_REVIEW_REQUIRED",
     },
     {
         "id": "CASE-015",
-        "description": "Consulta CEIS que cita licença ambiental e IBAMA é avaliada pela 006, não pela 005",
+        "description": (
+            "Consulta CEIS que cita licença ambiental e IBAMA é avaliada pela 006, não pela 005"
+        ),
         "input_text": (
             "PORTAL DA TRANSPARÊNCIA - CONTROLADORIA-GERAL DA UNIÃO\n"
             "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS (CEIS)\n"
@@ -278,10 +273,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "Sanção: IMPEDIMENTO DE LICITAR E CONTRATAR\n"
             "Data da consulta: 28/10/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-005": "NOT_APPLICABLE",
-            "RULE-BNDES-006": "NON_COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-005": "NOT_APPLICABLE", "RULE-BNDES-006": "NON_COMPLIANT"},
     },
 ]
 
