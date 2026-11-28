@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey
+from sqlalchemy import CheckConstraint, Column, String, DateTime, Text, ForeignKey
 from app.db.session import Base
 
 
@@ -15,6 +15,26 @@ class ReviewEvent(Base):
     """
 
     __tablename__ = "review_events"
+    __table_args__ = (
+        CheckConstraint(
+            "event_type IN ('PROPOSED', 'CONFIRMED', 'RETURNED')",
+            name="ck_review_events_event_type",
+        ),
+        CheckConstraint(
+            "decision IS NULL OR decision IN ('APPROVE', 'REJECT', 'EXCEPTION')",
+            name="ck_review_events_decision",
+        ),
+        CheckConstraint(
+            "(event_type = 'PROPOSED' AND decision IS NOT NULL AND resolves_id IS NULL) OR "
+            "(event_type IN ('CONFIRMED', 'RETURNED') "
+            "AND decision IS NULL AND resolves_id IS NOT NULL)",
+            name="ck_review_events_decision_for_event",
+        ),
+        CheckConstraint(
+            "actor_role IN ('ANALISTA', 'AUDITOR', 'ADMIN')",
+            name="ck_review_events_actor_role",
+        ),
+    )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     document_id = Column(String(36), ForeignKey("documents.id"), nullable=False, index=True)

@@ -2,13 +2,19 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, JSON, Text
+from sqlalchemy import CheckConstraint, Column, String, Integer, DateTime, JSON, Text
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 
 class Document(Base):
     __tablename__ = "documents"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'EXTRACTION_FAILED')",
+            name="ck_documents_status",
+        ),
+    )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     filename = Column(String(255), nullable=False)
