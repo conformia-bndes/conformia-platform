@@ -41,6 +41,24 @@ Dependabot, rulesets) está em [Governança do repositório](../development/gove
 O laudo e o registro de auditoria são gravados na mesma transação: ou os dois existem, ou
 nenhum. Um reprocessamento substitui o laudo vigente, mas o histórico permanece em `audit_logs`.
 
+### Imutabilidade na camada de banco de dados (RNF03 / Migration `003`)
+
+A partir da migration `003_immutable_audit_and_checks` (Issue `#167`), a garantia `append-only`
+não depende apenas da camada de aplicação:
+
+- **Triggers `BEFORE UPDATE OR DELETE`**: em PostgreSQL (função PL/pgSQL
+  `prevent_append_only_mutation()`) e em SQLite (`RAISE(ABORT, ...)`), qualquer tentativa de
+  `UPDATE` ou `DELETE` em `audit_logs` ou `review_events` falha com erro de violação de
+  integridade — inclusive para a conexão da aplicação dona das tabelas.
+- **Restrições `CHECK` de domínio**: `documents.status`, `compliance_checks.status`,
+  `review_events.event_type`, `review_events.decision` (e sua coerência com `PROPOSED` vs
+  `CONFIRMED`/`RETURNED`) e `review_events.actor_role` são validados diretamente pelo SGBD.
+- **Hash encadeado por registro (decisão técnica)**: dispensado no MVP por não ser exigência
+  normativa de RNF03 e por introduzir serialização global de escrita em uploads concorrentes; a
+  imutabilidade é assegurada pelos triggers no banco combinados ao SHA-256 dos PDFs.
+- **Rollback**: o `downgrade` da migration `003` remove triggers e constraints apenas em bancos
+  descartáveis ou após backup formal.
+
 ---
 
 ## 3. Riscos e mitigação
