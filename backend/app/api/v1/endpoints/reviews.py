@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.security import Principal, require_role
+from app.core.security import Principal, require_read_access, require_role
 from app.db.session import get_db
 from app.schemas.review import (
     ReviewEventResponse,
@@ -25,7 +25,7 @@ from app.services.review_service import (
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-require_analyst = require_role("ANALISTA")
+require_analyst = require_role("ANALISTA", "ADMIN")
 
 
 def _run_write(db: Session, action: Callable[[], object]):
@@ -50,6 +50,7 @@ def _run_write(db: Session, action: Callable[[], object]):
     "/{document_id}",
     response_model=ReviewStateResponse,
     summary="Consultar Estado e Historico da Revisao Humana",
+    dependencies=[Depends(require_read_access)],
 )
 def get_review(document_id: str, db: Session = Depends(get_db)) -> ReviewStateResponse:
     try:

@@ -11,7 +11,7 @@ Dependabot, rulesets) está em [Governança do repositório](../development/gove
 | Controle | Como funciona |
 | :-- | :-- |
 | **Autenticação por chave pessoal** | Cada usuário tem uma chave `user_id:segredo`. O servidor guarda só o hash PBKDF2-HMAC-SHA256 com sal (mínimo de 100 mil iterações) em `API_USERS`. A chave é gerada por `backend/scripts/create_api_user.py` e gravada em arquivo privado, nunca exibida no terminal |
-| **Autorização por perfil** | Perfis `ANALISTA`, `AUDITOR` e `ADMIN`. A revisão humana exige `ANALISTA` |
+| **Autorização por perfil (RBAC)** | Perfis `ANALISTA`, `AUDITOR` e `ADMIN` aplicados por rota ([ADR-005](../architecture/adr-005-autenticacao-chaves-pessoais-rbac.md)): `AUDITOR` é estritamente somente leitura (`403` em qualquer escrita); revisão humana exige chave pessoal `ANALISTA` ou `ADMIN` (chave de serviço sempre recusada com `401`) |
 | **Segregação de funções** | Quem propõe uma decisão de revisão não pode confirmá-la |
 | **Validação na entrada** | Upload só de PDF: extensão, assinatura binária `%PDF-` e tamanho máximo (HTTP 413 acima do limite) |
 | **Integridade do documento** | SHA-256 do arquivo calculado na ingestão e exposto nos metadados |

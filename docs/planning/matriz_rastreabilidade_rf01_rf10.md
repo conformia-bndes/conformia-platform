@@ -16,7 +16,7 @@ Base de testes: `backend/tests/test_initial_flow.py` e
 
 | ID   | Requisito Funcional                     | Prioridade | Status no Repo | Teste de Validação                                    | Evidência de Validação                                                                 |
 |:-----|:----------------------------------------|:-----------|:---------------|:------------------------------------------------------|:---------------------------------------------------------------------------------------|
-| RF01 | Autenticação e RBAC                     | Alta       | Parcial (chaves de API, D1) | `test_api_authentication.py`, `test_reviews.py` | 401 sem chave ou com chave inválida; perfil ANALISTA na revisão. RBAC por rota e JWT: #163 |
+| RF01 | Autenticação e RBAC                     | Alta       | Implementado (chaves pessoais + RBAC por rota, D1/ADR-005) | `test_api_authentication.py`, `test_security.py`, `test_reviews.py` | 401 sem chave ou com chave inválida; 403 por perfil/rota (`AUDITOR` somente leitura); `performed_by` real na trilha (#163) |
 | RF02 | Ingestão e Armazenamento                | Alta       | Implementado   | `test_upload_pdf_*_retorna_201`, `*_eh_rejeitado`     | HTTP 201 para PDF válido; HTTP 400 para extensão inválida / sem assinatura %PDF-       |
 | RF03 | Pipeline IDP e OCR                      | Alta       | Implementado   | `test_processamento_pdf_valido_fluxo_completo`, `*_ilegivel_*` | STATUS=COMPLETED + documento_type=CND_FEDERAL; STATUS=EXTRACTION_FAILED para ilegível |
 | RF04 | Estruturação de Entidades               | Alta       | Implementado   | `test_processamento_pdf_valido_fluxo_completo`        | Campo CNPJ extraído com evidence.page=1 e value="12.345.678/0001-90"                   |
@@ -32,11 +32,10 @@ Base de testes: `backend/tests/test_initial_flow.py` e
 ## Detalhamento por Requisito
 
 ### RF01 — Autenticação e RBAC
-- **Descrição:** Suporte a autenticação segura por token JWT com perfis segregados: `Admin`, `Analista`, `Auditor`.
-- **Status no Repositório (26/11/2026):** Parcial. Autenticação por chave de API pessoal com perfis ANALISTA/AUDITOR/ADMIN (decisão D1; PRs #45, #68 e #110) em todas as rotas de `documents`, `compliance` e `compliance/reviews`; a revisão humana exige perfil `ANALISTA`.
-- **Pendente (issue #163):** RBAC por rota, executor real na trilha de auditoria e decisão sobre a divergência com o texto do requisito, que cita JWT.
-- **Cobertura na Base de Testes do Fluxo Inicial:** O fluxo inicial roda com acesso anônimo explícito do perfil de teste (`ALLOW_ANONYMOUS_ACCESS=true` em `backend/tests/conftest.py`); a autenticação é coberta à parte.
-- **Evidência:** `backend/tests/test_api_authentication.py` (401 sem chave ou com chave inválida) e `backend/tests/test_reviews.py` (perfil e segregação).
+- **Descrição:** Autenticação segura via chaves de API pessoais PBKDF2-HMAC-SHA256 com RBAC por rota para perfis segregados (`ADMIN`, `ANALISTA`, `AUDITOR`) e executor real na auditoria ([ADR-005](../architecture/adr-005-autenticacao-chaves-pessoais-rbac.md)); integração JWT/OIDC adiada para pós-MVP.
+- **Status no Repositório (27/11/2026):** Implementado (issue #163). Todas as rotas de `documents`, `compliance` e `compliance/reviews` impõem autenticação e RBAC por rota (`AUDITOR` bloqueado com HTTP 403 em qualquer rota de escrita; `POST /compliance/reviews/*` restrito a chave pessoal `ANALISTA`/`ADMIN` sem chave de serviço nem acesso anônimo; `performed_by` real gravado em `DOCUMENT_UPLOADED` e `COMPLIANCE_EVALUATION`, inclusive propagado ao worker).
+- **Cobertura na Base de Testes do Fluxo Inicial:** O fluxo inicial roda com acesso anônimo explícito do perfil de teste (`ALLOW_ANONYMOUS_ACCESS=true` em `backend/tests/conftest.py`); a matriz completa `rota × perfil` (401/403) e a política da chave de serviço são cobertas em `test_api_authentication.py` e `test_security.py`.
+- **Evidência:** `backend/tests/test_api_authentication.py` (401 e 403 em todas as rotas do `api_router` + `performed_by` real), `backend/tests/test_security.py` e `backend/tests/test_reviews.py`.
 - **Histórico:** até a auditoria de 23/11/2026 constava "Planejado (Sprint 7)".
 
 ### RF02 — Ingestão e Armazenamento

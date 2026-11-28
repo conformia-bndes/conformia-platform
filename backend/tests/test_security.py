@@ -5,8 +5,16 @@ from pathlib import Path
 
 import pytest
 
+from fastapi import HTTPException
+
 from app.core.config import ApiUser, settings
-from app.core.security import API_KEY_HASH_ITERATIONS, hash_api_key, resolve_principal
+from app.core.security import (
+    API_KEY_HASH_ITERATIONS,
+    authenticate_principal,
+    hash_api_key,
+    require_access,
+    resolve_principal,
+)
 
 SECRET_ANA = "segredo-da-ana"
 SECRET_BIA = "segredo-da-bia"
@@ -87,3 +95,25 @@ def test_create_api_user_writes_key_to_private_file_only(tmp_path, monkeypatch, 
     # Segunda execucao nao sobrescreve a chave existente
     assert module.main(["create_api_user.py", "dani", "ANALISTA"]) == 1
     assert (tmp_path / "dani.key").read_text(encoding="utf-8").strip() == key
+
+
+def test_authenticate_principal_and_require_access_enforce_service_policy(monkeypatch):
+    monkeypatch.setattr(settings, "ALLOW_ANONYMOUS_ACCESS", False)
+
+    personal = authenticate_principal(api_key=f"ana:{SECRET_ANA}", credentials=None)
+    assert (personal.user_id, personal.role, personal.auth_type) == ("ana", "ANALISTA", "personal")
+
+    service = authenticate_principal(api_key=settings.API_KEY, credentials=None)
+    assert (service.user_id, service.role, service.auth_type) == ("service", "SERVICE", "service")
+
+    dep_no_service = require_access("ANALISTA", "ADMIN", allow_service=False)
+    with pytest.raises(HTTPException) as exc_svc:
+        dep_no_service(api_key=settings.API_KEY, credentials=None)
+    assert exc_svc.value.status_code == 403
+
+    with pytest.raises(HTTPException) as exc_role:
+        dep_no_service(api_key=f"bia:{SECRET_BIA}", credentials=None)
+    assert exc_role.value.status_code == 403
+
+    dep_allow_service = require_access("ANALISTA", allow_service=True)
+    assert dep_allow_service(api_key=settings.API_KEY, credentials=None).user_id == "service"
