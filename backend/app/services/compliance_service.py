@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models.compliance import AuditLog, ComplianceCheck
 from app.db.models.document import Document
 from app.idp.parser import extract_fields_and_evidence
+from app.services.review_service import ReviewConflict, get_review_state
 from app.services.rules_engine import RulesEngine
 
 UNIDENTIFIED_TYPE_REASON = (
@@ -41,6 +42,12 @@ def evaluate_and_persist(
     auditoria. Nao faz commit: o chamador controla a transacao, de modo que laudo e
     auditoria sao gravados juntos ou nao sao gravados.
     """
+    review_state = get_review_state(db, doc.id)["state"]
+    if review_state in ("PENDING_CHECK", "FINAL"):
+        raise ReviewConflict(
+            f"Reavaliacao bloqueada: documento possui revisao humana em estado {review_state}."
+        )
+
     engine = engine or RulesEngine()
     document_type = resolve_document_type(doc)
     if document_type is None:

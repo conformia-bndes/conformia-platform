@@ -4,7 +4,7 @@ import pytest
 
 from app.core.config import ApiUser, settings
 from app.core.security import hash_api_key
-from app.db.models.compliance import AuditLog
+from app.db.models.compliance import AuditLog, ComplianceCheck
 from app.db.models.document import Document
 from app.db.models.review import ReviewEvent
 
@@ -260,3 +260,44 @@ def test_personal_key_passes_router_auth_in_production(client, db_session, monke
         client.get(f"/api/v1/compliance/reviews/{doc_id}", headers=_as("carla")).status_code == 200
     )
     assert client.get("/api/v1/compliance/rules", headers=_as("ana")).status_code == 200
+
+
+def test_reverify_is_blocked_with_409_when_review_is_pending_or_final(client, db_session):
+    """Issue #199 / #174: bloqueia reavaliacao em PENDING_CHECK e FINAL e permite apos RETURN."""
+    doc_id = _evaluated_document(client, db_session)
+    proposal_id = _propose(client, doc_id, decision="APPROVE").json()["id"]
+
+    # Em PENDING_CHECK, reavaliar deve retornar 409 sem sobrescrever o laudo vigente.
+    blocked_pending = client.post(f"/api/v1/compliance/verify/{doc_id}")
+    assert blocked_pending.status_code == 409
+    assert "PENDING_CHECK" in blocked_pending.json()["detail"]
+
+    # Devolvendo a proposta (RETURNED), a reavaliacao volta a ser permitida.
+    assert _resolve(client, doc_id, proposal_id, action="return").status_code == 201
+    allowed_after_return = client.post(f"/api/v1/compliance/verify/{doc_id}")
+    assert allowed_after_return.status_code == 200
+
+    # Nova proposta confirmada -> estado FINAL: reavaliar deve retornar 409.
+    second_proposal_id = _propose(client, doc_id, decision="APPROVE").json()["id"]
+    assert _resolve(client, doc_id, second_proposal_id, action="confirm").status_code == 201
+    blocked_final = client.post(f"/api/v1/compliance/verify/{doc_id}")
+    assert blocked_final.status_code == 409
+    assert "FINAL" in blocked_final.json()["detail"]
+
+
+def test_confirm_rejects_divergent_report_status_as_defense_in_depth(client, db_session):
+    """Issue #199: defesa em profundidade se o laudo divergir de proposal.report_status."""
+    doc_id = _evaluated_document(client, db_session)
+    proposal_id = _propose(client, doc_id, decision="APPROVE").json()["id"]
+
+    check = db_session.query(ComplianceCheck).filter(ComplianceCheck.document_id == doc_id).first()
+    check.status = "NON_COMPLIANT"
+    db_session.commit()
+
+    confirm_resp = _resolve(client, doc_id, proposal_id, action="confirm")
+    assert confirm_resp.status_code == 409
+    assert "divergente" in confirm_resp.json()["detail"].lower()
+
+    # Devolucao continua permitida para destravar o fluxo.
+    return_resp = _resolve(client, doc_id, proposal_id, action="return")
+    assert return_resp.status_code == 201

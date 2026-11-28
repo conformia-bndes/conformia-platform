@@ -181,6 +181,22 @@ def resolve_proposal(
     if db.query(ReviewEvent).filter(ReviewEvent.resolves_id == proposal_id).first():
         raise ReviewConflict("Proposta ja resolvida.")
 
+    if outcome == "CONFIRMED":
+        statuses = [
+            status
+            for (status,) in db.query(ComplianceCheck.status).filter(
+                ComplianceCheck.document_id == document_id
+            )
+        ]
+        if not statuses:
+            raise ReviewConflict("Documento sem laudo de conformidade vigente.")
+        current_report_status, _ = summarize_statuses(statuses)
+        if current_report_status != proposal.report_status:
+            raise ReviewConflict(
+                "Laudo de conformidade divergente do estado registrado na proposta; "
+                "devolva a proposta antes de decidir."
+            )
+
     event = ReviewEvent(
         document_id=document_id,
         event_type=outcome,

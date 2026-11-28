@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.db.models.document import Document
 from app.db.models.compliance import ComplianceCheck, AuditLog
 from app.services.compliance_service import evaluate_and_persist
+from app.services.review_service import ReviewConflict
 from app.services.rules_engine import RulesEngine, summarize_statuses
 
 router = APIRouter()
@@ -17,7 +18,7 @@ def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
     Executa o motor de regras determinísticas e orquestração Maker-Checker no texto do documento,
     gerando o laudo de conformidade e registrando a trilha de auditoria imutável.
     """
-    doc = db.query(Document).filter(Document.id == document_id).first()
+    doc = db.query(Document).filter(Document.id == document_id).with_for_update().first()
     if not doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Documento não encontrado."
@@ -29,7 +30,15 @@ def verify_document_compliance(document_id: str, db: Session = Depends(get_db)):
             detail="O documento selecionado não possui texto extraído para validação.",
         )
 
-    evaluation, saved_checks = evaluate_and_persist(db, doc, performed_by="HARNESS_RULES_ENGINE")
+    try:
+        evaluation, saved_checks = evaluate_and_persist(
+            db, doc, performed_by="HARNESS_RULES_ENGINE"
+        )
+    except ReviewConflict as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=exc.message,
+        ) from exc
     db.commit()
 
     return {
