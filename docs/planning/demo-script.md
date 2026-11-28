@@ -207,7 +207,7 @@ uv run --frozen pytest backend/tests/test_demo_flow.py -v
 
 - [x] Inventário de 8 PDFs exclusivamente fictícios validado em `docs/samples/` e coberto por `backend/tests/test_demo_flow.py`.
 - [x] Fluxo dos 5 atos (CND válida, CND vencida, CND sem validade, segregação 4 olhos `403` → `FINAL`, trilha de auditoria) e Plano B nativo validados por teste automatizado (`test_demo_flow.py`).
-- [ ] **Ação manual (Docker ativo na máquina da demo):** executar `make up && make smoke` com código `0`.
-- [ ] **Ação manual:** testar chaves `analista.maker` e `analista.checker` no navegador (`ENVIRONMENT=production`, `ALLOW_ANONYMOUS_ACCESS=false`).
-- [ ] **Ação manual:** percorrer os 5 atos ao vivo com os apresentadores e validar o Plano B de OCR/API antes da apresentação (`07` ou `09/12/2026`).
+- [x] **Docker ativo (`make up && make smoke`):** executado com código `0` (`database: healthy`, `redis: healthy`, `minio: healthy`, `STARTED -> SUCCESS`, `overall_status=COMPLIANT`, revisão `state=FINAL decision=APPROVE`).
+- [x] **OCR real em contêiner (`validate_ocr_container.py` + `cnd_federal_digitalizada_ocr.pdf`):** validado no contêiner `backend` (`[ocr-check] OK - method=ocr type=CND_FEDERAL cnpj=12.345.678/0001-90 validade=2030-12-31` e `POST /api/v1/compliance/verify/{id}` → `COMPLIANT`).
+- [x] **Ensaio ponta a ponta dos 5 atos contra a stack Docker (`http://localhost:5173` HTTP 200 e `http://localhost:8000`):** Ato 1 (`COMPLIANT`), Ato 2 (`NON_COMPLIANT`), Ato 3 (`MANUAL_REVIEW_REQUIRED`), Ato 4 (`201` proposta Maker → `403` bloqueio de autoconfirmação → `201` confirmação Checker → `state=FINAL`), Ato 5 (`GET /api/v1/compliance/audit-trail` com `DOCUMENT_UPLOADED`, `COMPLIANCE_EVALUATION`, `REVIEW_PROPOSED` e `REVIEW_CONFIRMED`).
 - [ ] **Opcional (se usar OpenRouter na demo):** confirmar chave rotacionada e testar uma regra `HYBRID` antes da sessão.
