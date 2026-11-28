@@ -34,8 +34,9 @@ Campos de cada regra:
 | `category`, `severity`, `legal_basis` | Classificação e fundamento normativo exibidos no laudo |
 | `type` | `DETERMINISTIC` ou `HYBRID` |
 | `required_keywords` | Termos que precisam estar todos presentes |
-| `anti_keywords` | Termos impeditivos: a presença de qualquer um reprova a regra |
-| `regex_patterns` | Padrões registrados como evidência quando encontrados; não reprovam a regra |
+| `anti_keywords` | Termos impeditivos: a presença não negada de qualquer um reprova a regra (`NON_COMPLIANT`) |
+| `manual_review_keywords` | Termos sensíveis que impedem aprovação automática e encaminham para `MANUAL_REVIEW_REQUIRED` |
+| `regex_patterns` | Padrões estruturais obrigatórios (ex.: CNPJ, código CRF); a ausência de qualquer padrão encaminha para `MANUAL_REVIEW_REQUIRED` (decisão D2) e os padrões encontrados são registrados como evidência |
 | `requires_validity` | Exige data de validade legível. Ausente, vale `true` para FISCAL e TRABALHISTA |
 | `failure_message` | Mensagem do laudo quando os termos obrigatórios não são encontrados (laudo em revisão manual) |
 
@@ -63,17 +64,35 @@ flowchart TD
     A["Termo impeditivo presente?"] -->|sim| NC1["NON_COMPLIANT"]
     A -->|não| B["Todos os termos obrigatórios presentes?"]
     B -->|não| MR0["MANUAL_REVIEW_REQUIRED<br/>(failure_message)"]
-    B -->|sim| C["Data de validade legível?"]
-    C -->|"sim, vencida"| NC3["NON_COMPLIANT<br/>(certidão expirada)"]
-    C -->|"não, e a regra exige validade"| MR["MANUAL_REVIEW_REQUIRED"]
-    C -->|"sim, vigente; ou não exigida"| D{"Tipo da regra"}
+    B -->|sim| C["Validade temporal<br/>(todas as datas rotuladas)"]
+    C -->|"qualquer data vencida"| NC3["NON_COMPLIANT<br/>(certidão expirada)"]
+    C -->|"ausente, impossível ou múltiplas distintas<br/>(quando exigida)"| MR["MANUAL_REVIEW_REQUIRED"]
+    C -->|"única vigente; ou não exigida"| P["Todos os regex_patterns<br/>encontrados?"]
+    P -->|não| MR1["MANUAL_REVIEW_REQUIRED<br/>(padrão ausente)"]
+    P -->|sim| D{"Tipo da regra"}
     D -->|DETERMINISTIC| OK["COMPLIANT"]
     D -->|HYBRID| MC["Maker-Checker"]
     MC --> R["Status proposto pelo Maker,<br/>ou MANUAL_REVIEW_REQUIRED"]
 ```
 
-**Validade temporal.** A data é procurada em expressões como "válida até", "validade",
-"vigência" ou "até", seguidas de `dd/mm/aaaa`. A certidão vale até o fim do dia indicado.
+**Validade temporal (fonte única com o parser IDP).** A função `scan_validity_dates`
+(`backend/app/idp/parser.py`) localiza todas as datas rotuladas como validade ou vigência
+("válida até", "validade", "vigência", "data de validade", "prazo de validade" ou "até" seguido
+de `dd/mm/aaaa`); datas de emissão não entram na análise. A certidão vale até o fim do dia
+indicado e a decisão segue a tabela abaixo:
+
+| Situação no texto | Resultado (`requires_validity=true`) |
+| :-- | :-- |
+| Nenhuma data de validade | `MANUAL_REVIEW_REQUIRED` |
+| Somente datas impossíveis (ex.: `31/02/2026`) | `MANUAL_REVIEW_REQUIRED` |
+| Qualquer data válida vencida (mesmo havendo outra vigente) | `NON_COMPLIANT` |
+| Várias datas válidas vigentes e diferentes entre si (ou data vigente + impossível) | `MANUAL_REVIEW_REQUIRED` |
+| Uma única data válida vigente (ainda que repetida em múltiplas páginas) | Segue para as demais verificações |
+
+**Validação de `regex_patterns`.** Os padrões declarados em `regex_patterns` (como CNPJ em CND,
+CRF e CNDT, e número `CRF...` no CRF) são critérios de validação obrigatórios: quando algum padrão
+não é encontrado no documento, a regra termina em `MANUAL_REVIEW_REQUIRED` (política D2), nunca em
+`COMPLIANT`.
 
 **Regras híbridas.** Depois da triagem determinística, a regra segue para o
 [Maker-Checker](maker-checker.md). Se o LLM estiver indisponível, responder fora do formato ou

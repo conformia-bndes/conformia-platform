@@ -2,13 +2,19 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, DateTime, JSON, Text, ForeignKey
+from sqlalchemy import CheckConstraint, Column, String, Float, DateTime, JSON, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 
 class ComplianceCheck(Base):
     __tablename__ = "compliance_checks"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('COMPLIANT', 'NON_COMPLIANT', 'MANUAL_REVIEW_REQUIRED', 'NOT_APPLICABLE')",
+            name="ck_compliance_checks_status",
+        ),
+    )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     document_id = Column(
