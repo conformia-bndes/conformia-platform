@@ -59,11 +59,12 @@ jobs:
               hadolint --failure-threshold info - < "$dockerfile"
           done
 
-      - name: Validar o docker-compose.yml
+      - name: Validar o docker-compose.yml e o perfil de producao
         if: inputs.stack
         run: |
           bash scripts/setup-env.sh
           docker compose --env-file .env -f infra/docker-compose.yml config --quiet
+          docker compose --env-file .env -f infra/docker-compose.yml -f infra/docker-compose.prod.yml config --quiet
 
   smoke:
     name: Stack
@@ -111,6 +112,11 @@ jobs:
         run: |
           docker compose --env-file .env -f infra/docker-compose.yml \
             up -d --no-build --wait --wait-timeout 240
+
+      - name: Verificar que o Redis exige autenticacao (conexao sem senha falha)
+        run: |
+          out="$(docker compose --env-file .env -f infra/docker-compose.yml exec -T redis redis-cli ping 2>&1 || true)"
+          echo "$out" | grep -q "NOAUTH"
 
       - name: Smoke (upload -> fila -> worker -> laudo -> revisao humana)
         run: |

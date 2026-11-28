@@ -13,7 +13,13 @@ import sys
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "backend"))
 sys.path.insert(0, BACKEND_DIR)
 # Valores descartaveis: o provider nao usa banco, fila nem storage.
-for _name in ("SECRET_KEY", "API_KEY", "POSTGRES_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"):
+for _name in (
+    "SECRET_KEY",
+    "API_KEY",
+    "POSTGRES_PASSWORD",
+    "MINIO_ROOT_USER",
+    "MINIO_ROOT_PASSWORD",
+):
     os.environ.setdefault(_name, "promptfoo-only")
 
 from app.ai.llm_client import MakerCheckerValidator  # noqa: E402

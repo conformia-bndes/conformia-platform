@@ -35,7 +35,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 # O benchmark nao usa banco, fila nem storage; valores descartaveis apenas satisfazem a
 # validacao de Settings no import (segredos nao possuem default no codigo).
-for _name in ("SECRET_KEY", "API_KEY", "POSTGRES_PASSWORD", "MINIO_ROOT_USER", "MINIO_ROOT_PASSWORD"):
+for _name in (
+    "SECRET_KEY",
+    "API_KEY",
+    "POSTGRES_PASSWORD",
+    "MINIO_ROOT_USER",
+    "MINIO_ROOT_PASSWORD",
+):
     os.environ.setdefault(_name, "eval-only")
 
 from app.ai.llm_client import LLMUnavailableError, MakerCheckerValidator  # noqa: E402
@@ -68,14 +74,13 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
         "input_text": (
             "REPÚBLICA FEDERATIVA DO BRASIL - MINISTÉRIO DA FAZENDA\n"
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
             "É certificado que não constam pendências em nome do sujeito passivo.\n"
             "Válida até: 31/12/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-001": "COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-001": "COMPLIANT"},
     },
     {
         "id": "CASE-002",
@@ -85,9 +90,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "CERTIDÃO POSITIVA - CONSTA PENDÊNCIA RELATIVA AOS TRIBUTOS FEDERAIS E DÍVIDA ATIVA\n"
             "CNPJ: 98.765.432/0001-11"
         ),
-        "expected_results": {
-            "RULE-BNDES-001": "NON_COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-001": "NON_COMPLIANT"},
     },
     {
         "id": "CASE-003",
@@ -100,9 +103,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "A Caixa Econômica Federal certifica que a empresa encontra-se em SITUAÇÃO REGULAR.\n"
             "Validade: 15/11/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-002": "COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-002": "COMPLIANT"},
     },
     {
         "id": "CASE-004",
@@ -112,36 +113,32 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "CERTIDÃO DOS DISTRIBUIDORES CÍVEIS\n"
             "CONSTA DISTRIBUIÇÃO DE PROCESSO DE FALÊNCIA E RECUPERAÇÃO JUDICIAL"
         ),
-        "expected_results": {
-            "RULE-BNDES-004": "NON_COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-004": "NON_COMPLIANT"},
     },
     {
         "id": "CASE-005",
         "description": "CND Federal com Validade Expirada (Não Conforme Temporal)",
         "input_text": (
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
             "É certificado que não constam pendências em nome do sujeito passivo.\n"
             "Válida até: 01/01/2020"
         ),
-        "expected_results": {
-            "RULE-BNDES-001": "NON_COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-001": "NON_COMPLIANT"},
     },
     {
         "id": "CASE-006",
         "description": "CND Federal sem Data de Validade Legível (AGENTS.md, diretriz 1)",
         "input_text": (
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
             "É certificado que não constam pendências em nome do sujeito passivo."
         ),
-        "expected_results": {
-            "RULE-BNDES-001": "MANUAL_REVIEW_REQUIRED"
-        }
+        "expected_results": {"RULE-BNDES-001": "MANUAL_REVIEW_REQUIRED"},
     },
     {
         "id": "CASE-007",
@@ -151,29 +148,30 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
             "A Caixa Econômica Federal certifica que a empresa encontra-se em SITUAÇÃO REGULAR."
         ),
-        "expected_results": {
-            "RULE-BNDES-002": "MANUAL_REVIEW_REQUIRED"
-        }
+        "expected_results": {"RULE-BNDES-002": "MANUAL_REVIEW_REQUIRED"},
     },
     {
         "id": "CASE-008",
         "description": "CND Federal válida não é reprovada por regras de outras tipologias",
         "input_text": (
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
             "Válida até: 31/12/2026"
         ),
         "expected_results": {
             "RULE-BNDES-001": "COMPLIANT",
             "RULE-BNDES-002": "NOT_APPLICABLE",
-            "RULE-BNDES-004": "NOT_APPLICABLE"
+            "RULE-BNDES-004": "NOT_APPLICABLE",
         },
-        "expected_overall": "COMPLIANT"
+        "expected_overall": "COMPLIANT",
     },
     {
         "id": "CASE-009",
-        "description": "Licença Ambiental: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)",
+        "description": (
+            "Licença Ambiental: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)"
+        ),
         "input_text": (
             "IBAMA - INSTITUTO BRASILEIRO DO MEIO AMBIENTE\n"
             "ÓRGÃO AMBIENTAL FEDERAL\n"
@@ -188,24 +186,22 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "RULE-BNDES-004": "NOT_APPLICABLE",
             # HYBRID sem LLM: Maker-Checker fail-closed
             "RULE-BNDES-005": "MANUAL_REVIEW_REQUIRED",
-            "RULE-BNDES-006": "NOT_APPLICABLE"
+            "RULE-BNDES-006": "NOT_APPLICABLE",
         },
-        "expected_overall": "MANUAL_REVIEW_REQUIRED"
+        "expected_overall": "MANUAL_REVIEW_REQUIRED",
     },
     {
         "id": "CASE-010",
         "description": "CND Federal que cita licença ambiental continua CND_FEDERAL",
         "input_text": (
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
-            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
             "CNPJ: 12.345.678/0001-90\n"
             "Finalidade: instruir pedido de licença ambiental\n"
             "Válida até: 31/12/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-001": "COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-001": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-011",
@@ -219,10 +215,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "Finalidade: licença ambiental de operação\n"
             "Validade: 15/11/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-002": "COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-002": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-012",
@@ -235,24 +228,20 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "Finalidade: licença ambiental\n"
             "Validade: 20/12/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-003": "COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-003": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-013",
-        "description": "Certidão de falência que cita licença ambiental continua FALENCIA_RECUPERACAO",
+        "description": (
+            "Certidão de falência que cita licença ambiental continua FALENCIA_RECUPERACAO"
+        ),
         "input_text": (
             "TRIBUNAL DE JUSTIÇA DO ESTADO DO RIO DE JANEIRO\n"
             "CERTIDÃO DOS DISTRIBUIDORES CÍVEIS\n"
             "CONSTA DISTRIBUIÇÃO DE PROCESSO DE FALÊNCIA E RECUPERAÇÃO JUDICIAL\n"
             "Finalidade: renovação de licença ambiental"
         ),
-        "expected_results": {
-            "RULE-BNDES-004": "NON_COMPLIANT",
-            "RULE-BNDES-005": "NOT_APPLICABLE"
-        }
+        "expected_results": {"RULE-BNDES-004": "NON_COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
     },
     {
         "id": "CASE-014",
@@ -271,13 +260,15 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "RULE-BNDES-004": "NOT_APPLICABLE",
             "RULE-BNDES-005": "NOT_APPLICABLE",
             # HYBRID sem LLM: Maker-Checker fail-closed
-            "RULE-BNDES-006": "MANUAL_REVIEW_REQUIRED"
+            "RULE-BNDES-006": "MANUAL_REVIEW_REQUIRED",
         },
-        "expected_overall": "MANUAL_REVIEW_REQUIRED"
+        "expected_overall": "MANUAL_REVIEW_REQUIRED",
     },
     {
         "id": "CASE-015",
-        "description": "Consulta CEIS que cita licença ambiental e IBAMA é avaliada pela 006, não pela 005",
+        "description": (
+            "Consulta CEIS que cita licença ambiental e IBAMA é avaliada pela 006, não pela 005"
+        ),
         "input_text": (
             "PORTAL DA TRANSPARÊNCIA - CONTROLADORIA-GERAL DA UNIÃO\n"
             "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS (CEIS)\n"
@@ -286,10 +277,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "Sanção: IMPEDIMENTO DE LICITAR E CONTRATAR\n"
             "Data da consulta: 28/10/2026"
         ),
-        "expected_results": {
-            "RULE-BNDES-005": "NOT_APPLICABLE",
-            "RULE-BNDES-006": "NON_COMPLIANT"
-        }
+        "expected_results": {"RULE-BNDES-005": "NOT_APPLICABLE", "RULE-BNDES-006": "NON_COMPLIANT"},
     },
 ]
 
@@ -358,14 +346,20 @@ def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) 
             if expected_status != "COMPLIANT" and actual_status == "COMPLIANT":
                 false_positives += 1
                 outcome = "FALSE_POSITIVE"
-                print(f"  [FAIL] FALHA CRITICA (Falso Positivo) em {rule_id}: Esperado={expected_status}, Obtido={actual_status}")
+                print(
+                    f"  [FAIL] FALHA CRITICA (Falso Positivo) em {rule_id}: "
+                    f"Esperado={expected_status}, Obtido={actual_status}"
+                )
             elif actual_status == expected_status:
                 passed_checks += 1
                 outcome = "PASS"
                 print(f"  [PASS] {rule_id}: Sucesso (Status: {actual_status})")
             else:
                 outcome = "DIVERGENCE"
-                print(f"  [WARN] {rule_id}: Divergencia. Esperado={expected_status}, Obtido={actual_status}")
+                print(
+                    f"  [WARN] {rule_id}: Divergencia. "
+                    f"Esperado={expected_status}, Obtido={actual_status}"
+                )
             check_records.append(
                 {
                     "case_id": case["id"],
@@ -414,7 +408,10 @@ def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) 
         _log_to_mlflow(report, json_report)
 
     if not passed:
-        print("[FAIL] Regressao detectada nos Evals. O pipeline nao atingiu os criterios de aceitacao.")
+        print(
+            "[FAIL] Regressao detectada nos Evals. "
+            "O pipeline nao atingiu os criterios de aceitacao."
+        )
         return False
 
     print("[PASS] Todos os criterios de Evals foram aprovados sem regressoes.")
@@ -461,7 +458,8 @@ def _log_to_mlflow(report: Dict[str, Any], json_report: Optional[str]) -> None:
 
     if not os.environ.get("MLFLOW_TRACKING_URI"):
         repo_root = os.path.abspath(os.path.join(EVALS_DIR, ".."))
-        mlflow.set_tracking_uri("sqlite:///" + os.path.join(repo_root, "mlflow.db").replace("\\", "/"))
+        db_path = os.path.join(repo_root, "mlflow.db").replace("\\", "/")
+        mlflow.set_tracking_uri(f"sqlite:///{db_path}")
     mlflow.set_experiment("conformia-evals")
     with mlflow.start_run(run_name=f"evals-{report['reference_date']}"):
         mlflow.log_params(
