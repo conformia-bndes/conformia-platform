@@ -11,6 +11,7 @@ import {
   AuditLogItem,
 } from './services/api';
 import { describeApiError } from './services/presentation';
+import { createDocumentPoller, PollingSnapshot } from './services/polling';
 import { Header, ActiveTab } from './components/Header';
 import { Footer } from './components/Footer';
 import { DocumentUploadTab } from './components/DocumentUploadTab';
@@ -45,6 +46,8 @@ export default function App() {
 
   // Falhas sao exibidas como erro; a interface nunca substitui a resposta da API por dados simulados.
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pollingState, setPollingState] = useState<PollingSnapshot | null>(null);
+  const [pollingResetCount, setPollingResetCount] = useState<number>(0);
   const uploadTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -62,21 +65,26 @@ export default function App() {
   useEffect(() => {
     if (!hasProcessingDocs) return;
 
-    const intervalId = window.setInterval(() => {
-      apiService
-        .listDocuments()
-        .then((res) => {
-          setDocuments(res.items || []);
-        })
-        .catch(() => {
-          // Polling silencioso; falhas explícitas continuam visíveis ao atualizar manualmente.
-        });
-    }, 2500);
+    const poller = createDocumentPoller({
+      poll: () => apiService.listDocuments(),
+      onSuccess: (res) => {
+        setDocuments(res.items || []);
+      },
+      onStateChange: (snapshot) => {
+        setPollingState(snapshot);
+      },
+    });
+
+    const onVisibilityChange = () => poller.handleVisibilityChange();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    poller.start();
 
     return () => {
-      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      poller.stop();
+      setPollingState(null);
     };
-  }, [hasProcessingDocs]);
+  }, [hasProcessingDocs, pollingResetCount]);
 
   const handleSaveApiKey = (newKey: string | null) => {
     setApiKey(newKey);
@@ -113,6 +121,12 @@ export default function App() {
     } finally {
       setLoadingDocs(false);
     }
+  };
+
+  const handleManualRefreshDocuments = async () => {
+    setPollingState(null);
+    setPollingResetCount((prev) => prev + 1);
+    await loadDocuments();
   };
 
   useEffect(() => {
@@ -190,13 +204,20 @@ export default function App() {
     if (tab === 'audit') loadAuditLogs();
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const uploadPdfFile = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       setErrorMessage('Selecione um arquivo no formato PDF.');
-      event.target.value = '';
+      return;
+    }
+
+    if (file.size === 0) {
+      setErrorMessage('O arquivo PDF selecionado está vazio.');
+      return;
+    }
+
+    const MAX_PDF_BYTES = 50 * 1024 * 1024;
+    if (file.size > MAX_PDF_BYTES) {
+      setErrorMessage('O arquivo excede o limite máximo de 50 MB.');
       return;
     }
 
@@ -211,6 +232,7 @@ export default function App() {
       setUploadMessage('Enviando documento para a fila de processamento OCR/IDP...');
       await apiService.uploadDocument(file);
       setUploadMessage('Documento recebido e enviado para processamento. O status será atualizado automaticamente.');
+      setPollingResetCount((prev) => prev + 1);
       await loadDocuments();
       uploadTimerRef.current = window.setTimeout(() => {
         setUploadMessage(null);
@@ -220,9 +242,18 @@ export default function App() {
       setUploadMessage(null);
       setErrorMessage(describeApiError(error, 'Falha no envio do documento.'));
     } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadPdfFile(file);
+    } finally {
       // Permite reenviar o mesmo arquivo apos uma falha.
       event.target.value = '';
-      setUploading(false);
     }
   };
 
@@ -242,7 +273,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+    <div className="min-h-screen flex flex-col bg-bndes-bg text-bndes-ink">
       <Header
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -269,59 +300,83 @@ export default function App() {
         {errorMessage && (
           <div
             role="alert"
-            className="mb-6 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm"
+            className="mb-6 p-4 rounded-md bg-bndes-orange-tint border border-bndes-orange-border border-l-4 border-l-bndes-orange text-bndes-orange-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)"
           >
-            <div className="flex items-center space-x-2">
-              <XCircle className="w-5 h-5 text-rose-600" />
-              <span>{errorMessage}</span>
+            <div className="flex items-center space-x-2.5">
+              <XCircle className="w-5 h-5 text-bndes-orange shrink-0" aria-hidden="true" />
+              <span className="font-medium">{errorMessage}</span>
             </div>
-            <button onClick={() => setErrorMessage(null)} className="text-rose-600 hover:text-rose-800" title="Fechar">
-              <X className="w-4 h-4" />
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="text-bndes-orange-ink/80 hover:text-bndes-orange-ink p-1 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
+              title="Fechar"
+              aria-label="Fechar aviso de erro"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
         {uploadMessage && (
-          <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-sm">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <span>{uploadMessage}</span>
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-6 p-4 rounded-md bg-bndes-green-tint border border-bndes-green-border border-l-4 border-l-bndes-green text-bndes-green-ink text-sm flex items-center justify-between shadow-(--shadow-bndes-card)"
+          >
+            <div className="flex items-center space-x-2.5">
+              <CheckCircle2 className="w-5 h-5 text-bndes-green shrink-0" aria-hidden="true" />
+              <span className="font-medium">{uploadMessage}</span>
             </div>
-            <button onClick={() => setUploadMessage(null)} className="text-emerald-600 hover:text-emerald-800" title="Fechar">
-              <X className="w-4 h-4" />
+            <button
+              type="button"
+              onClick={() => setUploadMessage(null)}
+              className="text-bndes-green-ink/80 hover:text-bndes-green-ink p-1 rounded transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bndes-blue-2"
+              title="Fechar"
+              aria-label="Fechar aviso de envio"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
 
         {activeTab === 'upload' && (
-          <DocumentUploadTab
-            documents={documents}
-            loadingDocs={loadingDocs}
-            uploading={uploading}
-            verifyingId={verifyingId}
-            activeReport={activeReport}
-            apiKeyLabel={getApiKeyLabel(sessionKey)}
-            onFileUpload={handleFileUpload}
-            onRefreshDocuments={loadDocuments}
-            onVerifyCompliance={handleVerifyCompliance}
-            onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
-            onCloseReport={() => setActiveReport(null)}
-          />
+          <div id="panel-upload" role="tabpanel" aria-labelledby="tab-upload">
+            <DocumentUploadTab
+              documents={documents}
+              loadingDocs={loadingDocs}
+              uploading={uploading}
+              verifyingId={verifyingId}
+              activeReport={activeReport}
+              apiKeyLabel={getApiKeyLabel(sessionKey)}
+              pollingState={hasProcessingDocs ? pollingState : null}
+              onFileUpload={handleFileUpload}
+              onFileDrop={uploadPdfFile}
+              onRefreshDocuments={handleManualRefreshDocuments}
+              onVerifyCompliance={handleVerifyCompliance}
+              onOpenApiKeyModal={() => setApiKeyModalOpen(true)}
+              onCloseReport={() => setActiveReport(null)}
+            />
+          </div>
         )}
 
         {activeTab === 'checklist' && (
-          <ChecklistTab
-            rules={rules}
-            loadingRules={loadingRules}
-            onRefreshRules={loadRules}
-          />
+          <div id="panel-checklist" role="tabpanel" aria-labelledby="tab-checklist">
+            <ChecklistTab
+              rules={rules}
+              loadingRules={loadingRules}
+              onRefreshRules={loadRules}
+            />
+          </div>
         )}
 
         {activeTab === 'audit' && (
-          <AuditTrailTab
-            auditLogs={auditLogs}
-            loadingAudit={loadingAudit}
-            onRefreshAudit={loadAuditLogs}
-          />
+          <div id="panel-audit" role="tabpanel" aria-labelledby="tab-audit">
+            <AuditTrailTab
+              auditLogs={auditLogs}
+              loadingAudit={loadingAudit}
+              onRefreshAudit={loadAuditLogs}
+            />
+          </div>
         )}
       </main>
 

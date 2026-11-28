@@ -43,6 +43,10 @@ flowchart LR
 
 ## 3. Catálogo de Requisitos Funcionais (RF01 a RF15)
 
+O MVP cobre RF01 a RF10. **RF11 a RF15 estão fora do MVP** (issues #148 a #152; motivos na seção 1
+do [Plano de Entrega](DELIVERY_PLAN_2026_12_05.md)). O RF01 cita JWT, mas a implementação usa chaves
+de API pessoais (decisão D1); essa divergência é tratada na issue #163.
+
 | ID       | Requisito Funcional                | Prioridade  | Critério de Aceite Formal                                                                                    |
 | :------- | :--------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------- |
 | **RF01** | **Autenticação e RBAC**            | Alta        | Suporte a autenticação segura por token JWT com perfis segregados: `Admin`, `Analista`, `Auditor`.           |
@@ -55,11 +59,11 @@ flowchart LR
 | **RF08** | **Exibição de Evidências**         | Alta        | Interface destacando o trecho exato e página do documento original que fundamentou a classificação.          |
 | **RF09** | **Revisão Humana e Exceções**      | Alta        | Fluxo operacional para analista aprovar, rejeitar ou deferir exceção justificada com parecer técnico formal. |
 | **RF10** | **Trilha de Auditoria Imutável**   | Alta        | Gravação transacional de todos os eventos com timestamp UTC, ID do executor, hash do arquivo e laudo.        |
-| **RF11** | **Relatório Consolidado**          | Média       | Exportação de laudo pericial em formato PDF/JSON estruturado para órgãos de controle externo (TCU/CGU).      |
-| **RF12** | **Dashboard de Acurácia**          | Média       | Painel analítico exibindo indicadores de acurácia, recall, CER, tempo médio e taxa de revisão manual.        |
-| **RF13** | **Camada de Conectores Externos**  | Média       | Integração modular com adaptadores de APIs governamentais (Receita Federal, Caixa, TST, Juntas).             |
-| **RF14** | **Alertas e Notificações**         | Baixa/Média | Disparo de alertas preventivos sobre certidões próximas do vencimento durante a vigência do contrato.        |
-| **RF15** | **Agendamento e Reprocessamento**  | Baixa       | Execução periódica automatizada via Celery Beat para revalidação de proponentes ativos na carteira.          |
+| **RF11** | **Relatório Consolidado**          | Média       | Exportação de laudo pericial em formato PDF/JSON estruturado para órgãos de controle externo (TCU/CGU). **Fora do MVP** (#148). |
+| **RF12** | **Dashboard de Acurácia**          | Média       | Painel analítico exibindo indicadores de acurácia, recall, CER, tempo médio e taxa de revisão manual. **Fora do MVP** (#149). |
+| **RF13** | **Camada de Conectores Externos**  | Média       | Integração modular com adaptadores de APIs governamentais (Receita Federal, Caixa, TST, Juntas). **Fora do MVP** (#150). |
+| **RF14** | **Alertas e Notificações**         | Baixa/Média | Disparo de alertas preventivos sobre certidões próximas do vencimento durante a vigência do contrato. **Fora do MVP** (#151). |
+| **RF15** | **Agendamento e Reprocessamento**  | Baixa       | Execução periódica automatizada via Celery Beat para revalidação de proponentes ativos na carteira. **Fora do MVP** (#152). |
 
 ---
 

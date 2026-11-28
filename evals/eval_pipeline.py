@@ -44,6 +44,7 @@ for _name in (
 ):
     os.environ.setdefault(_name, "eval-only")
 
+from app.ai.llm_client import LLMUnavailableError, MakerCheckerValidator  # noqa: E402
 from app.idp.parser import extract_fields_and_evidence  # noqa: E402
 from app.services.rules_engine import RulesEngine  # noqa: E402
 
@@ -52,6 +53,17 @@ RULES_FILE = os.path.join(EVALS_DIR, "..", "rules", "schemas", "bndes_sample_che
 # Data de referencia fixa: o resultado do benchmark nao depende do dia em que roda.
 REFERENCE_DATE = date(2026, 10, 29)
 ACCURACY_THRESHOLD = 90.0
+
+
+class _LLMDisabledClient:
+    """
+    Cliente de LLM que sempre recusa. O benchmark mede as regras deterministicas e o
+    fail-closed do Maker-Checker; ele nao pode depender de OPENAI_API_KEY no .env nem
+    de rede. O MakerCheckerValidator trata a recusa como LLM indisponivel.
+    """
+
+    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
+        raise LLMUnavailableError("LLM desativada no benchmark de evals.")
 
 
 # Casos de teste de referência com Ground Truth
@@ -153,6 +165,116 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
         },
         "expected_overall": "COMPLIANT",
     },
+    {
+        "id": "CASE-009",
+        "description": (
+            "Licença Ambiental: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)"
+        ),
+        "input_text": (
+            "IBAMA - INSTITUTO BRASILEIRO DO MEIO AMBIENTE\n"
+            "ÓRGÃO AMBIENTAL FEDERAL\n"
+            "LICENÇA AMBIENTAL DE OPERAÇÃO N. 1010/2026\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Válida até: 01/03/2029"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "NOT_APPLICABLE",
+            "RULE-BNDES-002": "NOT_APPLICABLE",
+            "RULE-BNDES-003": "NOT_APPLICABLE",
+            "RULE-BNDES-004": "NOT_APPLICABLE",
+            # HYBRID sem LLM: Maker-Checker fail-closed
+            "RULE-BNDES-005": "MANUAL_REVIEW_REQUIRED",
+            "RULE-BNDES-006": "NOT_APPLICABLE",
+        },
+        "expected_overall": "MANUAL_REVIEW_REQUIRED",
+    },
+    {
+        "id": "CASE-010",
+        "description": "CND Federal que cita licença ambiental continua CND_FEDERAL",
+        "input_text": (
+            "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
+            "E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Finalidade: instruir pedido de licença ambiental\n"
+            "Válida até: 31/12/2026"
+        ),
+        "expected_results": {"RULE-BNDES-001": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
+    },
+    {
+        "id": "CASE-011",
+        "description": "CRF FGTS que cita licença ambiental continua CRF_FGTS",
+        "input_text": (
+            "CAIXA ECONÔMICA FEDERAL\n"
+            "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
+            "A empresa encontra-se em SITUAÇÃO REGULAR.\n"
+            "Finalidade: licença ambiental de operação\n"
+            "Validade: 15/11/2026"
+        ),
+        "expected_results": {"RULE-BNDES-002": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
+    },
+    {
+        "id": "CASE-012",
+        "description": "CNDT que cita licença ambiental continua CNDT_TRABALHISTA",
+        "input_text": (
+            "PODER JUDICIÁRIO - JUSTIÇA DO TRABALHO\n"
+            "CERTIDÃO NEGATIVA DE DÉBITOS TRABALHISTAS\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Não constam débitos inadimplidos.\n"
+            "Finalidade: licença ambiental\n"
+            "Validade: 20/12/2026"
+        ),
+        "expected_results": {"RULE-BNDES-003": "COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
+    },
+    {
+        "id": "CASE-013",
+        "description": (
+            "Certidão de falência que cita licença ambiental continua FALENCIA_RECUPERACAO"
+        ),
+        "input_text": (
+            "TRIBUNAL DE JUSTIÇA DO ESTADO DO RIO DE JANEIRO\n"
+            "CERTIDÃO DOS DISTRIBUIDORES CÍVEIS\n"
+            "CONSTA DISTRIBUIÇÃO DE PROCESSO DE FALÊNCIA E RECUPERAÇÃO JUDICIAL\n"
+            "Finalidade: renovação de licença ambiental"
+        ),
+        "expected_results": {"RULE-BNDES-004": "NON_COMPLIANT", "RULE-BNDES-005": "NOT_APPLICABLE"},
+    },
+    {
+        "id": "CASE-014",
+        "description": "Consulta CEIS: regras de outras tipologias ficam NOT_APPLICABLE (sem LLM)",
+        "input_text": (
+            "PORTAL DA TRANSPARÊNCIA - CONTROLADORIA-GERAL DA UNIÃO\n"
+            "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS (CEIS)\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Resultado: NADA CONSTA\n"
+            "Data da consulta: 28/10/2026"
+        ),
+        "expected_results": {
+            "RULE-BNDES-001": "NOT_APPLICABLE",
+            "RULE-BNDES-002": "NOT_APPLICABLE",
+            "RULE-BNDES-003": "NOT_APPLICABLE",
+            "RULE-BNDES-004": "NOT_APPLICABLE",
+            "RULE-BNDES-005": "NOT_APPLICABLE",
+            # HYBRID sem LLM: Maker-Checker fail-closed
+            "RULE-BNDES-006": "MANUAL_REVIEW_REQUIRED",
+        },
+        "expected_overall": "MANUAL_REVIEW_REQUIRED",
+    },
+    {
+        "id": "CASE-015",
+        "description": (
+            "Consulta CEIS que cita licença ambiental e IBAMA é avaliada pela 006, não pela 005"
+        ),
+        "input_text": (
+            "PORTAL DA TRANSPARÊNCIA - CONTROLADORIA-GERAL DA UNIÃO\n"
+            "CADASTRO NACIONAL DE EMPRESAS INIDÔNEAS E SUSPENSAS (CEIS)\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Órgão sancionador: IBAMA - Licença ambiental de operação cassada\n"
+            "Sanção: IMPEDIMENTO DE LICITAR E CONTRATAR\n"
+            "Data da consulta: 28/10/2026"
+        ),
+        "expected_results": {"RULE-BNDES-005": "NOT_APPLICABLE", "RULE-BNDES-006": "NON_COMPLIANT"},
+    },
 ]
 
 
@@ -186,9 +308,14 @@ def run_evaluation(json_report: Optional[str] = None, use_mlflow: bool = False) 
     print("=" * 70)
     print("Conform.IA BNDES - Pipeline de Avaliacao Continua (Evals)")
     print(f"Data de referencia: {REFERENCE_DATE.isoformat()}")
+    print("LLM: desativada (regras HYBRID terminam em revisao manual, fail-closed)")
     print("=" * 70)
 
-    engine = RulesEngine(rules_file=RULES_FILE, today=lambda: REFERENCE_DATE)
+    engine = RulesEngine(
+        rules_file=RULES_FILE,
+        maker_checker=MakerCheckerValidator(client=_LLMDisabledClient()),
+        today=lambda: REFERENCE_DATE,
+    )
     total_checks = 0
     passed_checks = 0
     false_positives = 0
