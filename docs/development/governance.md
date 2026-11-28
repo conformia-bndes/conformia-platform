@@ -86,8 +86,26 @@ Status do Kanban: **Backlog → A fazer → Em andamento → Em revisão → Con
 
 Somente o time `maintainers` pode ignorar os rulesets, e apenas para correções emergenciais. Em `dev`, esse bypass vale só para merge de PR: ninguém consegue apagar a branch nem fazer push direto, o que evita apagá-la pelo botão "Delete branch" após a promoção para `main`.
 
-### Revisão por pares e boas práticas
+### Revisão por pares, Política de Bypass e Exceções (Issue `#171` / `AUD-17b`)
 
 - **Quem revisa:** o time dono da área, conforme a tabela da seção 1 e o `.github/CODEOWNERS`. Em `main`, a aprovação vem de alguém que não fez o último push.
-- **Nível de proteção de `main`:** decisão registrada no [ADR-004](../architecture/adr-004-protecao-main-e-revisao.md). O bypass é só para emergência e deve ser justificado no PR.
+- **Nível de proteção de `main`:** decisão registrada no [ADR-004](../architecture/adr-004-protecao-main-e-revisao.md).
+- **Política de bypass em `main-protection` (`id: 24061709`):**
+  1. **Modo alvo (`bypass_mode: pull_request`):** restringir o bypass do time `maintainers` exclusivamente ao merge de Pull Request (alinhado ao `dev-protection`), eliminando qualquer possibilidade de push direto em `main` (`always` → `pull_request`).
+  2. **Proteção inviolável do `CI OK`:** nenhum merge em `main` nem publicação de release (`cd.yml`) pode ocorrer sem o check `CI OK` verde no SHA exato do commit. O bypass de revisão nunca dispensa o CI verde.
+  3. **Política de exceções (mantenedor único):** o bypass de revisão de par só é permitido em emergência ou indisponibilidade comprovada de revisores perto de entrega, devendo registrar comentário explícito no PR com motivo, SHA avaliado e solicitação de auditoria posterior ao time `devops` (`@arthurmgl99`), mitigando o conflito de interesse do mantenedor único.
+- **Verificação e atualização do ruleset (ação manual após aprovação do time `devops`):**
+
+```bash
+# Inspecionar o estado atual do ruleset main-protection (somente leitura)
+gh api repos/conformia-bndes/conformia-platform/rulesets/24061709 \
+  --jq '{id, name, enforcement, bypass_actors}'
+
+# Aplicar bypass_mode="pull_request" (executar somente apos aprovacao formal da politica)
+# Ajusta apenas bypass_actors preservando todas as demais regras de main-protection.
+gh api repos/conformia-bndes/conformia-platform/rulesets/24061709 \
+  | jq '{name, target, enforcement, conditions, rules, bypass_actors: (.bypass_actors | map(.bypass_mode = "pull_request"))}' \
+  | gh api -X PUT repos/conformia-bndes/conformia-platform/rulesets/24061709 --input -
+```
+
 - **OpenSSF Best Practices:** projeto cadastrado em [bestpractices.dev](https://www.bestpractices.dev/projects/16430), com o selo no `README.md`.

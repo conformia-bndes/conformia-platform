@@ -1,6 +1,7 @@
 """Parser and structured entity extractor for Intelligent Document Processing (IDP)."""
 
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import date, datetime, timezone
 import re
 import unicodedata
 from typing import Any, Dict, List, Optional, Tuple
@@ -11,6 +12,86 @@ from app.schemas.error import ErrorDetail
 from app.schemas.evidence import PageEvidence
 from app.schemas.extraction import ExtractedField, ExtractionResult
 from app.schemas.processing import ProcessingStatusResponse
+
+# Fonte unica para localizar datas rotuladas como validade/vigencia no texto.
+# Datas de emissao ("Emitida em", "Emissao", "Expedicao") nao entram neste padrao.
+VALIDITY_DATE_PATTERN = re.compile(
+    r"(?:"
+    r"v[aá]lid[ao]\s+at[eé]"
+    r"|data\s+de\s+validade"
+    r"|prazo\s+de\s+validade"
+    r"|validade(?:\s+at[eé])?"
+    r"|vig[eê]ncia(?:\s+at[eé])?"
+    r"|\bat[eé](?:\s+o\s+dia)?"
+    r")"
+    r"[\s:\-]+(\d{2})[/\-.](\d{2})[/\-.](\d{4})",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class ValidityDateMatch:
+    """Uma ocorrencia rotulada de data de validade encontrada no documento."""
+
+    raw_match: str
+    raw_date: str
+    parsed_date: Optional[date]
+
+
+@dataclass(frozen=True)
+class ValidityScanResult:
+    """Resultado consolidado de todas as datas de validade rotuladas no texto."""
+
+    matches: Tuple[ValidityDateMatch, ...]
+    valid_dates: Tuple[date, ...]
+    invalid_raw_dates: Tuple[str, ...]
+
+
+def scan_validity_dates(text: str) -> ValidityScanResult:
+    """
+    Extrai todas as datas rotuladas como validade/vigencia no texto (fonte unica
+    compartilhada entre parser IDP e motor de regras).
+
+    - Datas validas sao deduplicadas preservando a ordem de aparicao (repeticao da
+      mesma data em cabecalho/rodape de varias paginas conta como uma unica data).
+    - Datas impossiveis (ex.: 31/02/2026) ficam registradas em `invalid_raw_dates`
+      para impedir aprovacao automatica.
+    """
+    if not text:
+        return ValidityScanResult(matches=(), valid_dates=(), invalid_raw_dates=())
+
+    normalized = unicodedata.normalize("NFC", text)
+    matches: List[ValidityDateMatch] = []
+    valid_dates: List[date] = []
+    seen_valid: set[date] = set()
+    invalid_raw_dates: List[str] = []
+
+    for match in VALIDITY_DATE_PATTERN.finditer(normalized):
+        day_str, month_str, year_str = match.groups()
+        raw_date = f"{day_str}/{month_str}/{year_str}"
+        parsed: Optional[date] = None
+        try:
+            parsed = date(int(year_str), int(month_str), int(day_str))
+        except ValueError:
+            if raw_date not in invalid_raw_dates:
+                invalid_raw_dates.append(raw_date)
+        else:
+            if parsed not in seen_valid:
+                seen_valid.add(parsed)
+                valid_dates.append(parsed)
+        matches.append(
+            ValidityDateMatch(
+                raw_match=match.group(0).strip(),
+                raw_date=raw_date,
+                parsed_date=parsed,
+            )
+        )
+
+    return ValidityScanResult(
+        matches=tuple(matches),
+        valid_dates=tuple(valid_dates),
+        invalid_raw_dates=tuple(invalid_raw_dates),
+    )
 
 
 def normalize_text(text: str) -> str:
@@ -238,31 +319,31 @@ def extract_fields_and_evidence(
             evidence=ev,
         )
 
-    # 3. Extracao de Data de Validade
-    validity_patterns = [
-        (
-            r"(?:v[aá]lid[ao]\s+at[eé]|validade|vig[eê]ncia|data\s+de\s+validade)"
-            r"[\s:]+(\d{2})[/\-.](\d{2})[/\-.](\d{4})"
-        ),
-        r"at[eé]\s+(\d{2})[/\-.](\d{2})[/\-.](\d{4})",
-    ]
-    for pattern in validity_patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            day, month, year = match.groups()
-            raw_date = f"{day}/{month}/{year}"
-            iso_date = f"{year}-{month}-{day}"
-            page_num, snippet = _find_page_and_snippet(pattern, pages, text)
-            ev = PageEvidence(text=snippet or raw_date, page=page_num, confidence=1.0)
-            evidences.append(ev)
-            fields["data_validade"] = ExtractedField(
-                name="data_validade",
-                value=iso_date,
-                raw_value=raw_date,
-                confidence=1.0,
-                evidence=ev,
-            )
-            break
+    # 3. Extracao de Data de Validade (fonte unica compartilhada com o motor de regras)
+    # So preenche o campo quando ha uma unica data valida inequivoca e nenhuma data
+    # impossivel conflitante; multiplas datas distintas ficam sem escolha arbitraria.
+    validity_scan = scan_validity_dates(text)
+    if len(validity_scan.valid_dates) == 1 and not validity_scan.invalid_raw_dates:
+        validity_date = validity_scan.valid_dates[0]
+        first_valid_match = next(m for m in validity_scan.matches if m.parsed_date == validity_date)
+        raw_date = validity_date.strftime("%d/%m/%Y")
+        iso_date = validity_date.isoformat()
+        page_num, snippet = _find_page_and_snippet(
+            re.escape(first_valid_match.raw_match), pages, text
+        )
+        ev = PageEvidence(
+            text=snippet or first_valid_match.raw_match or raw_date,
+            page=page_num,
+            confidence=1.0,
+        )
+        evidences.append(ev)
+        fields["data_validade"] = ExtractedField(
+            name="data_validade",
+            value=iso_date,
+            raw_value=raw_date,
+            confidence=1.0,
+            evidence=ev,
+        )
 
     # 4. Extracao de Data de Emissao
     emission_patterns = [

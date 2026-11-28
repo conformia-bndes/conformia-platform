@@ -74,3 +74,20 @@ Revisores de áreas específicas (por exemplo, `devops`) são 1 ou 2 pessoas.
   ou justificativa de bypass.
 - O projeto está cadastrado em [bestpractices.dev](https://www.bestpractices.dev/projects/16430)
   e o selo consta no `README.md`.
+
+---
+
+## 6. Adendo de Endurecimento (2026-11-27 — Issue #171 / `AUD-17b`)
+
+Após a auditoria de 23/11/2026 (`AUD-17b`), que comprovou uso do bypass de revisão nos PRs `#155` e
+`#157` (ambos com `CI OK` verde) e ausência de verificação de CI no disparo de `cd.yml`, esta ADR
+é complementada pelas regras abaixo (sujeitas à aprovação do time `devops` para aplicação no
+ruleset `24061709`):
+
+1. **Redução de `bypass_mode` em `main-protection`:** alterar de `always` para `pull_request` para
+   bloquear tecnicamente push direto em `main`, mantendo o bypass restrito ao merge de PR.
+2. **Gate técnico no CD:** o job `verify-ci` em `.github/workflows/cd.yml` (`scripts/verify_release_ci.py`)
+   exige `CI OK` com conclusão `success` no SHA exato da tag antes de publicar imagens no GHCR.
+3. **Mitigação de conflito de interesse:** enquanto `maintainers` possuir um único membro, toda
+   exceção de revisão em `main` exige comentário de justificativa no PR e revisão periódica pelo
+   time `devops`.

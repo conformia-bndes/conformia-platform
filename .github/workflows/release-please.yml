@@ -51,14 +51,17 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   # Estagio de deploy: so quando o merge do PR de release criou uma versao nova.
+  # O cd.yml bloqueia a publicacao se o check 'CI OK' do SHA exato da tag nao estiver verde.
   deploy:
     name: Deploy
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     permissions:
       contents: read
+      checks: read
       packages: write
     uses: ./.github/workflows/cd.yml
     with:
       tag: ${{ needs.release-please.outputs.tag_name }}
       push: true
+      verify_ci: true

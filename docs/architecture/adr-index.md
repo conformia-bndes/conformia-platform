@@ -23,3 +23,4 @@ Para propor uma nova decisão arquitetural:
 | [ADR-002](adr-002-astral-uv-toolchain.md) | Adoção do Astral uv como Gerenciador de Pacotes e Workspace                      | Aprovado | 2026-09-27 | Conform.IA Engineering Team |
 | [ADR-003](adr-003-spa-vs-nextjs.md)       | Adoção de React + Vite SPA em Substituição ao Next.js para o Cockpit Operacional | Aprovado | 2026-09-27 | Conform.IA Engineering Team |
 | [ADR-004](adr-004-protecao-main-e-revisao.md) | Nível de Proteção da Branch `main` e Revisão por Pares                           | Aprovado | 2026-11-16 | Conform.IA Engineering Team |
+| [ADR-005](adr-005-autenticacao-chaves-pessoais-rbac.md) | Autenticação por Chaves Pessoais PBKDF2, RBAC por Rota e Política da Chave de Serviço | Aprovado | 2026-11-27 | Conform.IA Engineering Team |

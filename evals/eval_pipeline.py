@@ -99,6 +99,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "CAIXA ECONÔMICA FEDERAL\n"
             "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
             "Inscrição: 12.345.678/0001-90\n"
+            "Certificado: CRF202610290001\n"
             "A Caixa Econômica Federal certifica que a empresa encontra-se em SITUAÇÃO REGULAR.\n"
             "Validade: 15/11/2026"
         ),
@@ -156,6 +157,7 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
             "SECRETARIA ESPECIAL DA RECEITA FEDERAL DO BRASIL\n"
             "CERTIDÃO NEGATIVA DE DÉBITOS RELATIVOS AOS TRIBUTOS FEDERAIS "
             "E À DÍVIDA ATIVA DA UNIÃO\n"
+            "CNPJ: 12.345.678/0001-90\n"
             "Válida até: 31/12/2026"
         ),
         "expected_results": {
@@ -207,6 +209,8 @@ BENCHMARK_CASES: List[Dict[str, Any]] = [
         "input_text": (
             "CAIXA ECONÔMICA FEDERAL\n"
             "CERTIFICADO DE REGULARIDADE DO FGTS - CRF\n"
+            "CNPJ: 12.345.678/0001-90\n"
+            "Certificado: CRF202610290002\n"
             "A empresa encontra-se em SITUAÇÃO REGULAR.\n"
             "Finalidade: licença ambiental de operação\n"
             "Validade: 15/11/2026"

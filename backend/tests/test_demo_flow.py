@@ -206,3 +206,35 @@ def test_demo_scanned_pdf_ocr_and_native_plan_b(monkeypatch):
         document_id="demo-plan-b",
     )
     assert native_result["pages"][0]["extraction_method"] == "native"
+
+
+def test_demo_samples_are_fictitious_and_documented_in_demo_script():
+    """Issue #63: garante que todos os PDFs de demo sao ficticios e citados no roteiro."""
+    script_text = (REPO_ROOT / "docs" / "planning" / "demo-script.md").read_text(encoding="utf-8")
+    expected_samples = [
+        "cnd_federal_ficticia_apresentacao.pdf",
+        "cnd_federal_vencida.pdf",
+        "cnd_federal_sem_validade.pdf",
+        "cnd_federal_positiva_reprovada.pdf",
+        "crf_fgts_conforme.pdf",
+        "cndt_trabalhista_reprovada.pdf",
+        "licenca_ambiental_revisao_manual.pdf",
+        "cnd_federal_digitalizada_ocr.pdf",
+    ]
+    for name in expected_samples:
+        assert name in script_text, f"Roteiro demo-script.md nao referencia {name}"
+
+    assert "Plano B para falha de OCR" in script_text
+    assert "Plano B para falha ou cota do provedor LLM" in script_text
+    for act in ("### Ato 1:", "### Ato 2:", "### Ato 3:", "### Ato 4:", "### Ato 5:"):
+        assert act in script_text, f"Roteiro demo-script.md sem secao {act}"
+
+    # Todos os PDFs nativos de demo precisam conter aviso explicito de dado ficticio.
+    for name in expected_samples:
+        if name == "cnd_federal_digitalizada_ocr.pdf":
+            continue
+        with pdfplumber.open(SAMPLES_DIR / name) as pdf:
+            full_text = "\n".join((page.extract_text() or "") for page in pdf.pages).lower()
+        assert (
+            "ficticio" in full_text or "fictício" in full_text
+        ), f"Amostra {name} nao declara expressamente ser ficticia"

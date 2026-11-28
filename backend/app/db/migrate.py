@@ -19,8 +19,10 @@ from sqlalchemy.inspection import inspect
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
-# Revisao 001 criou estas tabelas; a 002 acrescentou review_events.
+# Revisao 001 criou estas tabelas; a 002 acrescentou review_events;
+# a 003 acrescenta triggers append-only e CHECK constraints (aplicada no upgrade apos o stamp).
 BASELINE_REVISION = "001_initial_schema"
+REVIEWS_REVISION = "002_review_events"
 BASELINE_TABLES = frozenset({"documents", "compliance_checks", "audit_logs"})
 REVIEW_TABLE = "review_events"
 
@@ -54,7 +56,7 @@ def detect_legacy_revision(connection: Connection, head_revision: str) -> str | 
             f"{', '.join(sorted(BASELINE_TABLES - present))}). Restaure um backup ou "
             "recrie o banco; nao e seguro adivinhar a revisao."
         )
-    return head_revision if REVIEW_TABLE in tables else BASELINE_REVISION
+    return REVIEWS_REVISION if REVIEW_TABLE in tables else BASELINE_REVISION
 
 
 def migrate(engine: Engine) -> str | None:
