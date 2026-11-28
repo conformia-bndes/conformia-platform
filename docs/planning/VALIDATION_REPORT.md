@@ -1,7 +1,8 @@
 # Relatório de Validação
 
-Execução mais recente registrada: **13/11/2026**, branch de integração `dev` (seção 4). A validação
-de infraestrutura, fila e OCR integrada em 22/11 (PR #123) está na seção 5.
+Execução mais recente registrada: **27/11/2026**, branch de integração `dev` (`035c255`) e RC1
+`v1.0.0-rc.1` (`78e65a5` em `main`, seção 6). As validações anteriores de 13/11 (seção 4) e
+infraestrutura/OCR de 22/11 (PR #123, seção 5) permanecem preservadas abaixo.
 
 As seções 1 a 3 são **histórico da auditoria de 29/10/2026**: base `d76f41c` na antiga branch
 de integração `developer` (hoje `dev`), working tree limpa no início. Ambiente daquela execução:
@@ -173,7 +174,23 @@ Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml`
 
 ---
 
-## 6. Limitações desta validação
+## 6. Consolidação Pré-Go/No-Go (Issue #64) — 27/11/2026
+
+Base verificada em **27/11/2026**: `origin/main` em `78e65a5` (tag `v1.0.0-rc.1`, PR `#192`) e
+`origin/dev` em `035c255` (PR `#194`), com **0 PRs abertos** no repositório.
+
+| Verificação | Referência / Origem | Resultado |
+| :-- | :-- | :-- |
+| **CI completo em `dev` (`035c255`)** | GitHub Actions run [46093243049](https://github.com/conformia-bndes/conformia-platform/actions/runs/46093243049) | **Sucesso** (`CI OK` verde) |
+| **CodeQL em `dev` (`035c255`)** | GitHub Actions run [46093242982](https://github.com/conformia-bndes/conformia-platform/actions/runs/46093242982) | **Sucesso** |
+| **Release Candidate `v1.0.0-rc.1`** | `origin/main` (`78e65a5`, PR `#192`) + sincronização `dev` (PR `#193`) | **Publicada** (regressão completa verde no run `46049692868`) |
+| **Evals (`eval_pipeline.py`)** | Gate `Backend / Evals` + execução local | **PASS**: `48/48`, `100,00%`, **0 falsos positivos** |
+| **Smoke e Resiliência em Compose** | Gate `Infra / Stack` (CI) | **PASS** (6/6 etapas + resiliência + k6 + Schemathesis); execução local pendente de Docker ativo na estação de demo |
+| **Issues P1 restantes (Critério Go 6)** | `gh issue list --state open` (27/11/2026) | **Pendente**: `#162`, `#163`, `#167` com branches prontas para PR; `#55`, `#164`, `#165`, `#166`, `#168` abertas sob outros responsáveis |
+
+---
+
+## 7. Limitações desta validação
 
 1. Histórico (29/10): nenhum teste com serviços reais. Desde o PR #95 o smoke do CI exercita
    PostgreSQL, Redis, MinIO e o worker pela fila; o registro manual está na seção 5 (PR #123).
