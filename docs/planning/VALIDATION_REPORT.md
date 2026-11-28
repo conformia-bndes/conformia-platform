@@ -1,7 +1,8 @@
 # Relatório de Validação
 
-Execução mais recente registrada: **13/11/2026**, branch de integração `dev` (seção 4). A validação
-de infraestrutura, fila e OCR integrada em 22/11 (PR #123) está na seção 5.
+Execução mais recente registrada: **27/11/2026**, branch de integração `dev` (`035c255`) e RC1
+`v1.0.0-rc.1` (`78e65a5` em `main`, seção 6). As validações anteriores de 13/11 (seção 4) e
+infraestrutura/OCR de 22/11 (PR #123, seção 5) permanecem preservadas abaixo.
 
 As seções 1 a 3 são **histórico da auditoria de 29/10/2026**: base `d76f41c` na antiga branch
 de integração `developer` (hoje `dev`), working tree limpa no início. Ambiente daquela execução:
@@ -173,7 +174,25 @@ Execução com Docker ativo e validação contínua nos workflows `ci-infra.yml`
 
 ---
 
-## 6. Limitações desta validação
+## 6. Consolidação Pré-Go/No-Go (Issue #64) — 27/11/2026
+
+Base verificada em **27/11/2026**: `origin/main` em `78e65a5` (tag `v1.0.0-rc.1`, PR `#192`),
+`origin/dev` em `035c255` (PR `#194`) e PRs de endurecimento/validação `#195` (`#162`), `#196`
+(`#163`), `#197` (`#167`), `#198` (`#174`), `#200` (`#171`) e `#201` (`#63`).
+
+| Verificação | Referência / Origem | Resultado |
+| :-- | :-- | :-- |
+| **CI completo em `dev` (`035c255`)** | GitHub Actions run [46093243049](https://github.com/conformia-bndes/conformia-platform/actions/runs/46093243049) | **Sucesso** (`CI OK` verde) |
+| **CodeQL em `dev` (`035c255`)** | GitHub Actions run [46093242982](https://github.com/conformia-bndes/conformia-platform/actions/runs/46093242982) | **Sucesso** |
+| **Release Candidate `v1.0.0-rc.1`** | `origin/main` (`78e65a5`, PR `#192`) + sincronização `dev` (PR `#193`) | **Publicada** (regressão completa verde no run `46049692868`) |
+| **Evals (`eval_pipeline.py`)** | Gate `Backend / Evals` + execução local (PR `#195`) | **PASS**: `48/48`, `100,00%`, **0 falsos positivos** |
+| **Migrations `001`–`003` em PostgreSQL 16 real (`#167`)** | `MIGRATION_TEST_DATABASE_URL=postgresql+psycopg2://... pytest backend/tests/test_migrations.py -q` (PR `#197`) | **PASS**: `23 passed, 0 skipped` (triggers PL/pgSQL `audit_logs` / `review_events` + `CHECK` constraints comprovados em `postgres:16-alpine`) |
+| **Smoke e OCR em Docker Compose local (`#63`)** | `make up && make smoke` + `validate_ocr_container.py` + ensaio dos 5 atos (PR `#201`) | **PASS**: `make smoke` 6/6 (`STARTED -> SUCCESS`, `COMPLIANT`, revisão `FINAL`); `[ocr-check] OK - method=ocr type=CND_FEDERAL`; 5 atos ao vivo (`200` UI, `COMPLIANT`, `NON_COMPLIANT`, `MANUAL_REVIEW_REQUIRED`, `201 -> 403 -> 201 FINAL`, `audit-trail`) |
+| **Issues P1 restantes (Critério Go 6)** | `gh issue list --state open` (27/11/2026) | **Em consolidação**: `#162` (PR `#195`), `#163` (PR `#196`), `#167` (PR `#197`), `#63` (PR `#201`) com CI verde; `#55`, `#164`, `#165`, `#166`, `#168` abertas sob outros responsáveis |
+
+---
+
+## 7. Limitações desta validação
 
 1. Histórico (29/10): nenhum teste com serviços reais. Desde o PR #95 o smoke do CI exercita
    PostgreSQL, Redis, MinIO e o worker pela fila; o registro manual está na seção 5 (PR #123).
