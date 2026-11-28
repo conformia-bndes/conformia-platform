@@ -47,10 +47,10 @@ jobs:
         run: uv sync --all-packages --all-extras
 
       - name: black
-        run: uv run black --check backend/ docs_hooks/ evals/compare_baseline.py
+        run: uv run black --check backend/ docs_hooks/ evals/ scripts/
 
       - name: flake8
-        run: uv run flake8 backend/ docs_hooks/ evals/compare_baseline.py --max-line-length=100
+        run: uv run flake8 backend/ docs_hooks/ evals/ scripts/ --max-line-length=100
 
   security:
     name: Security
@@ -198,7 +198,8 @@ jobs:
           mkdir -p reports
           uv run pytest backend/tests/ -q --durations=10 \
             --junitxml=reports/junit-backend.xml \
-            --cov=backend/app --cov-report=term-missing:skip-covered \
+            --cov=backend/app --cov-fail-under=70 \
+            --cov-report=term-missing:skip-covered \
             --cov-report=xml:reports/coverage.xml
 
       - name: Resumo da cobertura na execucao

@@ -89,7 +89,7 @@ migrate:
 	PYTHONPATH=backend $(PYTHON) -m app.db.migrate
 
 test:
-	$(PYTEST) backend/tests/ -v --cov=backend/app --cov-report=term-missing
+	$(PYTEST) backend/tests/ -v --cov=backend/app --cov-fail-under=70 --cov-report=term-missing
 	cd frontend && npm test
 
 eval:
@@ -111,12 +111,12 @@ hooks:
 	uvx pre-commit install --install-hooks
 
 lint:
-	$(FLAKE8) backend/ --count --max-line-length=100 --statistics
-	$(BLACK) --check backend/
+	$(FLAKE8) backend/ docs_hooks/ evals/ scripts/ --count --max-line-length=100 --statistics
+	$(BLACK) --check backend/ docs_hooks/ evals/ scripts/
 	cd frontend && npm run lint
 
 format:
-	$(BLACK) backend/
+	$(BLACK) backend/ docs_hooks/ evals/ scripts/
 
 load:
 	docker run --rm -i -e BASE_URL=http://host.docker.internal:8000 --add-host host.docker.internal:host-gateway grafana/k6 run --quiet - < tests/load/api.js

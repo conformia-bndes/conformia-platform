@@ -35,12 +35,12 @@ repos:
         entry: uv run --frozen black
         language: system
         types: [python]
-        files: ^backend/
+        files: ^(backend|docs_hooks|evals|scripts)/
       - id: flake8
         name: flake8 (versao do uv.lock)
         entry: uv run --frozen flake8
         language: system
         types: [python]
-        files: ^backend/
+        files: ^(backend|docs_hooks|evals|scripts)/
         # O pre-commit passa os arquivos explicitamente e ignora o exclude do .flake8.
         exclude: ^backend/alembic/
