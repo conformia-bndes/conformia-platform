@@ -20,7 +20,7 @@ fictícios:
 | `cnd_federal_positiva_reprovada.pdf` | CND Federal positiva com débitos | `NON_COMPLIANT` (`RULE-BNDES-001`) |
 | `crf_fgts_conforme.pdf` | CRF FGTS regular (até `16/12/2026`) | `COMPLIANT` (`RULE-BNDES-002`) |
 | `cndt_trabalhista_reprovada.pdf` | CNDT com débito ativo | `NON_COMPLIANT` (`RULE-BNDES-003`) |
-| `licenca_ambiental_revisao_manual.pdf` | Licença Ambiental (2 páginas) | `MANUAL_REVIEW_REQUIRED` (sem LLM / ou avaliada com `#146` + LLM) |
+| `licenca_ambiental_revisao_manual.pdf` | Licença Ambiental (2 páginas) | `MANUAL_REVIEW_REQUIRED` (sem LLM; regra `HYBRID` `RULE-BNDES-005` integrada) |
 | `cnd_federal_digitalizada_ocr.pdf` | CND Federal rasterizada (200 DPI, sem texto nativo) | `COMPLIANT` via OCR Tesseract (`tesseract-ocr-por`) |
 
 Para regerar os três PDFs complementares (`cnd_federal_vencida.pdf`, `cnd_federal_sem_validade.pdf`
@@ -122,10 +122,41 @@ Usando o laudo do Ato 3 (ou o do Ato 2 para demonstrar exceção motivada / repr
 
 1. Abra a aba **Trilha de Auditoria** e clique em **Atualizar Logs**.
 2. Mostre a sequência cronológica gravada no banco (`append-only`):
-   - `DOCUMENT_UPLOADED` (contendo `sha256` do PDF enviado);
-   - `COMPLIANCE_EVALUATION` (status, tipologia, score e `HARNESS_RULES_ENGINE`);
+   - `DOCUMENT_UPLOADED` (contendo `sha256` do PDF enviado e executor autenticado);
+   - `COMPLIANCE_EVALUATION` (status, tipologia, score e executor da verificação);
    - `REVIEW_PROPOSED` (autor `analista.maker`, decisão e justificativa);
    - `REVIEW_CONFIRMED` (autor `analista.checker` e parecer).
+
+### Contingência de Execução via API (Plano B de Interface)
+
+Caso ocorra instabilidade no navegador durante a apresentação, o mesmo roteiro dos 5 atos pode ser
+executado diretamente contra a API (`http://localhost:8000`) usando as chaves geradas no passo 2:
+
+```bash
+# 1) Upload + verificação da CND válida (Ato 1)
+DOC_ID=$(curl -fsS -X POST "http://localhost:8000/api/v1/documents/upload?async_process=false" \
+  -H "X-API-Key: $(cat analista.maker.key)" \
+  -F "file=@docs/samples/cnd_federal_ficticia_apresentacao.pdf;type=application/pdf" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+curl -fsS -X POST "http://localhost:8000/api/v1/compliance/verify/${DOC_ID}" \
+  -H "X-API-Key: $(cat analista.maker.key)" | python3 -m json.tool
+
+# 2) Proposta do Maker, bloqueio 403 na autoconfirmação e confirmação do Checker (Ato 4)
+PROP_ID=$(curl -fsS -X POST "http://localhost:8000/api/v1/compliance/reviews/${DOC_ID}" \
+  -H "Content-Type: application/json" -H "X-API-Key: $(cat analista.maker.key)" \
+  -d '{"decision":"APPROVE","justification":"Conferencia documental realizada durante o ensaio do MVP."}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+curl -i -X POST "http://localhost:8000/api/v1/compliance/reviews/${DOC_ID}/${PROP_ID}/confirm" \
+  -H "Content-Type: application/json" -H "X-API-Key: $(cat analista.maker.key)" \
+  -d '{"comment":"Tentativa de autoconfirmacao (esperado HTTP 403)."}'
+curl -fsS -X POST "http://localhost:8000/api/v1/compliance/reviews/${DOC_ID}/${PROP_ID}/confirm" \
+  -H "Content-Type: application/json" -H "X-API-Key: $(cat analista.checker.key)" \
+  -d '{"comment":"Segundo analista confirma parecer apos revisao independente."}' | python3 -m json.tool
+
+# 3) Trilha de auditoria (Ato 5)
+curl -fsS "http://localhost:8000/api/v1/compliance/audit-trail?limit=20" \
+  -H "X-API-Key: $(cat analista.checker.key)" | python3 -m json.tool
+```
 
 ---
 
@@ -161,10 +192,22 @@ Se o OpenRouter retornar `429` após as retentativas ou estiver sem chave no amb
 
 ---
 
-## 5. Checklist de Ensaio (Pré-Demonstração)
+## 5. Ensaio Automatizado e Checklist de Pré-Demonstração
 
-- [ ] `make up && make smoke` executado com código `0` na máquina da apresentação.
-- [ ] Chaves `analista.maker` e `analista.checker` testadas no navegador sem uso de acesso anônimo.
-- [ ] Todos os 5 atos executados em sequência no ambiente de apresentação.
-- [ ] Plano B de OCR testado (confirmar que os PDFs nativos de `docs/samples/` concluem sem `tesseract`).
-- [ ] Se usar OpenRouter na demo: confirmar chave rotacionada e validar uma regra `HYBRID` antes da sessão.
+### Ensaio automatizado executável (pré-voo offline)
+
+Antes de subir os contêineres na máquina de apresentação, valide de forma determinística todos os
+PDFs fictícios, os 5 atos, a segregação `403` e o Plano B de OCR com:
+
+```bash
+uv run --frozen pytest backend/tests/test_demo_flow.py -v
+```
+
+### Checklist de Ensaio ao Vivo (Estação de Apresentação com Docker)
+
+- [x] Inventário de 8 PDFs exclusivamente fictícios validado em `docs/samples/` e coberto por `backend/tests/test_demo_flow.py`.
+- [x] Fluxo dos 5 atos (CND válida, CND vencida, CND sem validade, segregação 4 olhos `403` → `FINAL`, trilha de auditoria) e Plano B nativo validados por teste automatizado (`test_demo_flow.py`).
+- [ ] **Ação manual (Docker ativo na máquina da demo):** executar `make up && make smoke` com código `0`.
+- [ ] **Ação manual:** testar chaves `analista.maker` e `analista.checker` no navegador (`ENVIRONMENT=production`, `ALLOW_ANONYMOUS_ACCESS=false`).
+- [ ] **Ação manual:** percorrer os 5 atos ao vivo com os apresentadores e validar o Plano B de OCR/API antes da apresentação (`07` ou `09/12/2026`).
+- [ ] **Opcional (se usar OpenRouter na demo):** confirmar chave rotacionada e testar uma regra `HYBRID` antes da sessão.
